@@ -1,10 +1,17 @@
 // ==========================================
-// CONFIGURACIÓN GENERAL & SUPABASE
+// CONFIGURACIÓN GENERAL & SUPABASE OFICIAL
 // ==========================================
 const SUPABASE_URL = 'https://anubyojemmaybrcmzqdo.supabase.co';
-const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFudWJ5b2plbW1heWJyY216cWRvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTA1OTg3NjUsImV4cCI6MjEwNjE3NDc2NX0.JH3fXRo8esF9s9G7sXNQr2L_5JPg2ppYrbOx26MDS-E'; // <-- PEGA TU CLAVE ANON AQUÍ
+const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFudWJ5b2plbW1heWJyY216cWRvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTA1OTg3NjUsImV4cCI6MjEwNjE3NDc2NX0.JH3fXRo8esF9s9G7sXNQr2L_5JPg2ppYrbOx26MDS-E';
 
-const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+let supabase = null;
+try {
+  if (window.supabase) {
+    supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+  }
+} catch (e) {
+  console.error("Error al inicializar el cliente de Supabase:", e);
+}
 
 const CONFIG = {
   adminPin: '2026',
@@ -14,24 +21,46 @@ const CONFIG = {
   wspGroupUrl: 'https://chat.whatsapp.com'
 };
 
-const spLink = document.getElementById('btn-spotify-link');
-const wspLink = document.getElementById('btn-wsp-group-link');
-if (spLink) spLink.href = CONFIG.spotifyUrl;
-if (wspLink) wspLink.href = CONFIG.wspGroupUrl;
-
 let cloudOrders = [];
 
 // ==========================================
-// SINCRONIZACIÓN EN TIEMPO REAL CON SUPABASE
+// CUENTA REGRESIVA AL EVENTO (31 OCT 2026)
+// ==========================================
+function initCountdown() {
+  const eventDate = new Date('2026-10-31T23:59:59').getTime();
+  function tick() {
+    const diff = eventDate - new Date().getTime();
+    if (diff > 0) {
+      const elDays = document.getElementById('cd-days');
+      const elHours = document.getElementById('cd-hours');
+      const elMins = document.getElementById('cd-mins');
+      const elSecs = document.getElementById('cd-secs');
+
+      if (elDays) elDays.textContent = String(Math.floor(diff / (1000 * 60 * 60 * 24))).padStart(2, '0');
+      if (elHours) elHours.textContent = String(Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60))).padStart(2, '0');
+      if (elMins) elMins.textContent = String(Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60))).padStart(2, '0');
+      if (elSecs) elSecs.textContent = String(Math.floor((diff % (1000 * 60)) / 1000)).padStart(2, '0');
+    }
+  }
+  setInterval(tick, 1000);
+  tick();
+}
+
+// ==========================================
+// SINCRONIZACIÓN CON SUPABASE (ORDERS)
 // ==========================================
 async function fetchOrders() {
+  if (!supabase) return;
   try {
     const { data, error } = await supabase
       .from('orders')
       .select('*')
       .order('created_at', { ascending: false });
 
-    if (error) throw error;
+    if (error) {
+      console.warn("Aviso en consulta a Supabase:", error.message);
+      return;
+    }
 
     if (data) {
       cloudOrders = data.map(o => ({
@@ -46,7 +75,7 @@ async function fetchOrders() {
         phone: o.phone,
         email: o.email,
         ticketType: o.ticket_type,
-        amount: Number(o.amount),
+        amount: Number(o.amount) || 0,
         status: o.status,
         used: o.used,
         createdAt: o.created_at
@@ -58,18 +87,24 @@ async function fetchOrders() {
       checkVipAvailability();
     }
   } catch (err) {
-    console.error("Error al obtener órdenes de Supabase:", err.message);
+    console.error("Error al traer órdenes de Supabase:", err);
   }
 }
 
-// Carga inicial y escucha cambios en tiempo real
-fetchOrders();
-supabase
-  .channel('public:orders')
-  .on('postgres_changes', { event: '*', schema: 'public', table: 'orders' }, () => {
-    fetchOrders();
-  })
-  .subscribe();
+function initSupabaseRealtime() {
+  if (!supabase) return;
+  fetchOrders();
+  try {
+    supabase
+      .channel('public:orders')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'orders' }, () => {
+        fetchOrders();
+      })
+      .subscribe();
+  } catch (e) {
+    console.warn("Canal en tiempo real no disponible:", e);
+  }
+}
 
 // ==========================================
 // CONTROL DE STOCK VIP (50 CUPOS)
@@ -100,25 +135,6 @@ function checkVipAvailability() {
 }
 
 // ==========================================
-// CUENTA REGRESIVA
-// ==========================================
-function initCountdown() {
-  const eventDate = new Date('2026-10-31T23:59:59').getTime();
-  function tick() {
-    const diff = eventDate - new Date().getTime();
-    if (diff > 0) {
-      document.getElementById('cd-days').textContent = String(Math.floor(diff / (1000 * 60 * 60 * 24))).padStart(2, '0');
-      document.getElementById('cd-hours').textContent = String(Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60))).padStart(2, '0');
-      document.getElementById('cd-mins').textContent = String(Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60))).padStart(2, '0');
-      document.getElementById('cd-secs').textContent = String(Math.floor((diff % (1000 * 60)) / 1000)).padStart(2, '0');
-    }
-  }
-  setInterval(tick, 1000);
-  tick();
-}
-initCountdown();
-
-// ==========================================
 // CHECKOUT MULTI-CANTIDAD
 // ==========================================
 let activePlan = { name: '', unitPrice: 0 };
@@ -127,44 +143,57 @@ let activeCreatedOrders = [];
 function openCheckout(name, price) {
   activePlan = { name, unitPrice: price };
   
-  document.getElementById('co-ticket-name').textContent = name;
-  document.getElementById('co-unit-price').textContent = `$${price.toLocaleString('es-AR')} ARS`;
+  const nameEl = document.getElementById('co-ticket-name');
+  const priceEl = document.getElementById('co-unit-price');
+  if (nameEl) nameEl.textContent = name;
+  if (priceEl) priceEl.textContent = `$${price.toLocaleString('es-AR')} ARS`;
   
   const selectQty = document.getElementById('cust-qty');
-  selectQty.value = "1";
+  if (selectQty) {
+    selectQty.value = "1";
 
-  if (name.includes('VIP')) {
-    const vipCount = cloudOrders.filter(o => o.ticketType && o.ticketType.includes('VIP') && o.status !== 'rejected').length;
-    const remaining = Math.max(0, CONFIG.maxVipStock - vipCount);
-    
-    Array.from(selectQty.options).forEach(opt => {
-      opt.disabled = parseInt(opt.value) > remaining;
-    });
-  } else {
-    Array.from(selectQty.options).forEach(opt => opt.disabled = false);
+    if (name.includes('VIP')) {
+      const vipCount = cloudOrders.filter(o => o.ticketType && o.ticketType.includes('VIP') && o.status !== 'rejected').length;
+      const remaining = Math.max(0, CONFIG.maxVipStock - vipCount);
+      Array.from(selectQty.options).forEach(opt => {
+        opt.disabled = parseInt(opt.value) > remaining;
+      });
+    } else {
+      Array.from(selectQty.options).forEach(opt => opt.disabled = false);
+    }
   }
 
   updateCheckoutTotal();
 
-  document.getElementById('co-step-form').classList.remove('hidden');
-  document.getElementById('co-step-transfer').classList.add('hidden');
-  document.getElementById('co-step-pending').classList.add('hidden');
-  document.getElementById('co-step-ticket').classList.add('hidden');
+  const stepForm = document.getElementById('co-step-form');
+  const stepTransfer = document.getElementById('co-step-transfer');
+  const stepPending = document.getElementById('co-step-pending');
+  const stepTicket = document.getElementById('co-step-ticket');
+  const modalCo = document.getElementById('modal-checkout');
+  const orderForm = document.getElementById('orderForm');
 
-  document.getElementById('orderForm').reset();
-  document.getElementById('cust-qty').value = "1";
-  document.getElementById('modal-checkout').classList.remove('hidden');
+  if (stepForm) stepForm.classList.remove('hidden');
+  if (stepTransfer) stepTransfer.classList.add('hidden');
+  if (stepPending) stepPending.classList.add('hidden');
+  if (stepTicket) stepTicket.classList.add('hidden');
+  if (orderForm) orderForm.reset();
+  if (modalCo) modalCo.classList.remove('hidden');
 }
 
 function updateCheckoutTotal() {
-  const qty = parseInt(document.getElementById('cust-qty').value) || 1;
+  const qtyEl = document.getElementById('cust-qty');
+  const qty = parseInt(qtyEl ? qtyEl.value : 1) || 1;
   const total = activePlan.unitPrice * qty;
-  document.getElementById('co-ticket-price').textContent = `$${total.toLocaleString('es-AR')} ARS`;
-  document.getElementById('transfer-amount').textContent = `$${total.toLocaleString('es-AR')} ARS`;
+
+  const coPrice = document.getElementById('co-ticket-price');
+  const trAmount = document.getElementById('transfer-amount');
+  if (coPrice) coPrice.textContent = `$${total.toLocaleString('es-AR')} ARS`;
+  if (trAmount) trAmount.textContent = `$${total.toLocaleString('es-AR')} ARS`;
 }
 
 function closeCheckout() {
-  document.getElementById('modal-checkout').classList.add('hidden');
+  const modal = document.getElementById('modal-checkout');
+  if (modal) modal.classList.add('hidden');
   activeCreatedOrders = [];
 }
 
@@ -208,6 +237,8 @@ async function handleOrderSubmit(e) {
   }
 
   try {
+    if (!supabase) throw new Error("La base de datos no está disponible.");
+
     const { data, error } = await supabase.from('orders').insert(rowsToInsert).select();
     if (error) throw error;
 
@@ -226,12 +257,13 @@ async function handleOrderSubmit(e) {
     document.getElementById('transfer-order-code').textContent = sharedOrderId;
     document.getElementById('co-step-transfer').classList.remove('hidden');
   } catch (err) {
-    alert("Error al registrar en Supabase: " + err.message);
+    alert("Error al registrar en la base de datos: " + err.message);
   }
 }
 
 function copyAlias() {
-  const alias = document.getElementById('transfer-alias').textContent;
+  const el = document.getElementById('transfer-alias');
+  const alias = el ? el.textContent : 'HAVANNA.HALLOWEEN';
   navigator.clipboard.writeText(alias).then(() => alert('Alias copiado: ' + alias));
 }
 
@@ -285,6 +317,7 @@ function checkStatusFromCurrent() {
 function renderMultipleTicketsUI(ordersList) {
   document.getElementById('co-step-ticket').classList.remove('hidden');
   const box = document.getElementById('ticket-render-box');
+  if (!box) return;
   box.innerHTML = '';
 
   if (typeof confetti === 'function') {
@@ -336,7 +369,7 @@ function renderMultipleTicketsUI(ordersList) {
 
     setTimeout(() => {
       const qrEl = document.getElementById(`ticket-qr-${order.ticketId}`);
-      if (qrEl) {
+      if (qrEl && typeof QRCode !== 'undefined') {
         new QRCode(qrEl, {
           text: JSON.stringify({ 
             e: 'HAVANNA_OBSESSION', 
@@ -698,4 +731,23 @@ async function manualCheckIn(id) {
   } catch (err) {
     alert("Error al marcar ingreso: " + err.message);
   }
+}
+
+// ==========================================
+// INICIALIZACIÓN GLOBAL SEGURA
+// ==========================================
+function startApp() {
+  initCountdown();
+  initSupabaseRealtime();
+
+  const spLink = document.getElementById('btn-spotify-link');
+  const wspLink = document.getElementById('btn-wsp-group-link');
+  if (spLink) spLink.href = CONFIG.spotifyUrl;
+  if (wspLink) wspLink.href = CONFIG.wspGroupUrl;
+}
+
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', startApp);
+} else {
+  startApp();
 }
