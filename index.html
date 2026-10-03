@@ -1,21 +1,28 @@
 <!DOCTYPE html>
 <html lang="es">
+
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>HAVANNA CLUB // HALLOWEEN OBSESSION 2026</title>
-  
+
   <!-- Tipografías Oficiales -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Anton&family=Permanent+Marker&family=Space+Mono:ital,wght@0,400;0,700;1,400&family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
-  
+  <link
+    href="https://fonts.googleapis.com/css2?family=Anton&family=Permanent+Marker&family=Space+Mono:ital,wght@0,400;0,700;1,400&family=Inter:wght@400;500;600;700;800;900&display=swap"
+    rel="stylesheet">
+
   <link rel="stylesheet" href="style.css">
-  
+
   <!-- Librerías de QR y Confetti -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+  <!-- Librerías para Descarga de Tickets y Exportación PDF -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 </head>
+
 <body>
   <!-- Fondo Adaptativo Dual (Móvil / PC) -->
   <div class="site-bg-overlay"></div>
@@ -62,7 +69,8 @@
     <div class="container">
       <div class="section-header">
         <h2 class="section-title">VENTA DE TICKETS OFICIALES</h2>
-        <p class="section-subtitle">ACCESO DIGITAL CON CÓDIGO QR ÚNICO E INTRANSFERIBLE. INGRESO OBLIGATORIO CON DNI EN MANO.</p>
+        <p class="section-subtitle">ACCESO DIGITAL CON CÓDIGO QR ÚNICO E INTRANSFERIBLE. INGRESO OBLIGATORIO CON DNI EN
+          MANO.</p>
       </div>
 
       <div class="tickets-grid">
@@ -92,7 +100,8 @@
             <li>// BARRA VIP PRIVADA SIN FILAS</li>
             <li>// CUPO ESTRICTO: 50 ACCESOS</li>
           </ul>
-          <button id="btn-buy-vip" onclick="openCheckout('Zona VIP', 15000)" class="btn-ticket btn-vip">COMPRAR VIP</button>
+          <button id="btn-buy-vip" onclick="openCheckout('Zona VIP', 15000)" class="btn-ticket btn-vip">COMPRAR
+            VIP</button>
           <div class="stock-counter">
             <span id="vip-stock-label">Cupos restantes: <strong>50/50</strong></span>
           </div>
@@ -114,7 +123,8 @@
         <div class="comm-card comm-lineup liquid-glass">
           <div class="comm-status-badge">CLASSIFIED</div>
           <h3 class="comm-title">LINE UP & ARTISTAS</h3>
-          <p class="comm-desc">Los DJs y sorpresas de la noche están bajo llave. La revelación oficial se desbloqueará próximamente.</p>
+          <p class="comm-desc">Los DJs y sorpresas de la noche están bajo llave. La revelación oficial se desbloqueará
+            próximamente.</p>
           <div class="lock-indicator">// ACCESO BLOQUEADO // FASE 1</div>
         </div>
 
@@ -122,7 +132,8 @@
         <div class="comm-card comm-spotify liquid-glass">
           <div class="comm-status-badge badge-green">COLABORATIVA</div>
           <h3 class="comm-title">ARREGLÁ LA PLAYLIST</h3>
-          <p class="comm-desc">Meté tus temas para la previa y la pista. La música de Halloween la armamos entre todos.</p>
+          <p class="comm-desc">Meté tus temas para la previa y la pista. La música de Halloween la armamos entre todos.
+          </p>
           <a href="#" target="_blank" id="btn-spotify-link" class="btn-comm btn-spotify">ABRIR EN SPOTIFY //</a>
         </div>
 
@@ -130,7 +141,8 @@
         <div class="comm-card comm-wsp liquid-glass">
           <div class="comm-status-badge badge-red">OFICIAL</div>
           <h3 class="comm-title">COMUNIDAD EXCLUSIVA</h3>
-          <p class="comm-desc">Enterate antes del cambio de preventas, anuncios de artistas y beneficios para miembros.</p>
+          <p class="comm-desc">Enterate antes del cambio de preventas, anuncios de artistas y beneficios para miembros.
+          </p>
           <a href="#" target="_blank" id="btn-wsp-group-link" class="btn-comm btn-wsp">ENTRAR AL GRUPO //</a>
         </div>
       </div>
@@ -158,7 +170,7 @@
       <div id="co-step-form">
         <h3 class="modal-heading">DATOS DEL TITULAR</h3>
         <p class="modal-sub">Tu entrada se emitirá a nombre de quien figure en este DNI.</p>
-        
+
         <div class="order-summary-box">
           <div>
             <span id="co-ticket-name" style="display:block; font-weight:700">Tipo de Ticket</span>
@@ -176,7 +188,7 @@
             </select>
           </div>
         </div>
-        
+
         <div class="order-total-bar">
           <span>TOTAL A TRANSFERIR:</span>
           <strong id="co-ticket-price" class="text-red">$0 ARS</strong>
@@ -208,13 +220,16 @@
         <h3 class="modal-heading">PAGO POR TRANSFERENCIA</h3>
         <p class="modal-sub">Realizá el envío del monto exacto para que podamos habilitar tus tickets.</p>
         <div class="bank-box">
-          <div class="bank-row"><span>Monto total a transferir:</span> <strong id="transfer-amount" class="text-red">$0 ARS</strong></div>
-          <div class="bank-row"><span>Alias:</span> <strong id="transfer-alias">HAVANNA.HALLOWEEN</strong> <button onclick="copyAlias()" class="btn-copy">Copiar</button></div>
+          <div class="bank-row"><span>Monto total a transferir:</span> <strong id="transfer-amount" class="text-red">$0
+              ARS</strong></div>
+          <div class="bank-row"><span>Alias:</span> <strong id="transfer-alias">HAVANNA.HALLOWEEN</strong> <button
+              onclick="copyAlias()" class="btn-copy">Copiar</button></div>
           <div class="bank-row"><span>CBU / CVU:</span> <span>0000003100012345678901</span></div>
           <div class="bank-row"><span>Titular:</span> <span>Alejo Nahuel Legal</span></div>
           <div class="bank-row"><span>Código de orden:</span> <strong id="transfer-order-code">ORD-0000</strong></div>
         </div>
-        <p class="transfer-warning">[!] Al transferir, enviá el comprobante por WhatsApp tocando el botón a continuación para la activación inmediata.</p>
+        <p class="transfer-warning">[!] Al transferir, enviá el comprobante por WhatsApp tocando el botón a continuación
+          para la activación inmediata.</p>
         <button onclick="sendWhatsAppProof()" class="btn-wsp-action">ENVIAR COMPROBANTE POR WHATSAPP //➔</button>
       </div>
 
@@ -222,8 +237,10 @@
       <div id="co-step-pending" class="hidden text-center">
         <div class="status-icon">// PENDING //</div>
         <h3 class="modal-heading">COMPROBANTE EN REVISIÓN</h3>
-        <p class="modal-sub">Orden <strong id="pend-code"></strong> para <span id="pend-name"></span> (DNI: <span id="pend-dni"></span>).</p>
-        <p class="pending-tip">En cuanto el staff verifique la acreditación del pago, tus entradas quedarán habilitadas con sus códigos QR.</p>
+        <p class="modal-sub">Orden <strong id="pend-code"></strong> para <span id="pend-name"></span> (DNI: <span
+            id="pend-dni"></span>).</p>
+        <p class="pending-tip">En cuanto el staff verifique la acreditación del pago, tus entradas quedarán habilitadas
+          con sus códigos QR.</p>
         <button onclick="checkStatusFromCurrent()" class="btn-secondary full-width mt-4">REVERIFICAR ESTADO</button>
       </div>
 
@@ -288,17 +305,20 @@
       </div>
 
       <div class="admin-tabs">
-        <button id="tab-btn-approvals" class="admin-tab active" onclick="switchAdminTab('approvals')">Aprobar Pagos</button>
-        <button id="tab-btn-door" class="admin-tab" onclick="switchAdminTab('door')">Control en Puerta (QR / DNI)</button>
-      </div>
-
-      <!-- VISTA APROBACIONES -->
-      <div id="adm-view-approvals" class="admin-body">
-        <div id="adm-pending-list" class="pending-orders-list"></div>
+        <button id="tab-btn-approvals" class="admin-tab active" onclick="switchAdminTab('approvals')">Aprobar
+          Pagos</button>
+        <button id="tab-btn-door" class="admin-tab" onclick="switchAdminTab('door')">Control en Puerta (QR /
+          DNI)</button>
       </div>
 
       <!-- VISTA PUERTA -->
       <div id="adm-view-door" class="admin-body hidden">
+        <!-- BOTÓN DESCARGAR PDF (AGREGADO ACÁ) -->
+        <button onclick="window.exportDoorListPDF()" class="btn-secondary"
+          style="margin-bottom: 1rem; width: 100%; border-color: #38bdf8; color: #38bdf8; font-weight: 700;">
+          📥 DESCARGAR PLANILLA DE CONTROL (PDF)
+        </button>
+
         <div class="door-scan-bar">
           <input type="text" id="door-input" placeholder="Escanear QR o tipear DNI / Ticket ID...">
           <button onclick="validateDoorCheckIn()" class="btn-primary">Validar Ingreso</button>
@@ -315,4 +335,5 @@
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="app.js?v=2"></script>
 </body>
+
 </html>
