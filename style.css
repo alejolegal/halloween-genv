@@ -19,7 +19,9 @@
 }
 
 /* RESET GENERAL */
-*, *::before, *::after {
+*,
+*::before,
+*::after {
   margin: 0;
   padding: 0;
   box-sizing: border-box;
@@ -47,7 +49,7 @@ body {
   left: 0;
   width: 100vw;
   height: 100vh;
-  background: 
+  background:
     radial-gradient(circle at 50% 35%, rgba(5, 5, 7, 0.4) 0%, rgba(5, 5, 7, 0.88) 65%, #050507 100%),
     linear-gradient(to bottom, rgba(5, 5, 7, 0.6) 0%, transparent 22%, transparent 70%, #050507 100%),
     url('fondo-halloween.jpg') center top / cover no-repeat;
@@ -58,7 +60,7 @@ body {
 /* 2. PC & PANTALLAS ANCHAS (> 768px): fondo-halloween-pc.jpg */
 @media (min-width: 769px) {
   .site-bg-overlay {
-    background: 
+    background:
       radial-gradient(circle at 50% 40%, rgba(5, 5, 7, 0.35) 0%, rgba(5, 5, 7, 0.88) 70%, #050507 100%),
       linear-gradient(to bottom, rgba(5, 5, 7, 0.7) 0%, transparent 20%, transparent 75%, #050507 100%),
       url('fondo-halloween-pc.jpg') center center / cover no-repeat;
@@ -87,16 +89,14 @@ body {
    LIQUID GLASS
    ========================================================================== */
 .liquid-glass {
-  background: linear-gradient(
-    135deg, 
-    rgba(255, 255, 255, 0.05) 0%, 
-    rgba(20, 20, 26, 0.65) 50%, 
-    rgba(10, 10, 14, 0.85) 100%
-  ) !important;
+  background: linear-gradient(135deg,
+      rgba(255, 255, 255, 0.05) 0%,
+      rgba(20, 20, 26, 0.65) 50%,
+      rgba(10, 10, 14, 0.85) 100%) !important;
   backdrop-filter: blur(20px) saturate(180%);
   -webkit-backdrop-filter: blur(20px) saturate(180%);
   border: 1px solid rgba(255, 255, 255, 0.08) !important;
-  box-shadow: 
+  box-shadow:
     0 25px 45px -15px rgba(0, 0, 0, 0.85),
     inset 0 1px 1px 0 rgba(255, 255, 255, 0.16),
     inset 0 -1px 1px 0 rgba(0, 0, 0, 0.4);
@@ -187,7 +187,7 @@ body {
   text-transform: uppercase;
   margin: 0;
   display: block;
-  text-shadow: 
+  text-shadow:
     3px 4px 0px rgba(0, 0, 0, 0.95),
     0 0 45px rgba(229, 9, 20, 0.55);
 }
@@ -309,7 +309,7 @@ body {
 
 .card-vip {
   border-top: 3px solid var(--gold-vip) !important;
-  box-shadow: 
+  box-shadow:
     0 15px 35px rgba(0, 0, 0, 0.6),
     0 0 30px rgba(212, 175, 55, 0.22);
 }
@@ -946,10 +946,12 @@ body {
   .one-wish-ticket {
     flex-direction: column;
   }
+
   .ticket-main-body {
     border-right: none;
     border-bottom: 2px dashed #8c1d1d;
   }
+
   .ticket-stub {
     width: 100%;
     padding: 1.2rem;
@@ -1087,10 +1089,27 @@ body {
   text-align: center;
 }
 
-.door-feedback.success { background: #064e3b; color: #34d399; }
-.door-feedback.vip-success { background: #78350f; color: #fbbf24; border: 2px solid #d4af37; font-size: 1.1rem; }
-.door-feedback.used { background: #7c2d12; color: #fb923c; }
-.door-feedback.error { background: #7f1d1d; color: #f87171; }
+.door-feedback.success {
+  background: #064e3b;
+  color: #34d399;
+}
+
+.door-feedback.vip-success {
+  background: #78350f;
+  color: #fbbf24;
+  border: 2px solid #d4af37;
+  font-size: 1.1rem;
+}
+
+.door-feedback.used {
+  background: #7c2d12;
+  color: #fb923c;
+}
+
+.door-feedback.error {
+  background: #7f1d1d;
+  color: #f87171;
+}
 
 .door-row {
   display: flex;
@@ -1100,5 +1119,60 @@ body {
   border-bottom: 1px solid rgba(255, 255, 255, 0.05);
 }
 
-.door-row.used { opacity: 0.4; }
-.badge-used { background: #374151; color: #9ca3af; padding: 0.2rem 0.5rem; border-radius: 3px; font-size: 0.65rem; }
+.door-row.used {
+  opacity: 0.4;
+}
+
+.badge-used {
+  background: #374151;
+  color: #9ca3af;
+  padding: 0.2rem 0.5rem;
+  border-radius: 3px;
+  font-size: 0.65rem;
+}
+
+/* BOTÓN MODERNO VER TICKET */
+.btn-view-qr {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: rgba(225, 29, 72, 0.15);
+  border: 1px solid rgba(225, 29, 72, 0.6);
+  color: #ff3366;
+  font-family: var(--font-mono, monospace);
+  font-size: 0.72rem;
+  font-weight: 700;
+  padding: 6px 12px;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  text-decoration: none;
+}
+
+.btn-view-qr:hover {
+  background: #e11d48;
+  color: #ffffff;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(225, 29, 72, 0.4);
+}
+
+/* BOTÓN DESCARGAR TICKET INDIVIDUAL */
+.btn-download-ticket {
+  display: block;
+  width: 100%;
+  margin-top: 10px;
+  background: #1e293b;
+  border: 1px solid #334155;
+  color: #94a3b8;
+  padding: 8px;
+  border-radius: 6px;
+  font-size: 0.75rem;
+  font-family: var(--font-mono, monospace);
+  cursor: pointer;
+  transition: background 0.2s ease, color 0.2s ease;
+}
+
+.btn-download-ticket:hover {
+  background: #334155;
+  color: #ffffff;
+}
