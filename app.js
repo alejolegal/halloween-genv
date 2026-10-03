@@ -10,37 +10,39 @@
   let client = null;
   if (window.supabase && typeof window.supabase.createClient === 'function') {
     client = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
-  } else {
-    console.error("No se encontró la librería global de Supabase.");
   }
 
   const CONFIG = {
     adminPin: '2026',
-    whatsappPhone: '5493794000000',
+    whatsappPhone: '5493794000000', // Modificá acá con tu WhatsApp
     maxVipStock: 50,
     spotifyUrl: 'https://open.spotify.com',
-    wspGroupUrl: 'https://chat.whatsapp.com'
+    wspGroupUrl: 'https://chat.whatsapp.com',
+    instagramUrl: 'https://instagram.com/'
   };
 
   let cloudOrders = [];
 
+  function cleanDni(val) {
+    return String(val || '').replace(/\D/g, '').trim();
+  }
+
   // ==========================================
-  // CUENTA REGRESIVA AL EVENTO
+  // CUENTA REGRESIVA
   // ==========================================
   function initCountdown() {
     const eventDate = new Date('2026-10-31T23:59:59').getTime();
     function tick() {
       const diff = eventDate - new Date().getTime();
       if (diff > 0) {
-        const elDays = document.getElementById('cd-days');
-        const elHours = document.getElementById('cd-hours');
-        const elMins = document.getElementById('cd-mins');
-        const elSecs = document.getElementById('cd-secs');
-
-        if (elDays) elDays.textContent = String(Math.floor(diff / (1000 * 60 * 60 * 24))).padStart(2, '0');
-        if (elHours) elHours.textContent = String(Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60))).padStart(2, '0');
-        if (elMins) elMins.textContent = String(Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60))).padStart(2, '0');
-        if (elSecs) elSecs.textContent = String(Math.floor((diff % (1000 * 60)) / 1000)).padStart(2, '0');
+        const d = document.getElementById('cd-days');
+        const h = document.getElementById('cd-hours');
+        const m = document.getElementById('cd-mins');
+        const s = document.getElementById('cd-secs');
+        if (d) d.textContent = String(Math.floor(diff / (1000 * 60 * 60 * 24))).padStart(2, '0');
+        if (h) h.textContent = String(Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60))).padStart(2, '0');
+        if (m) m.textContent = String(Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60))).padStart(2, '0');
+        if (s) s.textContent = String(Math.floor((diff % (1000 * 60)) / 1000)).padStart(2, '0');
       }
     }
     setInterval(tick, 1000);
@@ -48,7 +50,7 @@
   }
 
   // ==========================================
-  // SINCRONIZACIÓN CON SUPABASE
+  // SINCRONIZACIÓN Y TIEMPO REAL
   // ==========================================
   async function fetchOrders() {
     if (!client) return;
@@ -58,10 +60,7 @@
         .select('*')
         .order('created_at', { ascending: false });
 
-      if (error) {
-        console.warn("Aviso en Supabase:", error.message);
-        return;
-      }
+      if (error) throw error;
 
       if (data) {
         cloudOrders = data.map(o => ({
@@ -72,7 +71,7 @@
           ticketTotal: o.ticket_total,
           name: o.name,
           buyerName: o.buyer_name,
-          dni: o.dni,
+          dni: cleanDni(o.dni),
           phone: o.phone,
           email: o.email,
           ticketType: o.ticket_type,
@@ -86,25 +85,35 @@
         renderApprovalsList();
         renderDoorList();
         checkVipAvailability();
+
+        // Actualización dinámica si el usuario tiene abierta la vista de espera o tickets
+        if (activeCreatedOrders.length > 0) {
+          const curId = activeCreatedOrders[0].orderId;
+          const fresh = cloudOrders.filter(o => o.orderId === curId);
+          if (fresh.some(o => o.status === 'approved')) {
+            const pendScreen = document.getElementById('co-step-pending');
+            if (pendScreen && !pendScreen.classList.contains('hidden')) {
+              pendScreen.classList.add('hidden');
+              renderMultipleTicketsUI(fresh.filter(o => o.status === 'approved'));
+            }
+          }
+        }
       }
     } catch (err) {
-      console.error("Error al obtener órdenes:", err);
+      console.error("Error al sincronizar Supabase:", err);
     }
   }
 
   function initRealtime() {
     if (!client) return;
     fetchOrders();
-    try {
-      client
-        .channel('public:orders')
-        .on('postgres_changes', { event: '*', schema: 'public', table: 'orders' }, () => {
-          fetchOrders();
-        })
-        .subscribe();
-    } catch (e) {
-      console.warn("Realtime no disponible:", e);
-    }
+
+    client
+      .channel('schema-db-changes')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'orders' }, () => {
+        fetchOrders();
+      })
+      .subscribe();
   }
 
   function checkVipAvailability() {
@@ -113,21 +122,16 @@
     const label = document.getElementById('vip-stock-label');
     const btn = document.getElementById('btn-buy-vip');
 
-    if (label) {
-      label.innerHTML = `Cupos restantes: <strong>${remaining}/${CONFIG.maxVipStock}</strong>`;
-    }
-
+    if (label) label.innerHTML = `Cupos restantes: <strong>${remaining}/${CONFIG.maxVipStock}</strong>`;
     if (btn) {
       if (remaining === 0) {
         btn.disabled = true;
         btn.textContent = 'AGOTADO';
         btn.style.opacity = '0.5';
-        btn.style.cursor = 'not-allowed';
       } else {
         btn.disabled = false;
         btn.textContent = 'COMPRAR VIP';
         btn.style.opacity = '1';
-        btn.style.cursor = 'pointer';
       }
     }
   }
@@ -140,16 +144,13 @@
 
   function openCheckout(name, price) {
     activePlan = { name, unitPrice: price };
-    
-    const nameEl = document.getElementById('co-ticket-name');
-    const priceEl = document.getElementById('co-unit-price');
-    if (nameEl) nameEl.textContent = name;
-    if (priceEl) priceEl.textContent = `$${price.toLocaleString('es-AR')} ARS`;
-    
+
+    document.getElementById('co-ticket-name').textContent = name;
+    document.getElementById('co-unit-price').textContent = `$${price.toLocaleString('es-AR')} ARS`;
+
     const selectQty = document.getElementById('cust-qty');
     if (selectQty) {
       selectQty.value = "1";
-
       if (name.includes('VIP')) {
         const vipCount = cloudOrders.filter(o => o.ticketType && o.ticketType.includes('VIP') && o.status !== 'rejected').length;
         const remaining = Math.max(0, CONFIG.maxVipStock - vipCount);
@@ -162,36 +163,23 @@
     }
 
     updateCheckoutTotal();
-
-    const stepForm = document.getElementById('co-step-form');
-    const stepTransfer = document.getElementById('co-step-transfer');
-    const stepPending = document.getElementById('co-step-pending');
-    const stepTicket = document.getElementById('co-step-ticket');
-    const modalCo = document.getElementById('modal-checkout');
-    const orderForm = document.getElementById('orderForm');
-
-    if (stepForm) stepForm.classList.remove('hidden');
-    if (stepTransfer) stepTransfer.classList.add('hidden');
-    if (stepPending) stepPending.classList.add('hidden');
-    if (stepTicket) stepTicket.classList.add('hidden');
-    if (orderForm) orderForm.reset();
-    if (modalCo) modalCo.classList.remove('hidden');
+    document.getElementById('co-step-form').classList.remove('hidden');
+    document.getElementById('co-step-transfer').classList.add('hidden');
+    document.getElementById('co-step-pending').classList.add('hidden');
+    document.getElementById('co-step-ticket').classList.add('hidden');
+    document.getElementById('orderForm').reset();
+    document.getElementById('modal-checkout').classList.remove('hidden');
   }
 
   function updateCheckoutTotal() {
-    const qtyEl = document.getElementById('cust-qty');
-    const qty = parseInt(qtyEl ? qtyEl.value : 1) || 1;
+    const qty = parseInt(document.getElementById('cust-qty').value) || 1;
     const total = activePlan.unitPrice * qty;
-
-    const coPrice = document.getElementById('co-ticket-price');
-    const trAmount = document.getElementById('transfer-amount');
-    if (coPrice) coPrice.textContent = `$${total.toLocaleString('es-AR')} ARS`;
-    if (trAmount) trAmount.textContent = `$${total.toLocaleString('es-AR')} ARS`;
+    document.getElementById('co-ticket-price').textContent = `$${total.toLocaleString('es-AR')} ARS`;
+    document.getElementById('transfer-amount').textContent = `$${total.toLocaleString('es-AR')} ARS`;
   }
 
   function closeCheckout() {
-    const modal = document.getElementById('modal-checkout');
-    if (modal) modal.classList.add('hidden');
+    document.getElementById('modal-checkout').classList.add('hidden');
     activeCreatedOrders = [];
   }
 
@@ -199,15 +187,20 @@
     e.preventDefault();
 
     const name = document.getElementById('cust-name').value.trim();
-    const dni = document.getElementById('cust-dni').value.trim();
+    const dni = cleanDni(document.getElementById('cust-dni').value);
     const phone = document.getElementById('cust-phone').value.trim();
     const email = document.getElementById('cust-email').value.trim();
     const qty = parseInt(document.getElementById('cust-qty').value) || 1;
 
+    if (!dni) {
+      alert("Por favor ingresá un número de DNI válido.");
+      return;
+    }
+
     if (activePlan.name.includes('VIP')) {
       const vipCount = cloudOrders.filter(o => o.ticketType && o.ticketType.includes('VIP') && o.status !== 'rejected').length;
       if (vipCount + qty > CONFIG.maxVipStock) {
-        alert(`Lo sentimos, solo quedan ${CONFIG.maxVipStock - vipCount} cupos VIP disponibles.`);
+        alert(`Solo quedan ${CONFIG.maxVipStock - vipCount} cupos VIP.`);
         return;
       }
     }
@@ -222,7 +215,7 @@
         ticket_index: (i + 1),
         ticket_total: qty,
         ticket_id: ticketId,
-        name: qty > 1 ? `${name} [${i+1}/${qty}]` : name,
+        name: qty > 1 ? `${name} [${i + 1}/${qty}]` : name,
         buyer_name: name,
         dni: dni,
         phone: phone,
@@ -235,8 +228,6 @@
     }
 
     try {
-      if (!client) throw new Error("La base de datos no está disponible.");
-
       const { data, error } = await client.from('orders').insert(rowsToInsert).select();
       if (error) throw error;
 
@@ -246,7 +237,7 @@
         ticketId: o.ticket_id,
         name: o.name,
         buyerName: o.buyer_name,
-        dni: o.dni,
+        dni: cleanDni(o.dni),
         amount: Number(o.amount),
         ticketType: o.ticket_type
       }));
@@ -255,13 +246,12 @@
       document.getElementById('transfer-order-code').textContent = sharedOrderId;
       document.getElementById('co-step-transfer').classList.remove('hidden');
     } catch (err) {
-      alert("Error al registrar en la base de datos: " + err.message);
+      alert("Error al guardar la orden: " + err.message);
     }
   }
 
   function copyAlias() {
-    const el = document.getElementById('transfer-alias');
-    const alias = el ? el.textContent : 'HAVANNA.HALLOWEEN';
+    const alias = document.getElementById('transfer-alias').textContent;
     navigator.clipboard.writeText(alias).then(() => alert('Alias copiado: ' + alias));
   }
 
@@ -286,10 +276,8 @@
   function showPendingScreen() {
     if (activeCreatedOrders.length === 0) return;
     const o = activeCreatedOrders[0];
-
     document.getElementById('co-step-transfer').classList.add('hidden');
     document.getElementById('co-step-pending').classList.remove('hidden');
-
     document.getElementById('pend-code').textContent = `${o.orderId} (${activeCreatedOrders.length} tickets)`;
     document.getElementById('pend-name').textContent = o.buyerName || o.name;
     document.getElementById('pend-dni').textContent = o.dni;
@@ -310,7 +298,7 @@
   }
 
   // ==========================================
-  // RENDERIZADO DE TICKETS
+  // RENDERIZADO Y DESCARGA DE TICKETS
   // ==========================================
   function renderMultipleTicketsUI(ordersList) {
     document.getElementById('co-step-ticket').classList.remove('hidden');
@@ -323,15 +311,19 @@
     }
 
     if (ordersList.length > 1) {
-      const groupNotice = document.createElement('div');
-      groupNotice.style.cssText = "font-family:var(--font-mono); font-size:0.75rem; color:#34d399; margin-bottom:1rem; text-align:center;";
-      groupNotice.innerHTML = `✓ Se encontraron <strong>${ordersList.length} entradas</strong> asociadas. Mostrando todos los tickets con sus QR individuales:`;
-      box.appendChild(groupNotice);
+      const notice = document.createElement('div');
+      notice.style.cssText = "font-family:var(--font-mono); font-size:0.75rem; color:#34d399; margin-bottom:1rem; text-align:center;";
+      notice.innerHTML = `✓ Se encontraron <strong>${ordersList.length} entradas</strong> asociadas:`;
+      box.appendChild(notice);
     }
 
     ordersList.forEach(order => {
       const isVip = order.ticketType && order.ticketType.includes('VIP');
+      const cardWrapper = document.createElement('div');
+      cardWrapper.style.marginBottom = "1.5rem";
+
       const card = document.createElement('div');
+      card.id = `ticket-card-${order.ticketId}`;
       card.className = `one-wish-ticket ${isVip ? 'ticket-vip-style' : ''}`;
       card.innerHTML = `
         <div class="ticket-main-body">
@@ -348,11 +340,7 @@
             <div class="ow-field"><span>FECHA:</span><strong>31 OCT // 23:59 HS</strong></div>
           </div>
 
-          ${isVip ? `
-            <div class="ow-vip-seal">
-              ★ INCLUYE 1 CONSUMICIÓN GIN TONIC DE CORTESÍA ★
-            </div>
-          ` : ''}
+          ${isVip ? `<div class="ow-vip-seal">★ INCLUYE 1 CONSUMICIÓN GIN TONIC ★</div>` : ''}
         </div>
 
         <div class="ticket-stub">
@@ -363,18 +351,25 @@
         </div>
       `;
 
-      box.appendChild(card);
+      const btnDownload = document.createElement('button');
+      btnDownload.className = 'btn-download-ticket';
+      btnDownload.innerHTML = `💾 Descargar este Ticket (${order.ticketId})`;
+      btnDownload.onclick = () => downloadTicketAsImage(order.ticketId, order.name);
+
+      cardWrapper.appendChild(card);
+      cardWrapper.appendChild(btnDownload);
+      box.appendChild(cardWrapper);
 
       setTimeout(() => {
         const qrEl = document.getElementById(`ticket-qr-${order.ticketId}`);
         if (qrEl && typeof QRCode !== 'undefined') {
           new QRCode(qrEl, {
-            text: JSON.stringify({ 
-              e: 'HAVANNA_OBSESSION', 
-              t: order.ticketId, 
-              d: order.dni, 
+            text: JSON.stringify({
+              e: 'HAVANNA_OBSESSION',
+              t: order.ticketId,
+              d: order.dni,
               n: order.name,
-              v: isVip 
+              v: isVip
             }),
             width: 100,
             height: 100,
@@ -387,8 +382,22 @@
     });
   }
 
+  function downloadTicketAsImage(ticketId, holderName) {
+    const el = document.getElementById(`ticket-card-${ticketId}`);
+    if (!el || typeof html2canvas === 'undefined') {
+      alert("Preparando ticket para descarga...");
+      return;
+    }
+    html2canvas(el, { backgroundColor: '#090a0f', scale: 2 }).then(canvas => {
+      const link = document.createElement('a');
+      link.download = `Ticket-Havanna-${ticketId}-${holderName.replace(/\s+/g, '_')}.png`;
+      link.href = canvas.toDataURL('image/png');
+      link.click();
+    });
+  }
+
   // ==========================================
-  // CONSULTA POR DNI
+  // CONSULTA POR DNI (DIRECTA Y ROBUSTA)
   // ==========================================
   function openLookupModal() {
     document.getElementById('modal-lookup').classList.remove('hidden');
@@ -400,34 +409,40 @@
     document.getElementById('modal-lookup').classList.add('hidden');
   }
 
-  function executeLookup() {
-    const query = document.getElementById('lookup-dni-input').value.trim().toLowerCase();
+  async function executeLookup() {
+    const rawVal = document.getElementById('lookup-dni-input').value.trim();
+    const cleanNum = cleanDni(rawVal);
     const out = document.getElementById('lookup-response');
     out.classList.remove('hidden');
 
-    if (!query) {
+    if (!rawVal) {
       out.innerHTML = '<span style="color:#ef4444">Por favor ingresá tu DNI o Código de Orden.</span>';
       return;
     }
 
-    const matchedOrders = cloudOrders.filter(o => 
-      (o.dni && o.dni === query) || 
-      (o.orderId && o.orderId.toLowerCase() === query) ||
-      (o.ticketId && o.ticketId.toLowerCase() === query)
+    out.innerHTML = '<span style="color:#8e8e99">Buscando entradas en el sistema...</span>';
+
+    // Aseguramos sincronización fresca desde Supabase
+    await fetchOrders();
+
+    const matchedOrders = cloudOrders.filter(o =>
+      (cleanNum && o.dni === cleanNum) ||
+      (o.orderId && o.orderId.toLowerCase() === rawVal.toLowerCase()) ||
+      (o.ticketId && o.ticketId.toLowerCase() === rawVal.toLowerCase())
     );
 
     if (matchedOrders.length === 0) {
-      out.innerHTML = '<span style="color:#8e8e99">No se encontraron tickets registrados con ese documento u orden.</span>';
+      out.innerHTML = `<span style="color:#8e8e99">No se encontraron tickets para el DNI/Orden <strong>${rawVal}</strong>. Verificá que esté escrito correctamente.</span>`;
       return;
     }
 
     const approved = matchedOrders.filter(o => o.status === 'approved');
 
-    let html = `<div style="font-size:0.8rem; margin-bottom:0.6rem; color:#aaa">Entradas encontradas para DNI <strong>${query}</strong>: <strong>${matchedOrders.length}</strong></div>`;
+    let html = `<div style="font-size:0.8rem; margin-bottom:0.8rem; color:#aaa">Entradas registradas para este documento: <strong>${matchedOrders.length}</strong></div>`;
 
     if (approved.length > 0) {
-      html += `<button onclick="window.openAllApprovedFromLookup('${query}')" class="btn-primary full-width" style="margin-bottom:1rem; padding:0.6rem; font-size:0.8rem">
-        DESPLEGAR TODOS MIS TICKETS HABILITADOS (${approved.length})
+      html += `<button onclick="window.openAllApprovedFromLookup('${cleanNum || rawVal}')" class="btn-primary full-width" style="margin-bottom:1rem; padding:0.7rem; font-size:0.8rem">
+        DESPLEGAR TODAS MIS ENTRADAS HABILITADAS (${approved.length})
       </button>`;
     }
 
@@ -435,21 +450,20 @@
     matchedOrders.forEach((o) => {
       const isApproved = o.status === 'approved';
       const isUsed = o.used;
-      const statusClass = isUsed ? 'used' : (isApproved ? 'approved' : 'pending');
-      const statusLabel = isUsed ? 'INGRESÓ' : (isApproved ? 'HABILITADA' : 'PENDIENTE');
+      const statusLabel = isUsed ? 'INGRESÓ' : (isApproved ? 'HABILITADA' : 'EN REVISIÓN');
       const statusColor = isUsed ? '#9ca3af' : (isApproved ? '#34d399' : '#fbbf24');
 
       html += `
-        <div class="lookup-ticket-card ${statusClass}">
+        <div class="lookup-ticket-card" style="display:flex; justify-content:space-between; align-items:center; padding:12px; margin-bottom:8px; background:rgba(255,255,255,0.03); border:1px solid rgba(255,255,255,0.08); border-radius:8px;">
           <div>
-            <strong style="color:#fff; display:block; font-size:0.85rem">${o.ticketType}</strong>
+            <strong style="color:#fff; display:block; font-size:0.88rem">${o.ticketType}</strong>
             <small style="color:#8e8e99">${o.name} • ${o.ticketId}</small>
           </div>
           <div style="text-align:right">
-            <span style="color:${statusColor}; font-weight:700; font-size:0.7rem; display:block">${statusLabel}</span>
+            <span style="color:${statusColor}; font-weight:700; font-size:0.72rem; display:block; margin-bottom:4px">${statusLabel}</span>
             ${isApproved ? `
-              <button onclick="window.openSingleTicketFromLookup('${o.ticketId}')" style="background:transparent; border:none; color:var(--red-crimson); font-size:0.7rem; cursor:pointer; text-decoration:underline">
-                Ver este QR
+              <button onclick="window.openSingleTicketFromLookup('${o.ticketId}')" class="btn-view-qr">
+                Ver Ticket QR ➔
               </button>
             ` : ''}
           </div>
@@ -461,11 +475,11 @@
     out.innerHTML = html;
   }
 
-  function openAllApprovedFromLookup(dniOrOrder) {
+  function openAllApprovedFromLookup(query) {
     closeLookupModal();
-    const approved = cloudOrders.filter(o => 
-      o.status === 'approved' && 
-      ((o.dni && o.dni === dniOrOrder) || (o.orderId && o.orderId.toLowerCase() === dniOrOrder))
+    const approved = cloudOrders.filter(o =>
+      o.status === 'approved' &&
+      (o.dni === query || (o.orderId && o.orderId.toLowerCase() === query.toLowerCase()))
     );
     if (approved.length === 0) return;
 
@@ -488,12 +502,8 @@
     renderMultipleTicketsUI([order]);
   }
 
-  function toggleMapModal() {
-    document.getElementById('modal-map').classList.toggle('hidden');
-  }
-
   // ==========================================
-  // PANEL STAFF (ACCESOS SECRETOS)
+  // PANEL STAFF Y EXPORTACIÓN PDF
   // ==========================================
   window.addEventListener('keydown', (e) => {
     if (e.ctrlKey && e.shiftKey && e.code === 'KeyS') {
@@ -623,6 +633,7 @@
     try {
       const { error } = await client.from('orders').update({ status: 'approved' }).eq('id', id);
       if (error) throw error;
+      await fetchOrders();
     } catch (err) {
       alert("Error al aprobar: " + err.message);
     }
@@ -633,6 +644,7 @@
     try {
       const { error } = await client.from('orders').update({ status: 'rejected' }).eq('id', id);
       if (error) throw error;
+      await fetchOrders();
     } catch (err) {
       alert("Error al rechazar: " + err.message);
     }
@@ -660,10 +672,10 @@
           <span style="color:#8e8e99; font-size:0.75rem">DNI: ${order.dni} • ${order.ticketId}</span>
         </div>
         <div>
-          ${order.used ? 
-            '<span class="badge-used">INGRESÓ</span>' : 
-            `<button onclick="window.manualCheckIn('${order.firestoreId}')" class="btn-approve" style="font-size:0.7rem">Marcar Ingreso</button>`
-          }
+          ${order.used ?
+          '<span class="badge-used">INGRESÓ</span>' :
+          `<button onclick="window.manualCheckIn('${order.firestoreId}')" class="btn-approve" style="font-size:0.7rem">Marcar Ingreso</button>`
+        }
         </div>
       `;
       list.appendChild(row);
@@ -687,11 +699,12 @@
       if (parsed.t) query = parsed.t;
       else if (parsed.ticketId) query = parsed.ticketId;
       else if (parsed.d) query = parsed.d;
-    } catch(e) {}
+    } catch (e) { }
 
-    const order = cloudOrders.find(o => 
-      o.status === 'approved' && 
-      (o.ticketId.toLowerCase() === query.toLowerCase() || o.dni === query || (o.orderId && o.orderId.toLowerCase() === query.toLowerCase()))
+    const cleanQ = cleanDni(query);
+    const order = cloudOrders.find(o =>
+      o.status === 'approved' &&
+      (o.ticketId.toLowerCase() === query.toLowerCase() || (cleanQ && o.dni === cleanQ) || (o.orderId && o.orderId.toLowerCase() === query.toLowerCase()))
     );
 
     if (!order) {
@@ -719,6 +732,7 @@
         msg.innerHTML = `✓ INGRESO PERMITIDO: ${order.name} [PISTA GENERAL]`;
       }
       document.getElementById('door-input').value = '';
+      await fetchOrders();
     } catch (err) {
       alert("Error al validar: " + err.message);
     }
@@ -728,12 +742,85 @@
     try {
       const { error } = await client.from('orders').update({ used: true }).eq('id', id);
       if (error) throw error;
+      await fetchOrders();
     } catch (err) {
       alert("Error al marcar ingreso: " + err.message);
     }
   }
 
-  // Exponer al scope global solo las funciones que llaman los botones onclick del HTML
+  // EXPORTADOR OFICIAL A PDF (PLANILLA A4)
+  function exportDoorListPDF() {
+    if (typeof window.jspdf === 'undefined') {
+      alert("Cargando motor de PDF, aguarde un momento...");
+      return;
+    }
+
+    const approved = cloudOrders
+      .filter(o => o.status === 'approved')
+      .sort((a, b) => a.name.localeCompare(b.name));
+
+    if (approved.length === 0) {
+      alert("No hay tickets aprobados para exportar.");
+      return;
+    }
+
+    const { jsPDF } = window.jspdf;
+    const doc = new jsPDF('p', 'mm', 'a4');
+
+    doc.setFont("helvetica", "bold");
+    doc.setFontSize(14);
+    doc.text("HAVANNA CLUB // HALLOWEEN OBSESSION 2026", 14, 15);
+    doc.setFontSize(10);
+    doc.setFont("helvetica", "normal");
+    doc.text(`PLANILLA OFICIAL DE CONTROL EN PUERTA - TOTAL: ${approved.length} ASISTENTES`, 14, 21);
+    doc.text(`Fecha de emisión: ${new Date().toLocaleString('es-AR')}`, 14, 26);
+    doc.line(14, 28, 196, 28);
+
+    doc.setFont("helvetica", "bold");
+    doc.setFontSize(8);
+    let y = 34;
+    doc.text("N°", 14, y);
+    doc.text("TITULAR", 22, y);
+    doc.text("DNI", 85, y);
+    doc.text("TICKET ID", 115, y);
+    doc.text("SECTOR", 145, y);
+    doc.text("CHECK", 185, y);
+    doc.line(14, y + 2, 196, y + 2);
+
+    y += 7;
+    doc.setFont("helvetica", "normal");
+
+    approved.forEach((o, index) => {
+      if (y > 280) {
+        doc.addPage();
+        y = 15;
+        doc.setFont("helvetica", "bold");
+        doc.text("N°", 14, y);
+        doc.text("TITULAR", 22, y);
+        doc.text("DNI", 85, y);
+        doc.text("TICKET ID", 115, y);
+        doc.text("SECTOR", 145, y);
+        doc.text("CHECK", 185, y);
+        doc.line(14, y + 2, 196, y + 2);
+        y += 7;
+        doc.setFont("helvetica", "normal");
+      }
+
+      const isVip = o.ticketType && o.ticketType.includes('VIP');
+      doc.text(String(index + 1), 14, y);
+      doc.text(o.name.substring(0, 30), 22, y);
+      doc.text(o.dni, 85, y);
+      doc.text(o.ticketId, 115, y);
+      doc.text(isVip ? "VIP + GIN" : "GENERAL", 145, y);
+      doc.rect(185, y - 3.5, 4, 4); // Casilla para marcar con lapicera
+
+      y += 6;
+    });
+
+    doc.save(`Lista_Puerta_Havanna_Halloween_${new Date().toISOString().slice(0, 10)}.pdf`);
+  }
+
+  // EXPOSICIÓN GLOBAL
   window.openCheckout = openCheckout;
   window.closeCheckout = closeCheckout;
   window.updateCheckoutTotal = updateCheckoutTotal;
@@ -746,7 +833,7 @@
   window.executeLookup = executeLookup;
   window.openAllApprovedFromLookup = openAllApprovedFromLookup;
   window.openSingleTicketFromLookup = openSingleTicketFromLookup;
-  window.toggleMapModal = toggleMapModal;
+  window.toggleMapModal = () => document.getElementById('modal-map').classList.toggle('hidden');
   window.openAdminModal = openAdminModal;
   window.closeAdminLoginModal = closeAdminLoginModal;
   window.authenticateAdmin = authenticateAdmin;
@@ -756,8 +843,8 @@
   window.rejectOrder = rejectOrder;
   window.validateDoorCheckIn = validateDoorCheckIn;
   window.manualCheckIn = manualCheckIn;
+  window.exportDoorListPDF = exportDoorListPDF;
 
-  // Arrancar aplicación
   function start() {
     initCountdown();
     initRealtime();
