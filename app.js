@@ -2,7 +2,7 @@
   'use strict';
 
   // ==========================================
-  // CONFIGURACIÓN GENERAL & SUPABASE
+  // CONFIGURACION GENERAL & SUPABASE
   // ==========================================
   const SUPABASE_URL = 'https://anubyojemmaybrcmzqdo.supabase.co';
   const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFudWJ5b2plbW1heWJyY216cWRvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTA1OTg3NjUsImV4cCI6MjEwNjE3NDc2NX0.JH3fXRo8esF9s9G7sXNQr2L_5JPg2ppYrbOx26MDS-E';
@@ -14,7 +14,7 @@
 
   const CONFIG = {
     adminPin: '2026',
-    whatsappPhone: '5493794000000', // Modificá acá tu número de atención
+    whatsappPhone: '5493794000000',
     maxVipStock: 50,
     spotifyUrl: 'https://open.spotify.com',
     wspGroupUrl: 'https://chat.whatsapp.com',
@@ -28,7 +28,7 @@
   }
 
   // ==========================================
-  // SISTEMA DE AUDIO (BEEPS DE PUERTA)
+  // FEEDBACK DE AUDIO EN PUERTA (SIN EMOJIS)
   // ==========================================
   function playAudioTone(type) {
     try {
@@ -39,29 +39,27 @@
       gain.connect(audioCtx.destination);
 
       if (type === 'success') {
-        osc.frequency.setValueAtTime(880, audioCtx.currentTime); // La5 (A5)
+        osc.frequency.setValueAtTime(880, audioCtx.currentTime);
         gain.gain.setValueAtTime(0.2, audioCtx.currentTime);
-        gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.25);
+        gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.2);
         osc.start();
-        osc.stop(audioCtx.currentTime + 0.25);
+        osc.stop(audioCtx.currentTime + 0.2);
       } else if (type === 'vip') {
-        osc.frequency.setValueAtTime(587.33, audioCtx.currentTime); // D5
-        osc.frequency.setValueAtTime(880, audioCtx.currentTime + 0.12); // A5
+        osc.frequency.setValueAtTime(600, audioCtx.currentTime);
+        osc.frequency.setValueAtTime(900, audioCtx.currentTime + 0.1);
+        gain.gain.setValueAtTime(0.25, audioCtx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.35);
+        osc.start();
+        osc.stop(audioCtx.currentTime + 0.35);
+      } else {
+        osc.type = 'sawtooth';
+        osc.frequency.setValueAtTime(140, audioCtx.currentTime);
         gain.gain.setValueAtTime(0.25, audioCtx.currentTime);
         gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.4);
         osc.start();
         osc.stop(audioCtx.currentTime + 0.4);
-      } else {
-        osc.type = 'sawtooth';
-        osc.frequency.setValueAtTime(150, audioCtx.currentTime);
-        gain.gain.setValueAtTime(0.3, audioCtx.currentTime);
-        gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.45);
-        osc.start();
-        osc.stop(audioCtx.currentTime + 0.45);
       }
-    } catch (e) {
-      // Ignora si el navegador bloquea audio antes de interacción
-    }
+    } catch (e) { }
   }
 
   // ==========================================
@@ -87,7 +85,7 @@
   }
 
   // ==========================================
-  // SINCRONIZACIÓN Y TIEMPO REAL
+  // SINCRONIZACION SUPABASE
   // ==========================================
   async function fetchOrders() {
     if (!client) return;
@@ -136,7 +134,7 @@
         }
       }
     } catch (err) {
-      console.error("Error Supabase:", err);
+      console.error("Error sincronizacion Supabase:", err);
     }
   }
 
@@ -181,7 +179,7 @@
   }
 
   // ==========================================
-  // CHECKOUT MULTI-CANTIDAD
+  // CHECKOUT
   // ==========================================
   let activePlan = { name: '', unitPrice: 0 };
   let activeCreatedOrders = [];
@@ -238,32 +236,32 @@
     const qty = parseInt(document.getElementById('cust-qty').value) || 1;
 
     if (!dni || dni.length < 7 || dni.length > 9) {
-      alert("Por favor ingresá un número de DNI válido (entre 7 y 9 dígitos).");
+      alert("Ingrese un numero de DNI valido (entre 7 y 9 digitos).");
       return;
     }
 
     const pendingOrders = cloudOrders.filter(o => o.dni === dni && o.status === 'pending');
     if (pendingOrders.length >= 2) {
-      alert("Ya registrás compras pendientes de validación para este DNI. Por favor enviá tu comprobante por WhatsApp o aguardá a que el staff la apruebe.");
+      alert("Ya registra ordenes pendientes para este DNI. Aguarde la validacion o envie su comprobante por WhatsApp.");
       return;
     }
 
     if (qty > 4 || qty < 1) {
-      alert("El límite máximo permitido es de 4 entradas por compra.");
+      alert("Limite maximo: 4 entradas por transaccion.");
       return;
     }
 
     if (activePlan.name.includes('VIP')) {
       const vipApprovedCount = cloudOrders.filter(o => o.ticketType && o.ticketType.includes('VIP') && o.status === 'approved').length;
       if (vipApprovedCount + qty > CONFIG.maxVipStock) {
-        alert(`Solo quedan ${CONFIG.maxVipStock - vipApprovedCount} cupos VIP disponibles.`);
+        alert(`Cupos VIP insuficientes. Restantes: ${CONFIG.maxVipStock - vipApprovedCount}.`);
         return;
       }
     }
 
     if (btnSubmit) {
       btnSubmit.disabled = true;
-      btnSubmit.textContent = "GENERANDO ORDEN...";
+      btnSubmit.textContent = "GENERANDO REGISTRO...";
     }
 
     const sharedOrderId = 'ORD-' + Math.floor(1000 + Math.random() * 9000);
@@ -307,7 +305,7 @@
       document.getElementById('transfer-order-code').textContent = sharedOrderId;
       document.getElementById('co-step-transfer').classList.remove('hidden');
     } catch (err) {
-      alert("Error al registrar la orden: " + err.message);
+      alert("Error en el registro: " + err.message);
     } finally {
       if (btnSubmit) {
         btnSubmit.disabled = false;
@@ -327,13 +325,13 @@
     const qty = activeCreatedOrders.length;
     const total = o.amount * qty;
 
-    const text = `Hola Alejo! Realicé la transferencia para HAVANNA CLUB // HALLOWEEN OBSESSION 2026.%0A%0A` +
+    const text = `Hola Alejo. Realice la transferencia para HAVANNA CLUB // HALLOWEEN OBSESSION 2026.%0A%0A` +
       `• Orden: ${o.orderId} (${qty} ticket${qty > 1 ? 's' : ''})%0A` +
       `• Titular: ${o.buyerName || o.name}%0A` +
       `• DNI: ${o.dni}%0A` +
       `• Sector: ${o.ticketType}%0A` +
-      `• Total: $${total.toLocaleString('es-AR')} ARS%0A%0A` +
-      `Adjunto el comprobante bancario para validar los tickets. Muchas gracias!`;
+      `• Monto: $${total.toLocaleString('es-AR')} ARS%0A%0A` +
+      `Adjunto comprobante para validacion en sistema.`;
 
     window.open(`https://wa.me/${CONFIG.whatsappPhone}?text=${text}`, '_blank');
     showPendingScreen();
@@ -359,22 +357,18 @@
       document.getElementById('co-step-pending').classList.add('hidden');
       renderMultipleTicketsUI(approved);
     } else {
-      alert('Tus comprobantes siguen en proceso de verificación por el Staff de Havanna Club.');
+      alert('La orden sigue en revision.');
     }
   }
 
   // ==========================================
-  // RENDERIZADO DE TICKETS (ESTILO VINTAGE OBSESSION)
+  // RENDER TICKETS (ESTILO EDITORIAL VINTAGE)
   // ==========================================
   function renderMultipleTicketsUI(ordersList) {
     document.getElementById('co-step-ticket').classList.remove('hidden');
     const box = document.getElementById('ticket-render-box');
     if (!box) return;
     box.innerHTML = '';
-
-    if (typeof confetti === 'function') {
-      confetti({ particleCount: 120, spread: 70, origin: { y: 0.6 } });
-    }
 
     ordersList.forEach(order => {
       const isVip = order.ticketType && order.ticketType.includes('VIP');
@@ -385,19 +379,18 @@
       card.id = `ticket-card-${order.ticketId}`;
       card.className = `retro-obsession-ticket ${isVip ? 'theme-vip-yellow' : 'theme-general-red'}`;
       card.innerHTML = `
-        <!-- MARCA DE AGUA DE SEGURIDAD ESTAMPADA -->
         <div class="ticket-watermark">HAVANNA OFFICIAL // OBSESSION 2026 // NO DUPLICAR</div>
 
         <div class="retro-ticket-body">
           <div class="retro-banner-head">
-            <span class="retro-sub">HAVANNA CLUB • ITÁ IBATÉ</span>
-            <h2 class="retro-title">${isVip ? 'VIP OBSESSION' : 'ONE WISH OBSESSION'}</h2>
-            <div class="retro-motto">YOU ONLY GET ONE ENTRY • STRICT ID CHECK</div>
+            <span class="retro-sub">SPARK THE MIDDLE AND BREAK IT IN HALF!</span>
+            <h2 class="retro-title">${isVip ? 'VIP OBSESSION' : 'ONE WISH WILLOW'}</h2>
+            <div class="retro-motto">HAVANNA CLUB • ITÁ IBATÉ // HALLOWEEN 2026</div>
           </div>
 
           <div class="retro-fields-grid">
             <div class="field-box">
-              <label>TITULAR REGISTRADO</label>
+              <label>TITULAR</label>
               <div class="val-text">${order.name}</div>
             </div>
             <div class="field-box">
@@ -405,7 +398,7 @@
               <div class="val-text">${order.dni}</div>
             </div>
             <div class="field-box">
-              <label>SECTOR ADQUIRIDO</label>
+              <label>SECTOR</label>
               <div class="val-text">${order.ticketType.toUpperCase()}</div>
             </div>
             <div class="field-box">
@@ -415,7 +408,7 @@
           </div>
 
           <div class="retro-bottom-badge">
-            ${isVip ? '★ INCLUYE 1 CONSUMICIÓN GIN TONIC EN BALCÓN ★' : '• ACCESO PISTA GENERAL • SIN GUARDARROPAS •'}
+            ${isVip ? '★ INCLUYE 1 CONSUMICIÓN GIN TONIC EN BALCÓN ★' : 'AMAZE YOUR FRIENDS! • YOU ONLY GET ONE WISH'}
           </div>
         </div>
 
@@ -438,16 +431,16 @@
       const btnDownload = document.createElement('button');
       btnDownload.className = 'btn-download-ticket';
       btnDownload.style.flex = '1';
-      btnDownload.innerHTML = `💾 Descargar Ticket (${order.ticketId})`;
+      btnDownload.innerHTML = `Descargar Ticket (${order.ticketId})`;
       btnDownload.onclick = () => downloadTicketAsImage(order.ticketId, order.name);
 
       const btnShare = document.createElement('button');
       btnShare.className = 'btn-download-ticket';
       btnShare.style.flex = '1';
-      btnShare.style.background = '#25D366';
-      btnShare.innerHTML = `📲 Compartir Datos`;
+      btnShare.style.background = '#15803d';
+      btnShare.innerHTML = `Compartir Datos`;
       btnShare.onclick = () => {
-        const shareMsg = `Hola! Acá tenés la entrada para Havanna Club Halloween 2026 a nombre de ${order.name} (DNI ${order.dni}). Podés consultarla y ver el QR oficial ingresando tu DNI en https://alejolegal.com/`;
+        const shareMsg = `Entrada oficial Havanna Club Halloween 2026 para ${order.name} (DNI ${order.dni}). Acceso con DNI en https://alejolegal.com/`;
         window.open(`https://wa.me/?text=${encodeURIComponent(shareMsg)}`, '_blank');
       };
 
@@ -475,14 +468,14 @@
             correctLevel: QRCode.CorrectLevel.M
           });
         }
-      }, 70);
+      }, 60);
     });
   }
 
   function downloadTicketAsImage(ticketId, holderName) {
     const el = document.getElementById(`ticket-card-${ticketId}`);
     if (!el || typeof html2canvas === 'undefined') {
-      alert("Preparando ticket para descarga...");
+      alert("Procesando ticket...");
       return;
     }
     html2canvas(el, { backgroundColor: '#090a0f', scale: 2 }).then(canvas => {
@@ -494,7 +487,7 @@
   }
 
   // ==========================================
-  // CONSULTA POR DNI
+  // CONSULTA DNI CLIENTE
   // ==========================================
   function openLookupModal() {
     document.getElementById('modal-lookup').classList.remove('hidden');
@@ -513,11 +506,11 @@
     out.classList.remove('hidden');
 
     if (!rawVal) {
-      out.innerHTML = '<span style="color:#ef4444">Por favor ingresá tu DNI o Código de Orden.</span>';
+      out.innerHTML = '<span style="color:#ef4444">Ingrese su DNI o Referencia de Orden.</span>';
       return;
     }
 
-    out.innerHTML = '<span style="color:#8e8e99">Buscando entradas registradas...</span>';
+    out.innerHTML = '<span style="color:#8e8e99">Buscando registros...</span>';
     await fetchOrders();
 
     const matchedOrders = cloudOrders.filter(o =>
@@ -527,7 +520,7 @@
     );
 
     if (matchedOrders.length === 0) {
-      out.innerHTML = `<span style="color:#8e8e99">No se encontraron tickets para <strong>${rawVal}</strong>. Verificá que esté escrito correctamente.</span>`;
+      out.innerHTML = `<span style="color:#8e8e99">No se registran tickets bajo <strong>${rawVal}</strong>.</span>`;
       return;
     }
 
@@ -537,7 +530,7 @@
 
     if (approved.length > 0) {
       html += `<button onclick="window.openAllApprovedFromLookup('${cleanNum || rawVal}')" class="btn-primary full-width" style="margin-bottom:1rem; padding:0.7rem; font-size:0.8rem">
-        DESPLEGAR TODAS MIS ENTRADAS HABILITADAS (${approved.length})
+        DESPLEGAR TODAS LAS ENTRADAS HABILITADAS (${approved.length})
       </button>`;
     }
 
@@ -545,7 +538,7 @@
     matchedOrders.forEach((o) => {
       const isApproved = o.status === 'approved';
       const isUsed = o.used;
-      const statusLabel = isUsed ? 'INGRESÓ' : (isApproved ? 'HABILITADA' : 'EN REVISIÓN');
+      const statusLabel = isUsed ? 'INGRESADO' : (isApproved ? 'HABILITADO' : 'EN REVISION');
       const statusColor = isUsed ? '#9ca3af' : (isApproved ? '#34d399' : '#fbbf24');
 
       html += `
@@ -558,7 +551,7 @@
             <span style="color:${statusColor}; font-weight:700; font-size:0.72rem; display:block; margin-bottom:4px">${statusLabel}</span>
             ${isApproved ? `
               <button onclick="window.openSingleTicketFromLookup('${o.ticketId}')" class="btn-view-qr">
-                Ver Ticket QR ➔
+                Ver QR //➔
               </button>
             ` : ''}
           </div>
@@ -597,7 +590,7 @@
   }
 
   // ==========================================
-  // PANEL STAFF Y VALIDACIONES
+  // PANEL STAFF
   // ==========================================
   window.addEventListener('keydown', (e) => {
     if (e.ctrlKey && e.shiftKey && e.code === 'KeyS') {
@@ -606,7 +599,6 @@
     }
   });
 
-  // Disparador secreto para Staff: 3 toques rápidos sobre "GEN V" en el footer
   let staffTapCount = 0;
   let staffTapTimer = null;
   const staffTrigger = document.getElementById('secret-admin-trigger');
@@ -623,7 +615,7 @@
       } else {
         staffTapTimer = setTimeout(() => {
           staffTapCount = 0;
-        }, 900); // 900ms de ventana para completar los 3 toques
+        }, 900);
       }
     });
   }
@@ -652,7 +644,7 @@
       renderApprovalsList();
       updateMetrics();
     } else {
-      alert('PIN incorrecto.');
+      alert('PIN invalido.');
     }
   }
 
@@ -709,7 +701,7 @@
     const pendings = cloudOrders.filter(o => o.status === 'pending');
 
     if (pendings.length === 0) {
-      list.innerHTML = '<div style="text-align:center; padding:3rem; color:#8e8e99; font-size:0.8rem">No hay pagos pendientes de revisión.</div>';
+      list.innerHTML = '<div style="text-align:center; padding:3rem; color:#8e8e99; font-size:0.8rem">No hay ordenes pendientes de revision.</div>';
       return;
     }
 
@@ -721,7 +713,7 @@
         <div>
           <div>
             <strong style="color:#fff">${order.orderId}</strong> — 
-            <span style="color:${isVip ? 'var(--gold-vip)' : '#fff'}">${order.ticketType}</span> — 
+            <span style="color:${isVip ? '#eab308' : '#fff'}">${order.ticketType}</span> — 
             <strong style="color:#34d399">$${(order.amount || 0).toLocaleString('es-AR')}</strong>
           </div>
           <div style="color:#8e8e99; font-size:0.75rem; margin-top:3px">
@@ -729,8 +721,8 @@
           </div>
         </div>
         <div style="display:flex; gap:6px; flex-wrap:wrap;">
-          <button onclick="window.approveOrderAndNotify('${order.firestoreId}', '${order.phone}', '${order.name}')" class="btn-approve" title="Aprobar y notificar">✓ Aprobar & WS</button>
-          <button onclick="window.rejectOrder('${order.firestoreId}')" class="btn-reject">Rechazar</button>
+          <button onclick="window.approveOrderAndNotify('${order.firestoreId}', '${order.phone}', '${order.name}')" class="btn-approve" title="Aprobar">[OK] Aprobar</button>
+          <button onclick="window.rejectOrder('${order.firestoreId}')" class="btn-reject">[X] Rechazar</button>
         </div>
       `;
       list.appendChild(item);
@@ -745,10 +737,10 @@
 
       const cleanPhone = String(phone || '').replace(/\D/g, '');
       if (cleanPhone) {
-        const msg = `¡Hola ${name}! Tu pago para HAVANNA OBSESSION 2026 ha sido APROBADO con éxito.%0A%0A` +
-          `Ya podés consultar y descargar tus entradas con código QR ingresando tu DNI en nuestro sitio oficial:%0A` +
-          `👉 https://alejolegal.com/%0A%0A` +
-          `Recordá presentar tu DNI físico en puerta. Nos vemos el 31!`;
+        const msg = `Hola ${name}. Tu pago para HAVANNA OBSESSION 2026 fue APROBADO.%0A%0A` +
+          `Podes consultar tus tickets habilitados ingresando tu DNI en:%0A` +
+          `https://alejolegal.com/%0A%0A` +
+          `Ingreso obligatorio con DNI fisico en mano.`;
         window.open(`https://wa.me/${cleanPhone.startsWith('54') ? cleanPhone : '54' + cleanPhone}?text=${msg}`, '_blank');
       }
     } catch (err) {
@@ -757,13 +749,159 @@
   }
 
   async function rejectOrder(id) {
-    if (!confirm("¿Rechazar orden?")) return;
+    if (!confirm("Confirmar rechazo de orden?")) return;
     try {
       const { error } = await client.from('orders').update({ status: 'rejected' }).eq('id', id);
       if (error) throw error;
       await fetchOrders();
     } catch (err) {
       alert("Error al rechazar: " + err.message);
+    }
+  }
+
+  // ==========================================
+  // CONTROL EN PUERTA (INTELIGENTE MULTI-TICKET)
+  // ==========================================
+  function handleDoorInputKey(e) {
+    if (e.key === 'Enter') {
+      validateDoorCheckIn();
+    }
+  }
+
+  function handleDoorSearchInput(val) {
+    if (val.trim().length >= 4) {
+      validateDoorCheckIn();
+    }
+  }
+
+  async function processDoorVerification(identifier) {
+    const msg = document.getElementById('door-msg');
+    const panel = document.getElementById('door-verification-panel');
+    msg.className = 'door-feedback hidden';
+    panel.className = 'hidden';
+    panel.innerHTML = '';
+
+    if (!identifier) {
+      msg.className = 'door-feedback error';
+      msg.textContent = 'Ingrese DNI o escanee un Ticket QR.';
+      playAudioTone('error');
+      return;
+    }
+
+    let query = identifier;
+    let targetTicketId = null;
+
+    try {
+      const parsed = JSON.parse(identifier);
+      if (parsed.t) targetTicketId = parsed.t;
+      if (parsed.d) query = parsed.d;
+      else if (parsed.ticketId) targetTicketId = parsed.ticketId;
+    } catch (e) { }
+
+    const cleanQ = cleanDni(query);
+
+    // Búsqueda de todas las órdenes aprobadas asociadas al DNI, OrderId o TicketId
+    const matchedTickets = cloudOrders.filter(o =>
+      o.status === 'approved' && (
+        (cleanQ && o.dni === cleanQ) ||
+        (targetTicketId && o.ticketId.toLowerCase() === targetTicketId.toLowerCase()) ||
+        (o.ticketId.toLowerCase() === query.toLowerCase()) ||
+        (o.orderId && o.orderId.toLowerCase() === query.toLowerCase())
+      )
+    );
+
+    if (matchedTickets.length === 0) {
+      msg.className = 'door-feedback error';
+      msg.innerHTML = `[ACCESO DENEGADO] No existen tickets aprobados para "${identifier}".`;
+      playAudioTone('error');
+      return;
+    }
+
+    const first = matchedTickets[0];
+    // Traemos TODAS las compras del titular de ese DNI (incluso si escaneó solo un ticket)
+    const allUserTickets = cloudOrders.filter(o => o.status === 'approved' && o.dni === first.dni);
+    const pendingToEnter = allUserTickets.filter(o => !o.used);
+    const hasVip = allUserTickets.some(o => o.ticketType && o.ticketType.includes('VIP'));
+
+    panel.className = 'door-multi-panel';
+    panel.innerHTML = `
+      <div class="panel-header-info">
+        <div>
+          <span class="label-sub">TITULAR REGISTRADO</span>
+          <h3 class="holder-name">${first.name}</h3>
+          <span class="holder-dni">DNI: <strong>${first.dni}</strong></span>
+        </div>
+        <div style="text-align:right;">
+          <span class="count-badge">${pendingToEnter.length} / ${allUserTickets.length} DISPONIBLES</span>
+          ${hasVip ? '<span class="badge-vip-pill">[INCLUYE VIP]</span>' : ''}
+        </div>
+      </div>
+
+      ${pendingToEnter.length > 1 ? `
+        <button onclick="window.checkInAllPending('${first.dni}')" class="btn-checkin-all">
+          [+] INGRESAR TODAS LAS ENTRADAS PENDIENTES (${pendingToEnter.length})
+        </button>
+      ` : ''}
+
+      <div class="tickets-breakdown-list">
+        ${allUserTickets.map(t => `
+          <div class="breakdown-item ${t.used ? 'item-used' : 'item-active'}">
+            <div>
+              <span class="tk-type">${t.ticketType}</span>
+              <span class="tk-id">${t.ticketId}${t.used ? '(INGRESADO)' : '(HABILITADO)'}</span>
+            </div>
+            <div>
+              ${t.used ?
+        '<span class="status-used-tag">INGRESADO</span>' :
+        `<button onclick="window.manualCheckIn('${t.firestoreId}')" class="btn-checkin-single">INGRESAR //➔</button>`
+      }
+            </div>
+          </div>
+        `).join('')}
+      </div>
+    `;
+
+    // Si escaneó un QR específico y esa entrada está lista, la ingresa de una
+    if (targetTicketId) {
+      const specific = allUserTickets.find(t => t.ticketId === targetTicketId);
+      if (specific && !specific.used) {
+        await manualCheckIn(specific.firestoreId);
+      } else if (specific && specific.used) {
+        playAudioTone('error');
+      }
+    } else {
+      playAudioTone(hasVip ? 'vip' : 'success');
+    }
+  }
+
+  async function checkInAllPending(dni) {
+    const pendings = cloudOrders.filter(o => o.status === 'approved' && o.dni === dni && !o.used);
+    for (const t of pendings) {
+      await client.from('orders').update({ used: true }).eq('id', t.firestoreId);
+    }
+    playAudioTone('success');
+    await fetchOrders();
+    processDoorVerification(dni);
+  }
+
+  async function validateDoorCheckIn() {
+    const rawInput = document.getElementById('door-input').value.trim();
+    processDoorVerification(rawInput);
+  }
+
+  async function manualCheckIn(id) {
+    try {
+      const { error } = await client.from('orders').update({ used: true }).eq('id', id);
+      if (error) throw error;
+      playAudioTone('success');
+      await fetchOrders();
+
+      const updated = cloudOrders.find(o => o.firestoreId === id);
+      if (updated) {
+        processDoorVerification(updated.dni);
+      }
+    } catch (err) {
+      alert("Error de registro: " + err.message);
     }
   }
 
@@ -785,12 +923,12 @@
       row.className = `door-row ${order.used ? 'used' : ''}`;
       row.innerHTML = `
         <div>
-          <strong style="color:${isVip ? 'var(--gold-vip)' : '#fff'}; display:block">${order.name} ${isVip ? '★ VIP' : ''}</strong>
+          <strong style="color:${isVip ? '#eab308' : '#fff'}; display:block">${order.name} ${isVip ? '[VIP]' : ''}</strong>
           <span style="color:#8e8e99; font-size:0.75rem">DNI: ${order.dni} • ${order.ticketId}</span>
         </div>
         <div>
           ${order.used ?
-          '<span class="badge-used">INGRESÓ</span>' :
+          '<span class="badge-used">INGRESADO</span>' :
           `<button onclick="window.manualCheckIn('${order.firestoreId}')" class="btn-approve" style="font-size:0.7rem">Marcar Ingreso</button>`
         }
         </div>
@@ -799,100 +937,8 @@
     });
   }
 
-  function handleDoorInputKey(e) {
-    if (e.key === 'Enter') {
-      validateDoorCheckIn();
-    }
-  }
-
-  async function processDoorVerification(identifier) {
-    const msg = document.getElementById('door-msg');
-    msg.className = 'door-feedback hidden';
-
-    if (!identifier) {
-      msg.className = 'door-feedback error';
-      msg.textContent = 'Ingrese un DNI o Código de Ticket.';
-      playAudioTone('error');
-      return;
-    }
-
-    let query = identifier;
-    try {
-      const parsed = JSON.parse(identifier);
-      if (parsed.t) query = parsed.t;
-      else if (parsed.ticketId) query = parsed.ticketId;
-      else if (parsed.d) query = parsed.d;
-    } catch (e) { }
-
-    const cleanQ = cleanDni(query);
-    const order = cloudOrders.find(o =>
-      o.status === 'approved' &&
-      (o.ticketId.toLowerCase() === query.toLowerCase() || (cleanQ && o.dni === cleanQ) || (o.orderId && o.orderId.toLowerCase() === query.toLowerCase()))
-    );
-
-    if (!order) {
-      msg.className = 'door-feedback error';
-      msg.innerHTML = `❌ TICKET INVÁLIDO O PAGO NO APROBADO.<br><small>Verifique si el DNI está registrado.</small>`;
-      playAudioTone('error');
-      return;
-    }
-
-    if (order.used) {
-      msg.className = 'door-feedback used';
-      msg.innerHTML = `⚠️ ATENCIÓN: ENTRADA YA UTILIZADA.<br><strong>Titular:</strong> ${order.name}<br><strong>DNI:</strong> ${order.dni}`;
-      playAudioTone('error');
-      return;
-    }
-
-    try {
-      const { error } = await client.from('orders').update({ used: true }).eq('id', order.firestoreId);
-      if (error) throw error;
-
-      const isVip = order.ticketType && order.ticketType.includes('VIP');
-      if (isVip) {
-        msg.className = 'door-feedback vip-success';
-        msg.innerHTML = `
-          ★ INGRESO VIP HABILITADO ★<br>
-          <span style="font-size:1.1rem; color:#fff"><strong>${order.name}</strong></span><br>
-          <span>DNI COTEJADO: <strong>${order.dni}</strong></span><br>
-          🍸 <strong>ENTREGAR CONSUMICIÓN GIN TONIC</strong>
-        `;
-        playAudioTone('vip');
-      } else {
-        msg.className = 'door-feedback success';
-        msg.innerHTML = `
-          ✓ INGRESO PERMITIDO [GENERAL]<br>
-          <span style="font-size:1.1rem; color:#fff"><strong>${order.name}</strong></span><br>
-          <span>DNI COTEJADO: <strong>${order.dni}</strong></span>
-        `;
-        playAudioTone('success');
-      }
-
-      document.getElementById('door-input').value = '';
-      await fetchOrders();
-    } catch (err) {
-      alert("Error al validar: " + err.message);
-    }
-  }
-
-  async function validateDoorCheckIn() {
-    const rawInput = document.getElementById('door-input').value.trim();
-    processDoorVerification(rawInput);
-  }
-
-  async function manualCheckIn(id) {
-    try {
-      const { error } = await client.from('orders').update({ used: true }).eq('id', id);
-      if (error) throw error;
-      playAudioTone('success');
-      await fetchOrders();
-    } catch (err) {
-      alert("Error al marcar ingreso: " + err.message);
-    }
-  }
-
   // ==========================================
-  // ESCÁNER QR DE CÁMARA (HTML5-QRCODE)
+  // ESCANER CAMARA
   // ==========================================
   let html5QrScanner = null;
 
@@ -906,27 +952,25 @@
     }
 
     if (typeof Html5Qrcode === 'undefined') {
-      alert("Librería de escáner no disponible.");
+      alert("Libreria de escaneo no disponible.");
       return;
     }
 
     qrBox.classList.remove('hidden');
-    btn.textContent = "🛑 DETENER ESCÁNER";
-    btn.style.background = "#ef4444";
+    btn.textContent = "[X] DETENER CAMARA";
+    btn.style.borderColor = "#ef4444";
+    btn.style.color = "#ef4444";
 
     html5QrScanner = new Html5Qrcode("qr-reader");
     html5QrScanner.start(
       { facingMode: "environment" },
-      { fps: 10, qrbox: { width: 250, height: 250 } },
+      { fps: 10, qrbox: { width: 220, height: 220 } },
       (decodedText) => {
-        // En cuanto detecta un QR, valida al instante
         processDoorVerification(decodedText);
       },
-      (error) => {
-        // Escaneo continuo silencioso
-      }
+      () => { }
     ).catch(err => {
-      alert("Error al abrir cámara: " + err);
+      alert("Permiso de camara denegado: " + err);
       stopQrCameraScanner();
     });
   }
@@ -940,8 +984,9 @@
         if (qrBox) qrBox.classList.add('hidden');
         const btn = document.getElementById('btn-toggle-cam');
         if (btn) {
-          btn.textContent = "📷 ABRIR ESCÁNER DE CÁMARA";
-          btn.style.background = "#2563eb";
+          btn.textContent = "[CAMARA] ACTIVAR ESCANER";
+          btn.style.borderColor = "#f59e0b";
+          btn.style.color = "#f59e0b";
         }
       }).catch(() => {
         html5QrScanner = null;
@@ -950,11 +995,11 @@
   }
 
   // ==========================================
-  // EXPORTACIÓN A PDF
+  // EXPORTAR PDF
   // ==========================================
   function exportDoorListPDF() {
     if (typeof window.jspdf === 'undefined') {
-      alert("Cargando motor de PDF, aguarde un momento...");
+      alert("Cargando modulo PDF...");
       return;
     }
 
@@ -971,18 +1016,18 @@
     const doc = new jsPDF('p', 'mm', 'a4');
 
     doc.setFont("helvetica", "bold");
-    doc.setFontSize(14);
+    doc.setFontSize(13);
     doc.text("HAVANNA CLUB // HALLOWEEN OBSESSION 2026", 14, 15);
-    doc.setFontSize(10);
+    doc.setFontSize(9);
     doc.setFont("helvetica", "normal");
-    doc.text(`PLANILLA OFICIAL DE CONTROL EN PUERTA - TOTAL: ${approved.length} ASISTENTES`, 14, 21);
-    doc.text(`Fecha de emisión: ${new Date().toLocaleString('es-AR')}`, 14, 26);
+    doc.text(`PLANILLA DE CONTROL EN PUERTA • TOTAL: ${approved.length} ASISTENTES`, 14, 21);
+    doc.text(`Fecha emision: ${new Date().toLocaleString('es-AR')}`, 14, 26);
     doc.line(14, 28, 196, 28);
 
     doc.setFont("helvetica", "bold");
     doc.setFontSize(8);
     let y = 34;
-    doc.text("N°", 14, y);
+    doc.text("N", 14, y);
     doc.text("TITULAR", 22, y);
     doc.text("DNI", 85, y);
     doc.text("TICKET ID", 115, y);
@@ -998,7 +1043,7 @@
         doc.addPage();
         y = 15;
         doc.setFont("helvetica", "bold");
-        doc.text("N°", 14, y);
+        doc.text("N", 14, y);
         doc.text("TITULAR", 22, y);
         doc.text("DNI", 85, y);
         doc.text("TICKET ID", 115, y);
@@ -1020,10 +1065,10 @@
       y += 6;
     });
 
-    doc.save(`Lista_Puerta_Havanna_${new Date().toISOString().slice(0, 10)}.pdf`);
+    doc.save(`Havanna_Puerta_${new Date().toISOString().slice(0, 10)}.pdf`);
   }
 
-  // EXPOSICIÓN GLOBAL
+  // EXPOSICION GLOBAL
   window.openCheckout = openCheckout;
   window.closeCheckout = closeCheckout;
   window.updateCheckoutTotal = updateCheckoutTotal;
@@ -1046,8 +1091,10 @@
   window.rejectOrder = rejectOrder;
   window.validateDoorCheckIn = validateDoorCheckIn;
   window.manualCheckIn = manualCheckIn;
+  window.checkInAllPending = checkInAllPending;
   window.toggleQrCameraScanner = toggleQrCameraScanner;
   window.handleDoorInputKey = handleDoorInputKey;
+  window.handleDoorSearchInput = handleDoorSearchInput;
   window.exportDoorListPDF = exportDoorListPDF;
 
   function start() {
