@@ -6,6 +6,10 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>HAVANNA CLUB // HALLOWEEN OBSESSION 2026</title>
 
+  <!-- Favicon Calabaza Naranja Brillante -->
+  <link rel="icon"
+    href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><filter id=%22glow%22><feGaussianBlur stdDeviation=%224%22 result=%22coloredBlur%22/><feMerge><feMergeNode in=%22coloredBlur%22/><feMergeNode in=%22SourceGraphic%22/></feMerge></filter><text y=%22.88em%22 font-size=%2286%22 filter=%22url(%23glow)%22>🎃</text></svg>">
+
   <!-- Tipografías Oficiales -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -15,12 +19,12 @@
 
   <link rel="stylesheet" href="style.css">
 
-  <!-- Librerías de QR y Confetti -->
+  <!-- Librerías: QR, Confetti, HTML2Canvas, JSPDF y Escáner QR de Cámara -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
-  <!-- Librerías para Descarga de Tickets y Exportación PDF -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
 </head>
 
 <body>
@@ -74,7 +78,7 @@
       </div>
 
       <div class="tickets-grid">
-        <!-- TICKET GENERAL (SIN GUARDARROPAS) -->
+        <!-- TICKET GENERAL -->
         <div class="ticket-card card-general liquid-glass">
           <div class="card-badge">PREVENTA 1 ACTIVA</div>
           <h3 class="tier-title">PISTA GENERAL</h3>
@@ -152,16 +156,17 @@
   <!-- FOOTER -->
   <footer class="footer">
     <div class="container footer-content">
-      <p class="footer-collab">ALEJO LEGAL × HAVANNA CLUB × GEN V</p>
+      <p class="footer-collab">ALEJO LEGAL × HAVANNA CLUB × <span id="secret-admin-trigger"
+          style="cursor: pointer; user-select: none;">GEN V</span></p>
       <small>ITÁ IBATÉ, CORRIENTES • Ingreso exclusivo para mayores de 18 años con DNI físico en mano.</small>
     </div>
   </footer>
-
+  
   <!-- ==========================================
        MODALES DEL SISTEMA
        ========================================== -->
 
-  <!-- MODAL CHECKOUT COMPRA CON SELECTOR DE CANTIDAD -->
+  <!-- MODAL CHECKOUT -->
   <div id="modal-checkout" class="modal-overlay hidden">
     <div class="modal-window liquid-glass">
       <button class="modal-close" onclick="closeCheckout()">✕</button>
@@ -242,15 +247,19 @@
         <button onclick="checkStatusFromCurrent()" class="btn-secondary full-width mt-4">REVERIFICAR ESTADO</button>
       </div>
 
-      <!-- PASO 4: TICKETS HABILITADOS (LISTA CON QR INDIVIDUALES) -->
+      <!-- PASO 4: TICKETS HABILITADOS -->
       <div id="co-step-ticket" class="hidden">
+        <div class="security-disclaimer">
+          ⚠️ <strong>AVISO ESTRICTO:</strong> Prohibido compartir o publicar tu código QR y DNI en redes sociales. Cada
+          ticket es nominativo, de uso único y se cotejará contra tu DNI físico en puerta.
+        </div>
         <div id="ticket-render-box"></div>
-        <button onclick="closeCheckout()" class="btn-secondary full-width mt-4">LISTO, GUARDAR ENTRADAS</button>
+        <button onclick="closeCheckout()" class="btn-secondary full-width mt-4">LISTO, CERRAR VENTANA</button>
       </div>
     </div>
   </div>
 
-  <!-- MODAL CONSULTA DNI (MULTI-TICKETS) -->
+  <!-- MODAL CONSULTA DNI -->
   <div id="modal-lookup" class="modal-overlay hidden">
     <div class="modal-window liquid-glass">
       <button class="modal-close" onclick="closeLookupModal()">✕</button>
@@ -316,17 +325,28 @@
 
       <!-- VISTA PUERTA -->
       <div id="adm-view-door" class="admin-body hidden">
-        <!-- BOTÓN DESCARGAR PDF -->
         <button onclick="window.exportDoorListPDF()" class="btn-secondary"
-          style="margin-bottom: 1rem; width: 100%; border-color: #38bdf8; color: #38bdf8; font-weight: 700;">
+          style="margin-bottom: 0.8rem; width: 100%; border-color: #38bdf8; color: #38bdf8; font-weight: 700;">
           📥 DESCARGAR PLANILLA DE CONTROL (PDF)
         </button>
 
+        <!-- CÁMARA ESCÁNER QR -->
+        <div class="camera-scanner-wrapper">
+          <button id="btn-toggle-cam" onclick="toggleQrCameraScanner()" class="btn-cam-scanner">
+            📷 ABRIR ESCÁNER DE CÁMARA
+          </button>
+          <div id="qr-reader" class="hidden qr-cam-box"></div>
+        </div>
+
+        <!-- BÚSQUEDA MANUAL / PISTOLA LECTORA -->
         <div class="door-scan-bar">
-          <input type="text" id="door-input" placeholder="Escanear QR o tipear DNI / Ticket ID...">
+          <input type="text" id="door-input" placeholder="Escanear QR o tipear DNI / Ticket ID..."
+            onkeyup="handleDoorInputKey(event)">
           <button onclick="validateDoorCheckIn()" class="btn-primary">Validar Ingreso</button>
         </div>
+
         <div id="door-msg" class="door-feedback hidden"></div>
+
         <div class="door-table-wrapper">
           <div id="adm-door-list" class="door-list"></div>
         </div>
@@ -336,7 +356,7 @@
 
   <!-- CLIENTE OFICIAL DE SUPABASE -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="app.js?v=2"></script>
+  <script src="app.js?v=3"></script>
 </body>
 
 </html>
