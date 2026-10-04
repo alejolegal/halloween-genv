@@ -14,7 +14,7 @@
 
   const CONFIG = {
     adminPin: '2026',
-    whatsappPhone: '5493794000000', // Modificá acá con tu WhatsApp
+    whatsappPhone: '5493794000000', // Modificá acá tu número de atención
     maxVipStock: 50,
     spotifyUrl: 'https://open.spotify.com',
     wspGroupUrl: 'https://chat.whatsapp.com',
@@ -25,6 +25,43 @@
 
   function cleanDni(val) {
     return String(val || '').replace(/\D/g, '').trim();
+  }
+
+  // ==========================================
+  // SISTEMA DE AUDIO (BEEPS DE PUERTA)
+  // ==========================================
+  function playAudioTone(type) {
+    try {
+      const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+      const osc = audioCtx.createOscillator();
+      const gain = audioCtx.createGain();
+      osc.connect(gain);
+      gain.connect(audioCtx.destination);
+
+      if (type === 'success') {
+        osc.frequency.setValueAtTime(880, audioCtx.currentTime); // La5 (A5)
+        gain.gain.setValueAtTime(0.2, audioCtx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.25);
+        osc.start();
+        osc.stop(audioCtx.currentTime + 0.25);
+      } else if (type === 'vip') {
+        osc.frequency.setValueAtTime(587.33, audioCtx.currentTime); // D5
+        osc.frequency.setValueAtTime(880, audioCtx.currentTime + 0.12); // A5
+        gain.gain.setValueAtTime(0.25, audioCtx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.4);
+        osc.start();
+        osc.stop(audioCtx.currentTime + 0.4);
+      } else {
+        osc.type = 'sawtooth';
+        osc.frequency.setValueAtTime(150, audioCtx.currentTime);
+        gain.gain.setValueAtTime(0.3, audioCtx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.45);
+        osc.start();
+        osc.stop(audioCtx.currentTime + 0.45);
+      }
+    } catch (e) {
+      // Ignora si el navegador bloquea audio antes de interacción
+    }
   }
 
   // ==========================================
@@ -86,7 +123,6 @@
         renderDoorList();
         checkVipAvailability();
 
-        // Actualización dinámica si el usuario tiene abierta la vista de espera o tickets
         if (activeCreatedOrders.length > 0) {
           const curId = activeCreatedOrders[0].orderId;
           const fresh = cloudOrders.filter(o => o.orderId === curId);
@@ -100,7 +136,7 @@
         }
       }
     } catch (err) {
-      console.error("Error al sincronizar Supabase:", err);
+      console.error("Error Supabase:", err);
     }
   }
 
@@ -117,7 +153,6 @@
   }
 
   function checkVipAvailability() {
-    // FILTRO: Solo resta cupos si la compra está aprobada
     const vipCount = cloudOrders.filter(o =>
       o.ticketType && o.ticketType.includes('VIP') && o.status === 'approved'
     ).length;
@@ -202,26 +237,22 @@
     const email = document.getElementById('cust-email').value.trim();
     const qty = parseInt(document.getElementById('cust-qty').value) || 1;
 
-    // 1. Validación de DNI
     if (!dni || dni.length < 7 || dni.length > 9) {
       alert("Por favor ingresá un número de DNI válido (entre 7 y 9 dígitos).");
       return;
     }
 
-    // 2. FILTRO ANTI-SPAM: Máximo 2 órdenes pendientes por DNI
     const pendingOrders = cloudOrders.filter(o => o.dni === dni && o.status === 'pending');
     if (pendingOrders.length >= 2) {
-      alert("Ya registrás compras pendientes de validación para este DNI. Por favor enviá el comprobante de pago por WhatsApp o aguardá a que el staff apruebe tu orden.");
+      alert("Ya registrás compras pendientes de validación para este DNI. Por favor enviá tu comprobante por WhatsApp o aguardá a que el staff la apruebe.");
       return;
     }
 
-    // 3. TOPE MÁXIMO DE TICKETS
     if (qty > 4 || qty < 1) {
       alert("El límite máximo permitido es de 4 entradas por compra.");
       return;
     }
 
-    // 4. Control de cupos VIP sobre compras aprobadas
     if (activePlan.name.includes('VIP')) {
       const vipApprovedCount = cloudOrders.filter(o => o.ticketType && o.ticketType.includes('VIP') && o.status === 'approved').length;
       if (vipApprovedCount + qty > CONFIG.maxVipStock) {
@@ -230,7 +261,6 @@
       }
     }
 
-    // Bloqueo del botón para evitar envíos duplicados por doble clic
     if (btnSubmit) {
       btnSubmit.disabled = true;
       btnSubmit.textContent = "GENERANDO ORDEN...";
@@ -334,7 +364,7 @@
   }
 
   // ==========================================
-  // RENDERIZADO Y DESCARGA DE TICKETS
+  // RENDERIZADO DE TICKETS (ESTILO VINTAGE OBSESSION)
   // ==========================================
   function renderMultipleTicketsUI(ordersList) {
     document.getElementById('co-step-ticket').classList.remove('hidden');
@@ -346,54 +376,86 @@
       confetti({ particleCount: 120, spread: 70, origin: { y: 0.6 } });
     }
 
-    if (ordersList.length > 1) {
-      const notice = document.createElement('div');
-      notice.style.cssText = "font-family:var(--font-mono); font-size:0.75rem; color:#34d399; margin-bottom:1rem; text-align:center;";
-      notice.innerHTML = `✓ Se encontraron <strong>${ordersList.length} entradas</strong> asociadas:`;
-      box.appendChild(notice);
-    }
-
     ordersList.forEach(order => {
       const isVip = order.ticketType && order.ticketType.includes('VIP');
       const cardWrapper = document.createElement('div');
-      cardWrapper.style.marginBottom = "1.5rem";
+      cardWrapper.style.marginBottom = "2rem";
 
       const card = document.createElement('div');
       card.id = `ticket-card-${order.ticketId}`;
-      card.className = `one-wish-ticket ${isVip ? 'ticket-vip-style' : ''}`;
+      card.className = `retro-obsession-ticket ${isVip ? 'theme-vip-yellow' : 'theme-general-red'}`;
       card.innerHTML = `
-        <div class="ticket-main-body">
-          <div class="ow-curve-header">${isVip ? 'VIP OBSESSION' : 'ONE NIGHT WISH'}</div>
-          <div class="ow-legend-row">
-            <span>HAVANNA CLUB • ITÁ IBATÉ</span>
-            <span>YOU ONLY GET ONE ENTRY</span>
+        <!-- MARCA DE AGUA DE SEGURIDAD ESTAMPADA -->
+        <div class="ticket-watermark">HAVANNA OFFICIAL // OBSESSION 2026 // NO DUPLICAR</div>
+
+        <div class="retro-ticket-body">
+          <div class="retro-banner-head">
+            <span class="retro-sub">HAVANNA CLUB • ITÁ IBATÉ</span>
+            <h2 class="retro-title">${isVip ? 'VIP OBSESSION' : 'ONE WISH OBSESSION'}</h2>
+            <div class="retro-motto">YOU ONLY GET ONE ENTRY • STRICT ID CHECK</div>
           </div>
 
-          <div class="ow-data-grid">
-            <div class="ow-field"><span>TITULAR:</span><strong>${order.name}</strong></div>
-            <div class="ow-field"><span>DNI:</span><strong>${order.dni}</strong></div>
-            <div class="ow-field"><span>SECTOR:</span><strong>${order.ticketType.toUpperCase()}</strong></div>
-            <div class="ow-field"><span>FECHA:</span><strong>31 OCT // 23:59 HS</strong></div>
+          <div class="retro-fields-grid">
+            <div class="field-box">
+              <label>TITULAR REGISTRADO</label>
+              <div class="val-text">${order.name}</div>
+            </div>
+            <div class="field-box">
+              <label>DOCUMENTO NACIONAL [DNI]</label>
+              <div class="val-text">${order.dni}</div>
+            </div>
+            <div class="field-box">
+              <label>SECTOR ADQUIRIDO</label>
+              <div class="val-text">${order.ticketType.toUpperCase()}</div>
+            </div>
+            <div class="field-box">
+              <label>FECHA & HORA</label>
+              <div class="val-text">31 OCTUBRE // 23:59 HS</div>
+            </div>
           </div>
 
-          ${isVip ? `<div class="ow-vip-seal">★ INCLUYE 1 CONSUMICIÓN GIN TONIC ★</div>` : ''}
+          <div class="retro-bottom-badge">
+            ${isVip ? '★ INCLUYE 1 CONSUMICIÓN GIN TONIC EN BALCÓN ★' : '• ACCESO PISTA GENERAL • SIN GUARDARROPAS •'}
+          </div>
         </div>
 
-        <div class="ticket-stub">
-          <div class="stub-qr-box">
+        <div class="retro-stub">
+          <div class="stub-notch notch-top"></div>
+          <div class="stub-notch notch-bottom"></div>
+          <div class="stub-qr-container">
             <div id="ticket-qr-${order.ticketId}"></div>
           </div>
-          <div class="stub-id">${order.ticketId}</div>
+          <div class="stub-code-badge">${order.ticketId}</div>
+          <div class="stub-notice">CONTROL EN PUERTA</div>
         </div>
       `;
 
+      const btnGroup = document.createElement('div');
+      btnGroup.style.display = 'flex';
+      btnGroup.style.gap = '8px';
+      btnGroup.style.marginTop = '10px';
+
       const btnDownload = document.createElement('button');
       btnDownload.className = 'btn-download-ticket';
-      btnDownload.innerHTML = `💾 Descargar este Ticket (${order.ticketId})`;
+      btnDownload.style.flex = '1';
+      btnDownload.innerHTML = `💾 Descargar Ticket (${order.ticketId})`;
       btnDownload.onclick = () => downloadTicketAsImage(order.ticketId, order.name);
 
+      const btnShare = document.createElement('button');
+      btnShare.className = 'btn-download-ticket';
+      btnShare.style.flex = '1';
+      btnShare.style.background = '#25D366';
+      btnShare.innerHTML = `📲 Compartir Datos`;
+      btnShare.onclick = () => {
+        const shareMsg = `Hola! Acá tenés la entrada para Havanna Club Halloween 2026 a nombre de ${order.name} (DNI ${order.dni}). Podés consultarla y ver el QR oficial ingresando tu DNI en https://alejolegal.com/`;
+        window.open(`https://wa.me/?text=${encodeURIComponent(shareMsg)}`, '_blank');
+      };
+
+      btnGroup.appendChild(btnDownload);
+      btnGroup.appendChild(btnShare);
+
       cardWrapper.appendChild(card);
-      cardWrapper.appendChild(btnDownload);
+      cardWrapper.appendChild(btnGroup);
       box.appendChild(cardWrapper);
 
       setTimeout(() => {
@@ -401,20 +463,19 @@
         if (qrEl && typeof QRCode !== 'undefined') {
           new QRCode(qrEl, {
             text: JSON.stringify({
-              e: 'HAVANNA_OBSESSION',
               t: order.ticketId,
               d: order.dni,
               n: order.name,
-              v: isVip
+              s: order.ticketType
             }),
             width: 100,
             height: 100,
-            colorDark: "#1a1a1a",
-            colorLight: "#ffffff",
+            colorDark: isVip ? "#4d3800" : "#5c1010",
+            colorLight: "#faf6ee",
             correctLevel: QRCode.CorrectLevel.M
           });
         }
-      }, 60);
+      }, 70);
     });
   }
 
@@ -426,14 +487,14 @@
     }
     html2canvas(el, { backgroundColor: '#090a0f', scale: 2 }).then(canvas => {
       const link = document.createElement('a');
-      link.download = `Ticket-Havanna-${ticketId}-${holderName.replace(/\s+/g, '_')}.png`;
+      link.download = `Havanna_Ticket_${ticketId}_${holderName.replace(/\s+/g, '_')}.png`;
       link.href = canvas.toDataURL('image/png');
       link.click();
     });
   }
 
   // ==========================================
-  // CONSULTA POR DNI (DIRECTA Y ROBUSTA)
+  // CONSULTA POR DNI
   // ==========================================
   function openLookupModal() {
     document.getElementById('modal-lookup').classList.remove('hidden');
@@ -456,9 +517,7 @@
       return;
     }
 
-    out.innerHTML = '<span style="color:#8e8e99">Buscando entradas en el sistema...</span>';
-
-    // Aseguramos sincronización fresca desde Supabase
+    out.innerHTML = '<span style="color:#8e8e99">Buscando entradas registradas...</span>';
     await fetchOrders();
 
     const matchedOrders = cloudOrders.filter(o =>
@@ -468,13 +527,13 @@
     );
 
     if (matchedOrders.length === 0) {
-      out.innerHTML = `<span style="color:#8e8e99">No se encontraron tickets para el DNI/Orden <strong>${rawVal}</strong>. Verificá que esté escrito correctamente.</span>`;
+      out.innerHTML = `<span style="color:#8e8e99">No se encontraron tickets para <strong>${rawVal}</strong>. Verificá que esté escrito correctamente.</span>`;
       return;
     }
 
     const approved = matchedOrders.filter(o => o.status === 'approved');
 
-    let html = `<div style="font-size:0.8rem; margin-bottom:0.8rem; color:#aaa">Entradas registradas para este documento: <strong>${matchedOrders.length}</strong></div>`;
+    let html = `<div style="font-size:0.8rem; margin-bottom:0.8rem; color:#aaa">Entradas asociadas: <strong>${matchedOrders.length}</strong></div>`;
 
     if (approved.length > 0) {
       html += `<button onclick="window.openAllApprovedFromLookup('${cleanNum || rawVal}')" class="btn-primary full-width" style="margin-bottom:1rem; padding:0.7rem; font-size:0.8rem">
@@ -507,7 +566,6 @@
       `;
     });
     html += `</div>`;
-
     out.innerHTML = html;
   }
 
@@ -539,7 +597,7 @@
   }
 
   // ==========================================
-  // PANEL STAFF Y EXPORTACIÓN PDF
+  // PANEL STAFF Y VALIDACIONES
   // ==========================================
   window.addEventListener('keydown', (e) => {
     if (e.ctrlKey && e.shiftKey && e.code === 'KeyS') {
@@ -548,19 +606,24 @@
     }
   });
 
-  let secretTapCount = 0;
-  let secretTapTimer = null;
-  const secretTrigger = document.getElementById('secret-lookup-trigger');
-  if (secretTrigger) {
-    secretTrigger.addEventListener('click', (e) => {
-      secretTapCount++;
-      clearTimeout(secretTapTimer);
-      if (secretTapCount >= 4) {
-        e.preventDefault();
-        secretTapCount = 0;
+  // Disparador secreto para Staff: 3 toques rápidos sobre "GEN V" en el footer
+  let staffTapCount = 0;
+  let staffTapTimer = null;
+  const staffTrigger = document.getElementById('secret-admin-trigger');
+
+  if (staffTrigger) {
+    staffTrigger.addEventListener('click', (e) => {
+      e.preventDefault();
+      staffTapCount++;
+      clearTimeout(staffTapTimer);
+
+      if (staffTapCount >= 3) {
+        staffTapCount = 0;
         openAdminModal();
       } else {
-        secretTapTimer = setTimeout(() => { secretTapCount = 0; }, 1200);
+        staffTapTimer = setTimeout(() => {
+          staffTapCount = 0;
+        }, 900); // 900ms de ventana para completar los 3 toques
       }
     });
   }
@@ -585,7 +648,6 @@
       closeAdminLoginModal();
       const modalDash = document.getElementById('modal-admin-dashboard');
       if (modalDash) modalDash.classList.remove('hidden');
-
       switchAdminTab('approvals');
       renderApprovalsList();
       updateMetrics();
@@ -595,6 +657,7 @@
   }
 
   function closeAdminDashboard() {
+    stopQrCameraScanner();
     const modalDash = document.getElementById('modal-admin-dashboard');
     if (modalDash) modalDash.classList.add('hidden');
   }
@@ -602,10 +665,11 @@
   function switchAdminTab(tab) {
     const btnApp = document.getElementById('tab-btn-approvals');
     const btnDoor = document.getElementById('tab-btn-door');
-    const viewApp = document.getElementById('adm-view-approvals') || document.getElementById('section-approvals');
-    const viewDoor = document.getElementById('adm-view-door') || document.getElementById('section-door');
+    const viewApp = document.getElementById('adm-view-approvals');
+    const viewDoor = document.getElementById('adm-view-door');
 
     if (tab === 'approvals') {
+      stopQrCameraScanner();
       btnApp?.classList.add('active');
       btnDoor?.classList.remove('active');
       viewApp?.classList.remove('hidden');
@@ -664,8 +728,8 @@
             ${order.name} (DNI: ${order.dni}) • Tel: ${order.phone}
           </div>
         </div>
-        <div>
-          <button onclick="window.approveOrder('${order.firestoreId}')" class="btn-approve">Aprobar</button>
+        <div style="display:flex; gap:6px; flex-wrap:wrap;">
+          <button onclick="window.approveOrderAndNotify('${order.firestoreId}', '${order.phone}', '${order.name}')" class="btn-approve" title="Aprobar y notificar">✓ Aprobar & WS</button>
           <button onclick="window.rejectOrder('${order.firestoreId}')" class="btn-reject">Rechazar</button>
         </div>
       `;
@@ -673,11 +737,20 @@
     });
   }
 
-  async function approveOrder(id) {
+  async function approveOrderAndNotify(id, phone, name) {
     try {
       const { error } = await client.from('orders').update({ status: 'approved' }).eq('id', id);
       if (error) throw error;
       await fetchOrders();
+
+      const cleanPhone = String(phone || '').replace(/\D/g, '');
+      if (cleanPhone) {
+        const msg = `¡Hola ${name}! Tu pago para HAVANNA OBSESSION 2026 ha sido APROBADO con éxito.%0A%0A` +
+          `Ya podés consultar y descargar tus entradas con código QR ingresando tu DNI en nuestro sitio oficial:%0A` +
+          `👉 https://alejolegal.com/%0A%0A` +
+          `Recordá presentar tu DNI físico en puerta. Nos vemos el 31!`;
+        window.open(`https://wa.me/${cleanPhone.startsWith('54') ? cleanPhone : '54' + cleanPhone}?text=${msg}`, '_blank');
+      }
     } catch (err) {
       alert("Error al aprobar: " + err.message);
     }
@@ -726,20 +799,26 @@
     });
   }
 
-  async function validateDoorCheckIn() {
-    const rawInput = document.getElementById('door-input').value.trim();
+  function handleDoorInputKey(e) {
+    if (e.key === 'Enter') {
+      validateDoorCheckIn();
+    }
+  }
+
+  async function processDoorVerification(identifier) {
     const msg = document.getElementById('door-msg');
     msg.className = 'door-feedback hidden';
 
-    if (!rawInput) {
+    if (!identifier) {
       msg.className = 'door-feedback error';
-      msg.textContent = 'Ingresá un DNI o código de ticket.';
+      msg.textContent = 'Ingrese un DNI o Código de Ticket.';
+      playAudioTone('error');
       return;
     }
 
-    let query = rawInput;
+    let query = identifier;
     try {
-      const parsed = JSON.parse(rawInput);
+      const parsed = JSON.parse(identifier);
       if (parsed.t) query = parsed.t;
       else if (parsed.ticketId) query = parsed.ticketId;
       else if (parsed.d) query = parsed.d;
@@ -753,13 +832,15 @@
 
     if (!order) {
       msg.className = 'door-feedback error';
-      msg.innerHTML = '❌ TICKET INVÁLIDO O PAGO NO APROBADO.';
+      msg.innerHTML = `❌ TICKET INVÁLIDO O PAGO NO APROBADO.<br><small>Verifique si el DNI está registrado.</small>`;
+      playAudioTone('error');
       return;
     }
 
     if (order.used) {
       msg.className = 'door-feedback used';
-      msg.innerHTML = `⚠️ TICKET YA UTILIZADO POR ${order.name} (DNI ${order.dni}).`;
+      msg.innerHTML = `⚠️ ATENCIÓN: ENTRADA YA UTILIZADA.<br><strong>Titular:</strong> ${order.name}<br><strong>DNI:</strong> ${order.dni}`;
+      playAudioTone('error');
       return;
     }
 
@@ -770,11 +851,23 @@
       const isVip = order.ticketType && order.ticketType.includes('VIP');
       if (isVip) {
         msg.className = 'door-feedback vip-success';
-        msg.innerHTML = `★ INGRESO VIP HABILITADO: ${order.name}<br>🍸 ENTREGAR CONSUMICIÓN GIN TONIC`;
+        msg.innerHTML = `
+          ★ INGRESO VIP HABILITADO ★<br>
+          <span style="font-size:1.1rem; color:#fff"><strong>${order.name}</strong></span><br>
+          <span>DNI COTEJADO: <strong>${order.dni}</strong></span><br>
+          🍸 <strong>ENTREGAR CONSUMICIÓN GIN TONIC</strong>
+        `;
+        playAudioTone('vip');
       } else {
         msg.className = 'door-feedback success';
-        msg.innerHTML = `✓ INGRESO PERMITIDO: ${order.name} [PISTA GENERAL]`;
+        msg.innerHTML = `
+          ✓ INGRESO PERMITIDO [GENERAL]<br>
+          <span style="font-size:1.1rem; color:#fff"><strong>${order.name}</strong></span><br>
+          <span>DNI COTEJADO: <strong>${order.dni}</strong></span>
+        `;
+        playAudioTone('success');
       }
+
       document.getElementById('door-input').value = '';
       await fetchOrders();
     } catch (err) {
@@ -782,17 +875,83 @@
     }
   }
 
+  async function validateDoorCheckIn() {
+    const rawInput = document.getElementById('door-input').value.trim();
+    processDoorVerification(rawInput);
+  }
+
   async function manualCheckIn(id) {
     try {
       const { error } = await client.from('orders').update({ used: true }).eq('id', id);
       if (error) throw error;
+      playAudioTone('success');
       await fetchOrders();
     } catch (err) {
       alert("Error al marcar ingreso: " + err.message);
     }
   }
 
-  // EXPORTADOR OFICIAL A PDF (PLANILLA A4)
+  // ==========================================
+  // ESCÁNER QR DE CÁMARA (HTML5-QRCODE)
+  // ==========================================
+  let html5QrScanner = null;
+
+  function toggleQrCameraScanner() {
+    const qrBox = document.getElementById('qr-reader');
+    const btn = document.getElementById('btn-toggle-cam');
+
+    if (html5QrScanner) {
+      stopQrCameraScanner();
+      return;
+    }
+
+    if (typeof Html5Qrcode === 'undefined') {
+      alert("Librería de escáner no disponible.");
+      return;
+    }
+
+    qrBox.classList.remove('hidden');
+    btn.textContent = "🛑 DETENER ESCÁNER";
+    btn.style.background = "#ef4444";
+
+    html5QrScanner = new Html5Qrcode("qr-reader");
+    html5QrScanner.start(
+      { facingMode: "environment" },
+      { fps: 10, qrbox: { width: 250, height: 250 } },
+      (decodedText) => {
+        // En cuanto detecta un QR, valida al instante
+        processDoorVerification(decodedText);
+      },
+      (error) => {
+        // Escaneo continuo silencioso
+      }
+    ).catch(err => {
+      alert("Error al abrir cámara: " + err);
+      stopQrCameraScanner();
+    });
+  }
+
+  function stopQrCameraScanner() {
+    if (html5QrScanner) {
+      html5QrScanner.stop().then(() => {
+        html5QrScanner.clear();
+        html5QrScanner = null;
+        const qrBox = document.getElementById('qr-reader');
+        if (qrBox) qrBox.classList.add('hidden');
+        const btn = document.getElementById('btn-toggle-cam');
+        if (btn) {
+          btn.textContent = "📷 ABRIR ESCÁNER DE CÁMARA";
+          btn.style.background = "#2563eb";
+        }
+      }).catch(() => {
+        html5QrScanner = null;
+      });
+    }
+  }
+
+  // ==========================================
+  // EXPORTACIÓN A PDF
+  // ==========================================
   function exportDoorListPDF() {
     if (typeof window.jspdf === 'undefined') {
       alert("Cargando motor de PDF, aguarde un momento...");
@@ -856,12 +1015,12 @@
       doc.text(o.dni, 85, y);
       doc.text(o.ticketId, 115, y);
       doc.text(isVip ? "VIP + GIN" : "GENERAL", 145, y);
-      doc.rect(185, y - 3.5, 4, 4); // Casilla para marcar con lapicera
+      doc.rect(185, y - 3.5, 4, 4);
 
       y += 6;
     });
 
-    doc.save(`Lista_Puerta_Havanna_Halloween_${new Date().toISOString().slice(0, 10)}.pdf`);
+    doc.save(`Lista_Puerta_Havanna_${new Date().toISOString().slice(0, 10)}.pdf`);
   }
 
   // EXPOSICIÓN GLOBAL
@@ -883,10 +1042,12 @@
   window.authenticateAdmin = authenticateAdmin;
   window.closeAdminDashboard = closeAdminDashboard;
   window.switchAdminTab = switchAdminTab;
-  window.approveOrder = approveOrder;
+  window.approveOrderAndNotify = approveOrderAndNotify;
   window.rejectOrder = rejectOrder;
   window.validateDoorCheckIn = validateDoorCheckIn;
   window.manualCheckIn = manualCheckIn;
+  window.toggleQrCameraScanner = toggleQrCameraScanner;
+  window.handleDoorInputKey = handleDoorInputKey;
   window.exportDoorListPDF = exportDoorListPDF;
 
   function start() {
