@@ -1176,3 +1176,299 @@ body {
   background: #334155;
   color: #ffffff;
 }
+
+/* ===================================================
+   TICKETS RETRO OBSESSION (ROJO GENERAL Y ORO VIP)
+   =================================================== */
+
+.security-disclaimer {
+  background: rgba(239, 68, 68, 0.1);
+  border: 1px dashed #ef4444;
+  color: #fca5a5;
+  font-size: 0.76rem;
+  padding: 10px 14px;
+  border-radius: 8px;
+  margin-bottom: 1.2rem;
+  line-height: 1.4;
+  text-align: center;
+}
+
+.retro-obsession-ticket {
+  position: relative;
+  display: flex;
+  flex-direction: row;
+  border-radius: 12px;
+  box-shadow: 0 16px 36px rgba(0, 0, 0, 0.6);
+  overflow: hidden;
+  font-family: 'Space Mono', monospace;
+  transition: transform 0.2s ease;
+}
+
+/* Marca de Agua Estampada Diagonal */
+.ticket-watermark {
+  position: absolute;
+  top: 50%;
+  left: 38%;
+  transform: translate(-50%, -50%) rotate(-24deg);
+  font-size: 1.3rem;
+  font-weight: 800;
+  letter-spacing: 4px;
+  opacity: 0.08;
+  pointer-events: none;
+  white-space: nowrap;
+  text-transform: uppercase;
+  user-select: none;
+  z-index: 1;
+}
+
+/* PALETA 1: PISTA GENERAL (ROJO CARMESÍ RETRO / OBSESSION) */
+.theme-general-red {
+  background: #fdfaf3;
+  color: #4a0d0d;
+  border: 2px solid #8B1E1E;
+}
+
+.theme-general-red .retro-title {
+  color: #8B1E1E;
+}
+
+.theme-general-red .retro-stub {
+  background: #f4ecdc;
+  border-left: 2px dashed #8B1E1E;
+}
+
+.theme-general-red .stub-code-badge {
+  background: #8B1E1E;
+  color: #fff;
+}
+
+.theme-general-red .val-text {
+  color: #1a1a1a;
+}
+
+/* PALETA 2: ZONA VIP (ORO AMARILLO VINTAGE) */
+.theme-vip-yellow {
+  background: #fffdf5;
+  color: #3b2c00;
+  border: 2px solid #b8860b;
+}
+
+.theme-vip-yellow .retro-title {
+  color: #996515;
+}
+
+.theme-vip-yellow .retro-stub {
+  background: #f7eed3;
+  border-left: 2px dashed #b8860b;
+}
+
+.theme-vip-yellow .stub-code-badge {
+  background: #996515;
+  color: #fff;
+}
+
+.theme-vip-yellow .val-text {
+  color: #111;
+}
+
+/* Estructura del Cuerpo del Ticket */
+.retro-ticket-body {
+  flex: 1;
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  position: relative;
+  z-index: 2;
+}
+
+.retro-banner-head {
+  border-bottom: 2px solid currentColor;
+  padding-bottom: 8px;
+  margin-bottom: 14px;
+}
+
+.retro-sub {
+  font-size: 0.65rem;
+  letter-spacing: 2px;
+  font-weight: 700;
+  display: block;
+}
+
+.retro-title {
+  font-family: 'Anton', sans-serif;
+  font-size: 1.8rem;
+  line-height: 1;
+  margin: 4px 0 2px 0;
+  letter-spacing: 1px;
+}
+
+.retro-motto {
+  font-size: 0.62rem;
+  letter-spacing: 1px;
+  font-weight: 600;
+  opacity: 0.85;
+}
+
+.retro-fields-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px 14px;
+  margin-bottom: 12px;
+}
+
+.field-box label {
+  display: block;
+  font-size: 0.58rem;
+  font-weight: 700;
+  opacity: 0.7;
+  letter-spacing: 0.5px;
+}
+
+.field-box .val-text {
+  font-size: 0.85rem;
+  font-weight: 700;
+}
+
+.retro-bottom-badge {
+  font-size: 0.66rem;
+  font-weight: 800;
+  padding: 5px 8px;
+  background: rgba(0, 0, 0, 0.05);
+  border-radius: 4px;
+  text-align: center;
+  letter-spacing: 0.5px;
+}
+
+/* Talón Stub con Muescas Troqueladas */
+.retro-stub {
+  width: 140px;
+  padding: 16px 12px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  z-index: 2;
+}
+
+.stub-notch {
+  position: absolute;
+  left: -8px;
+  width: 14px;
+  height: 14px;
+  background: #090a0f;
+  /* Color del fondo de la ventana */
+  border-radius: 50%;
+}
+
+.notch-top {
+  top: -7px;
+}
+
+.notch-bottom {
+  bottom: -7px;
+}
+
+.stub-qr-container {
+  padding: 6px;
+  background: #fff;
+  border-radius: 6px;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+  margin-bottom: 8px;
+}
+
+.stub-code-badge {
+  font-size: 0.72rem;
+  font-weight: 700;
+  padding: 3px 8px;
+  border-radius: 4px;
+  letter-spacing: 1px;
+  margin-bottom: 4px;
+}
+
+.stub-notice {
+  font-size: 0.52rem;
+  font-weight: 700;
+  letter-spacing: 1px;
+  opacity: 0.7;
+}
+
+/* Adaptación Mobile de los Tickets */
+@media (max-width: 600px) {
+  .retro-obsession-ticket {
+    flex-direction: column;
+  }
+
+  .theme-general-red .retro-stub,
+  .theme-vip-yellow .retro-stub {
+    width: 100%;
+    border-left: none;
+    border-top: 2px dashed currentColor;
+    padding: 16px 0;
+  }
+
+  .stub-notch {
+    display: none;
+  }
+}
+
+/* ===================================================
+   INTERFAZ DE CÁMARA & PUERTA STAFF
+   =================================================== */
+
+.camera-scanner-wrapper {
+  margin-bottom: 1rem;
+}
+
+.btn-cam-scanner {
+  width: 100%;
+  padding: 11px;
+  border-radius: 8px;
+  border: none;
+  background: #2563eb;
+  color: #fff;
+  font-weight: 700;
+  font-size: 0.82rem;
+  cursor: pointer;
+  letter-spacing: 0.5px;
+  transition: opacity 0.2s;
+}
+
+.qr-cam-box {
+  width: 100%;
+  max-width: 320px;
+  margin: 12px auto;
+  border: 2px solid #2563eb;
+  border-radius: 12px;
+  overflow: hidden;
+  background: #000;
+}
+
+.door-feedback {
+  padding: 14px;
+  border-radius: 8px;
+  margin-bottom: 1rem;
+  font-size: 0.88rem;
+  text-align: center;
+  line-height: 1.4;
+}
+
+.door-feedback.success {
+  background: rgba(52, 211, 153, 0.15);
+  border: 1px solid #34d399;
+  color: #34d399;
+}
+
+.door-feedback.vip-success {
+  background: rgba(251, 191, 36, 0.2);
+  border: 1px solid #fbbf24;
+  color: #fbbf24;
+}
+
+.door-feedback.used,
+.door-feedback.error {
+  background: rgba(239, 68, 68, 0.2);
+  border: 1px solid #ef4444;
+  color: #ef4444;
+}
