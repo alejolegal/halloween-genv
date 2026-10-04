@@ -14,7 +14,7 @@
 
   const CONFIG = {
     adminPin: '2026',
-    whatsappPhone: '5493794000000',
+    whatsappPhone: '5493794000000', // Modificá acá tu número de atención
     maxVipStock: 50,
     spotifyUrl: 'https://open.spotify.com',
     wspGroupUrl: 'https://chat.whatsapp.com',
@@ -28,7 +28,7 @@
   }
 
   // ==========================================
-  // FEEDBACK DE AUDIO EN PUERTA (SIN EMOJIS)
+  // FEEDBACK DE AUDIO EN PUERTA
   // ==========================================
   function playAudioTone(type) {
     try {
@@ -179,7 +179,7 @@
   }
 
   // ==========================================
-  // CHECKOUT
+  // CHECKOUT MULTI-CANTIDAD
   // ==========================================
   let activePlan = { name: '', unitPrice: 0 };
   let activeCreatedOrders = [];
@@ -362,7 +362,7 @@
   }
 
   // ==========================================
-  // RENDER TICKETS (ESTILO EDITORIAL VINTAGE)
+  // RENDER TICKETS EDITORIAL "ONE WISH WILLOW"
   // ==========================================
   function renderMultipleTicketsUI(ordersList) {
     document.getElementById('co-step-ticket').classList.remove('hidden');
@@ -408,7 +408,7 @@
           </div>
 
           <div class="retro-bottom-badge">
-            ${isVip ? '★ INCLUYE 1 CONSUMICIÓN GIN TONIC EN BALCÓN ★' : 'AMAZE YOUR FRIENDS! • YOU ONLY GET ONE WISH'}
+            ${isVip ? '[BALCON VIP] INCLUYE 1 CONSUMICION GIN TONIC' : 'AMAZE YOUR FRIENDS! • YOU ONLY GET ONE WISH'}
           </div>
         </div>
 
@@ -551,7 +551,7 @@
             <span style="color:${statusColor}; font-weight:700; font-size:0.72rem; display:block; margin-bottom:4px">${statusLabel}</span>
             ${isApproved ? `
               <button onclick="window.openSingleTicketFromLookup('${o.ticketId}')" class="btn-view-qr">
-                Ver QR //➔
+                Ver Ticket //➔
               </button>
             ` : ''}
           </div>
@@ -599,6 +599,7 @@
     }
   });
 
+  // Acceso Staff por 3 toques sobre "GEN V"
   let staffTapCount = 0;
   let staffTapTimer = null;
   const staffTrigger = document.getElementById('secret-admin-trigger');
@@ -649,7 +650,6 @@
   }
 
   function closeAdminDashboard() {
-    stopQrCameraScanner();
     const modalDash = document.getElementById('modal-admin-dashboard');
     if (modalDash) modalDash.classList.add('hidden');
   }
@@ -661,7 +661,6 @@
     const viewDoor = document.getElementById('adm-view-door');
 
     if (tab === 'approvals') {
-      stopQrCameraScanner();
       btnApp?.classList.add('active');
       btnDoor?.classList.remove('active');
       viewApp?.classList.remove('hidden');
@@ -759,8 +758,34 @@
     }
   }
 
+  // AUTO-LIMPIEZA DE PENDIENTES > 24H
+  async function cleanOldPendingOrders() {
+    const oneDayAgo = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
+    const oldPendings = cloudOrders.filter(o => o.status === 'pending' && o.createdAt < oneDayAgo);
+
+    if (oldPendings.length === 0) {
+      alert("No hay ordenes pendientes con mas de 24 horas de antiguedad.");
+      return;
+    }
+
+    if (!confirm(`Se encontraron ${oldPendings.length} tickets pendientes de mas de 24 hs. Desea descartarlos para liberar cupos?`)) {
+      return;
+    }
+
+    try {
+      const idsToDelete = oldPendings.map(o => o.firestoreId);
+      const { error } = await client.from('orders').update({ status: 'rejected' }).in('id', idsToDelete);
+      if (error) throw error;
+
+      alert(`Se descartaron ${oldPendings.length} ordenes viejas.`);
+      await fetchOrders();
+    } catch (err) {
+      alert("Error al limpiar: " + err.message);
+    }
+  }
+
   // ==========================================
-  // CONTROL EN PUERTA (INTELIGENTE MULTI-TICKET)
+  // CONTROL EN PUERTA (100% POR DNI)
   // ==========================================
   function handleDoorInputKey(e) {
     if (e.key === 'Enter') {
@@ -769,7 +794,7 @@
   }
 
   function handleDoorSearchInput(val) {
-    if (val.trim().length >= 4) {
+    if (val.trim().length >= 7) {
       validateDoorCheckIn();
     }
   }
@@ -781,59 +806,40 @@
     panel.className = 'hidden';
     panel.innerHTML = '';
 
-    if (!identifier) {
+    const cleanQ = cleanDni(identifier);
+
+    if (!cleanQ) {
       msg.className = 'door-feedback error';
-      msg.textContent = 'Ingrese DNI o escanee un Ticket QR.';
+      msg.textContent = 'Ingrese un numero de DNI.';
       playAudioTone('error');
       return;
     }
 
-    let query = identifier;
-    let targetTicketId = null;
+    // Busca todas las compras aprobadas de ese DNI
+    const userTickets = cloudOrders.filter(o => o.status === 'approved' && o.dni === cleanQ);
 
-    try {
-      const parsed = JSON.parse(identifier);
-      if (parsed.t) targetTicketId = parsed.t;
-      if (parsed.d) query = parsed.d;
-      else if (parsed.ticketId) targetTicketId = parsed.ticketId;
-    } catch (e) { }
-
-    const cleanQ = cleanDni(query);
-
-    // Búsqueda de todas las órdenes aprobadas asociadas al DNI, OrderId o TicketId
-    const matchedTickets = cloudOrders.filter(o =>
-      o.status === 'approved' && (
-        (cleanQ && o.dni === cleanQ) ||
-        (targetTicketId && o.ticketId.toLowerCase() === targetTicketId.toLowerCase()) ||
-        (o.ticketId.toLowerCase() === query.toLowerCase()) ||
-        (o.orderId && o.orderId.toLowerCase() === query.toLowerCase())
-      )
-    );
-
-    if (matchedTickets.length === 0) {
+    if (userTickets.length === 0) {
       msg.className = 'door-feedback error';
-      msg.innerHTML = `[ACCESO DENEGADO] No existen tickets aprobados para "${identifier}".`;
+      msg.innerHTML = `[SIN ACCESO] No hay tickets aprobados para el DNI: <strong>${cleanQ}</strong>.`;
       playAudioTone('error');
       return;
     }
 
-    const first = matchedTickets[0];
-    // Traemos TODAS las compras del titular de ese DNI (incluso si escaneó solo un ticket)
-    const allUserTickets = cloudOrders.filter(o => o.status === 'approved' && o.dni === first.dni);
-    const pendingToEnter = allUserTickets.filter(o => !o.used);
-    const hasVip = allUserTickets.some(o => o.ticketType && o.ticketType.includes('VIP'));
+    const first = userTickets[0];
+    const pendingToEnter = userTickets.filter(o => !o.used);
+    const hasVip = userTickets.some(o => o.ticketType && o.ticketType.includes('VIP'));
 
     panel.className = 'door-multi-panel';
     panel.innerHTML = `
       <div class="panel-header-info">
         <div>
           <span class="label-sub">TITULAR REGISTRADO</span>
-          <h3 class="holder-name">${first.name}</h3>
-          <span class="holder-dni">DNI: <strong>${first.dni}</strong></span>
+          <h3 class="holder-name">${first.buyerName || first.name}</h3>
+          <span class="holder-dni">DNI COTEJADO: <strong>${first.dni}</strong></span>
         </div>
         <div style="text-align:right;">
-          <span class="count-badge">${pendingToEnter.length} / ${allUserTickets.length} DISPONIBLES</span>
-          ${hasVip ? '<span class="badge-vip-pill">[INCLUYE VIP]</span>' : ''}
+          <span class="count-badge">${pendingToEnter.length} / ${userTickets.length} DISPONIBLES</span>
+          ${hasVip ? '<span class="badge-vip-pill">[INCLUYE BALCON VIP]</span>' : ''}
         </div>
       </div>
 
@@ -844,16 +850,16 @@
       ` : ''}
 
       <div class="tickets-breakdown-list">
-        ${allUserTickets.map(t => `
+        ${userTickets.map(t => `
           <div class="breakdown-item ${t.used ? 'item-used' : 'item-active'}">
             <div>
               <span class="tk-type">${t.ticketType}</span>
-              <span class="tk-id">${t.ticketId}${t.used ? '(INGRESADO)' : '(HABILITADO)'}</span>
+              <span class="tk-id">${t.name} •${t.ticketId}</span>
             </div>
             <div>
               ${t.used ?
         '<span class="status-used-tag">INGRESADO</span>' :
-        `<button onclick="window.manualCheckIn('${t.firestoreId}')" class="btn-checkin-single">INGRESAR //➔</button>`
+        `<button onclick="window.manualCheckIn('${t.firestoreId}')" class="btn-checkin-single">DAR INGRESO //➔</button>`
       }
             </div>
           </div>
@@ -861,14 +867,12 @@
       </div>
     `;
 
-    // Si escaneó un QR específico y esa entrada está lista, la ingresa de una
-    if (targetTicketId) {
-      const specific = allUserTickets.find(t => t.ticketId === targetTicketId);
-      if (specific && !specific.used) {
-        await manualCheckIn(specific.firestoreId);
-      } else if (specific && specific.used) {
-        playAudioTone('error');
-      }
+    if (userTickets.length === 1 && !first.used) {
+      await manualCheckIn(first.firestoreId);
+    } else if (pendingToEnter.length === 0) {
+      msg.className = 'door-feedback used';
+      msg.innerHTML = `[ATENCION] Todas las entradas de este DNI ya fueron ingresadas.`;
+      playAudioTone('error');
     } else {
       playAudioTone(hasVip ? 'vip' : 'success');
     }
@@ -938,64 +942,7 @@
   }
 
   // ==========================================
-  // ESCANER CAMARA
-  // ==========================================
-  let html5QrScanner = null;
-
-  function toggleQrCameraScanner() {
-    const qrBox = document.getElementById('qr-reader');
-    const btn = document.getElementById('btn-toggle-cam');
-
-    if (html5QrScanner) {
-      stopQrCameraScanner();
-      return;
-    }
-
-    if (typeof Html5Qrcode === 'undefined') {
-      alert("Libreria de escaneo no disponible.");
-      return;
-    }
-
-    qrBox.classList.remove('hidden');
-    btn.textContent = "[X] DETENER CAMARA";
-    btn.style.borderColor = "#ef4444";
-    btn.style.color = "#ef4444";
-
-    html5QrScanner = new Html5Qrcode("qr-reader");
-    html5QrScanner.start(
-      { facingMode: "environment" },
-      { fps: 10, qrbox: { width: 220, height: 220 } },
-      (decodedText) => {
-        processDoorVerification(decodedText);
-      },
-      () => { }
-    ).catch(err => {
-      alert("Permiso de camara denegado: " + err);
-      stopQrCameraScanner();
-    });
-  }
-
-  function stopQrCameraScanner() {
-    if (html5QrScanner) {
-      html5QrScanner.stop().then(() => {
-        html5QrScanner.clear();
-        html5QrScanner = null;
-        const qrBox = document.getElementById('qr-reader');
-        if (qrBox) qrBox.classList.add('hidden');
-        const btn = document.getElementById('btn-toggle-cam');
-        if (btn) {
-          btn.textContent = "[CAMARA] ACTIVAR ESCANER";
-          btn.style.borderColor = "#f59e0b";
-          btn.style.color = "#f59e0b";
-        }
-      }).catch(() => {
-        html5QrScanner = null;
-      });
-    }
-  }
-
-  // ==========================================
-  // EXPORTAR PDF
+  // EXPORTAR PLANILLA A PDF
   // ==========================================
   function exportDoorListPDF() {
     if (typeof window.jspdf === 'undefined') {
@@ -1068,7 +1015,7 @@
     doc.save(`Havanna_Puerta_${new Date().toISOString().slice(0, 10)}.pdf`);
   }
 
-  // EXPOSICION GLOBAL
+  // EXPOSICION GLOBAL DE FUNCIONES
   window.openCheckout = openCheckout;
   window.closeCheckout = closeCheckout;
   window.updateCheckoutTotal = updateCheckoutTotal;
@@ -1089,10 +1036,10 @@
   window.switchAdminTab = switchAdminTab;
   window.approveOrderAndNotify = approveOrderAndNotify;
   window.rejectOrder = rejectOrder;
+  window.cleanOldPendingOrders = cleanOldPendingOrders;
   window.validateDoorCheckIn = validateDoorCheckIn;
   window.manualCheckIn = manualCheckIn;
   window.checkInAllPending = checkInAllPending;
-  window.toggleQrCameraScanner = toggleQrCameraScanner;
   window.handleDoorInputKey = handleDoorInputKey;
   window.handleDoorSearchInput = handleDoorSearchInput;
   window.exportDoorListPDF = exportDoorListPDF;
