@@ -117,21 +117,30 @@
   }
 
   function checkVipAvailability() {
-    const vipCount = cloudOrders.filter(o => o.ticketType && o.ticketType.includes('VIP') && o.status !== 'rejected').length;
+    // FILTRO: Solo resta cupos si la compra está aprobada
+    const vipCount = cloudOrders.filter(o =>
+      o.ticketType && o.ticketType.includes('VIP') && o.status === 'approved'
+    ).length;
+
     const remaining = Math.max(0, CONFIG.maxVipStock - vipCount);
     const label = document.getElementById('vip-stock-label');
     const btn = document.getElementById('btn-buy-vip');
 
-    if (label) label.innerHTML = `Cupos restantes: <strong>${remaining}/${CONFIG.maxVipStock}</strong>`;
+    if (label) {
+      label.innerHTML = `Cupos restantes: <strong>${remaining}/${CONFIG.maxVipStock}</strong>`;
+    }
+
     if (btn) {
       if (remaining === 0) {
         btn.disabled = true;
         btn.textContent = 'AGOTADO';
         btn.style.opacity = '0.5';
+        btn.style.cursor = 'not-allowed';
       } else {
         btn.disabled = false;
         btn.textContent = 'COMPRAR VIP';
         btn.style.opacity = '1';
+        btn.style.cursor = 'pointer';
       }
     }
   }
@@ -186,23 +195,45 @@
   async function handleOrderSubmit(e) {
     e.preventDefault();
 
+    const btnSubmit = e.target.querySelector('button[type="submit"]');
     const name = document.getElementById('cust-name').value.trim();
     const dni = cleanDni(document.getElementById('cust-dni').value);
     const phone = document.getElementById('cust-phone').value.trim();
     const email = document.getElementById('cust-email').value.trim();
     const qty = parseInt(document.getElementById('cust-qty').value) || 1;
 
-    if (!dni) {
-      alert("Por favor ingresá un número de DNI válido.");
+    // 1. Validación de DNI
+    if (!dni || dni.length < 7 || dni.length > 9) {
+      alert("Por favor ingresá un número de DNI válido (entre 7 y 9 dígitos).");
       return;
     }
 
+    // 2. FILTRO ANTI-SPAM: Máximo 2 órdenes pendientes por DNI
+    const pendingOrders = cloudOrders.filter(o => o.dni === dni && o.status === 'pending');
+    if (pendingOrders.length >= 2) {
+      alert("Ya registrás compras pendientes de validación para este DNI. Por favor enviá el comprobante de pago por WhatsApp o aguardá a que el staff apruebe tu orden.");
+      return;
+    }
+
+    // 3. TOPE MÁXIMO DE TICKETS
+    if (qty > 4 || qty < 1) {
+      alert("El límite máximo permitido es de 4 entradas por compra.");
+      return;
+    }
+
+    // 4. Control de cupos VIP sobre compras aprobadas
     if (activePlan.name.includes('VIP')) {
-      const vipCount = cloudOrders.filter(o => o.ticketType && o.ticketType.includes('VIP') && o.status !== 'rejected').length;
-      if (vipCount + qty > CONFIG.maxVipStock) {
-        alert(`Solo quedan ${CONFIG.maxVipStock - vipCount} cupos VIP.`);
+      const vipApprovedCount = cloudOrders.filter(o => o.ticketType && o.ticketType.includes('VIP') && o.status === 'approved').length;
+      if (vipApprovedCount + qty > CONFIG.maxVipStock) {
+        alert(`Solo quedan ${CONFIG.maxVipStock - vipApprovedCount} cupos VIP disponibles.`);
         return;
       }
+    }
+
+    // Bloqueo del botón para evitar envíos duplicados por doble clic
+    if (btnSubmit) {
+      btnSubmit.disabled = true;
+      btnSubmit.textContent = "GENERANDO ORDEN...";
     }
 
     const sharedOrderId = 'ORD-' + Math.floor(1000 + Math.random() * 9000);
@@ -246,7 +277,12 @@
       document.getElementById('transfer-order-code').textContent = sharedOrderId;
       document.getElementById('co-step-transfer').classList.remove('hidden');
     } catch (err) {
-      alert("Error al guardar la orden: " + err.message);
+      alert("Error al registrar la orden: " + err.message);
+    } finally {
+      if (btnSubmit) {
+        btnSubmit.disabled = false;
+        btnSubmit.textContent = "CONTINUAR A TRANSFERENCIA //➔";
+      }
     }
   }
 
@@ -530,19 +566,26 @@
   }
 
   function openAdminModal() {
-    document.getElementById('modal-admin-login').classList.remove('hidden');
-    document.getElementById('admin-pin-input').value = '';
+    const modalLogin = document.getElementById('modal-admin-login');
+    const pinInput = document.getElementById('admin-pin-input');
+    if (modalLogin) modalLogin.classList.remove('hidden');
+    if (pinInput) pinInput.value = '';
   }
 
   function closeAdminLoginModal() {
-    document.getElementById('modal-admin-login').classList.add('hidden');
+    const modalLogin = document.getElementById('modal-admin-login');
+    if (modalLogin) modalLogin.classList.add('hidden');
   }
 
   function authenticateAdmin() {
-    const pin = document.getElementById('admin-pin-input').value;
+    const pinInput = document.getElementById('admin-pin-input');
+    const pin = pinInput ? pinInput.value.trim() : '';
+
     if (pin === CONFIG.adminPin) {
       closeAdminLoginModal();
-      document.getElementById('modal-admin-dashboard').classList.remove('hidden');
+      const modalDash = document.getElementById('modal-admin-dashboard');
+      if (modalDash) modalDash.classList.remove('hidden');
+
       switchAdminTab('approvals');
       renderApprovalsList();
       updateMetrics();
@@ -552,26 +595,27 @@
   }
 
   function closeAdminDashboard() {
-    document.getElementById('modal-admin-dashboard').classList.add('hidden');
+    const modalDash = document.getElementById('modal-admin-dashboard');
+    if (modalDash) modalDash.classList.add('hidden');
   }
 
   function switchAdminTab(tab) {
     const btnApp = document.getElementById('tab-btn-approvals');
     const btnDoor = document.getElementById('tab-btn-door');
-    const viewApp = document.getElementById('adm-view-approvals');
-    const viewDoor = document.getElementById('adm-view-door');
+    const viewApp = document.getElementById('adm-view-approvals') || document.getElementById('section-approvals');
+    const viewDoor = document.getElementById('adm-view-door') || document.getElementById('section-door');
 
     if (tab === 'approvals') {
-      btnApp.classList.add('active');
-      btnDoor.classList.remove('active');
-      viewApp.classList.remove('hidden');
-      viewDoor.classList.add('hidden');
+      btnApp?.classList.add('active');
+      btnDoor?.classList.remove('active');
+      viewApp?.classList.remove('hidden');
+      viewDoor?.classList.add('hidden');
       renderApprovalsList();
     } else {
-      btnDoor.classList.add('active');
-      btnApp.classList.remove('active');
-      viewDoor.classList.remove('hidden');
-      viewApp.classList.add('hidden');
+      btnDoor?.classList.add('active');
+      btnApp?.classList.remove('active');
+      viewDoor?.classList.remove('hidden');
+      viewApp?.classList.add('hidden');
       renderDoorList();
     }
   }
