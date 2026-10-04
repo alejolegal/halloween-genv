@@ -48,13 +48,13 @@ body {
   top: 0;
   left: 0;
   width: 100vw;
-  height: 100vh;
+  height: 100dvh;
   background:
-    radial-gradient(circle at 50% 35%, rgba(5, 5, 7, 0.4) 0%, rgba(5, 5, 7, 0.88) 65%, #050507 100%),
-    linear-gradient(to bottom, rgba(5, 5, 7, 0.6) 0%, transparent 22%, transparent 70%, #050507 100%),
+    radial-gradient(circle at 50% 35%, rgba(5, 5, 7, 0.55) 0%, rgba(5, 5, 7, 0.92) 70%, #050507 100%),
+    linear-gradient(to bottom, rgba(5, 5, 7, 0.7) 0%, transparent 25%, rgba(5, 5, 7, 0.8) 75%, #050507 100%),
     url('fondo-halloween.jpg') center top / cover no-repeat;
-  background-attachment: fixed;
   z-index: -2;
+  pointer-events: none;
 }
 
 /* 2. PC & PANTALLAS ANCHAS (> 768px): fondo-halloween-pc.jpg */
