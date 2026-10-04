@@ -1472,3 +1472,124 @@ body {
   border: 1px solid #ef4444;
   color: #ef4444;
 }
+
+/* ===================================================
+   PANEL MULTI-TICKET Y PUERTA OPERATIVA
+   =================================================== */
+
+.door-controls-top {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  margin-bottom: 12px;
+}
+
+.door-multi-panel {
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 8px;
+  padding: 14px;
+  margin-bottom: 14px;
+}
+
+.panel-header-info {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 10px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  padding-bottom: 8px;
+}
+
+.holder-name {
+  font-size: 1.15rem;
+  color: #fff;
+  margin: 0;
+}
+
+.holder-dni {
+  font-size: 0.8rem;
+  color: #a3a3a3;
+}
+
+.count-badge {
+  display: block;
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: #34d399;
+  letter-spacing: 0.5px;
+}
+
+.badge-vip-pill {
+  display: inline-block;
+  font-size: 0.68rem;
+  font-weight: 700;
+  color: #fbbf24;
+  margin-top: 4px;
+}
+
+.btn-checkin-all {
+  width: 100%;
+  padding: 10px;
+  background: #16a34a;
+  color: #fff;
+  border: none;
+  border-radius: 6px;
+  font-weight: 700;
+  font-size: 0.82rem;
+  cursor: pointer;
+  margin-bottom: 10px;
+}
+
+.tickets-breakdown-list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.breakdown-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8px 12px;
+  border-radius: 6px;
+  font-size: 0.8rem;
+}
+
+.breakdown-item.item-active {
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.breakdown-item.item-used {
+  background: rgba(255, 255, 255, 0.02);
+  opacity: 0.5;
+}
+
+.tk-type {
+  font-weight: 700;
+  display: block;
+  color: #fff;
+}
+
+.tk-id {
+  font-size: 0.7rem;
+  color: #888;
+}
+
+.status-used-tag {
+  font-size: 0.7rem;
+  color: #737373;
+  font-weight: 700;
+}
+
+.btn-checkin-single {
+  background: #2563eb;
+  color: #fff;
+  border: none;
+  padding: 5px 10px;
+  border-radius: 4px;
+  font-size: 0.72rem;
+  font-weight: 700;
+  cursor: pointer;
+}
