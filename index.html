@@ -6,11 +6,11 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>HAVANNA CLUB // HALLOWEEN OBSESSION 2026</title>
 
-  <!-- Favicon Calabaza Naranja Brillante -->
+  <!-- Favicon Calabaza Brillante -->
   <link rel="icon"
     href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><filter id=%22glow%22><feGaussianBlur stdDeviation=%224%22 result=%22coloredBlur%22/><feMerge><feMergeNode in=%22coloredBlur%22/><feMergeNode in=%22SourceGraphic%22/></feMerge></filter><text y=%22.88em%22 font-size=%2286%22 filter=%22url(%23glow)%22>🎃</text></svg>">
 
-  <!-- Tipografías Oficiales -->
+  <!-- Tipografias Oficiales -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link
@@ -19,12 +19,11 @@
 
   <link rel="stylesheet" href="style.css">
 
-  <!-- Librerías de QR, Canvas, PDF y Cámara -->
+  <!-- Librerias de QR, Confetti, Canvas y PDF -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-  <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
 </head>
 
 <body>
@@ -81,7 +80,7 @@
           <ul class="tier-features">
             <li>// ACCESO A PISTA GENERAL</li>
             <li>// BARRA PRINCIPAL HABILITADA</li>
-            <li>// SEGURIDAD EN PREDIO</li>
+            <li>// SEGURIDAD EN TODO EL PREDIO</li>
           </ul>
           <button onclick="openCheckout('Pista General', 5000)" class="btn-ticket btn-general">COMPRAR GENERAL</button>
           <small class="tier-next">Fase siguiente: Preventa 2 ($7.000)</small>
@@ -140,7 +139,7 @@
     </div>
   </section>
 
-  <!-- FOOTER -->
+  <!-- FOOTER CON ACCESO SECRET STAFF EN "GEN V" -->
   <footer class="footer">
     <div class="container footer-content">
       <p class="footer-collab">ALEJO LEGAL × HAVANNA CLUB × <span id="secret-admin-trigger"
@@ -153,12 +152,12 @@
        MODALES
        ========================================== -->
 
-  <!-- CHECKOUT -->
+  <!-- MODAL CHECKOUT -->
   <div id="modal-checkout" class="modal-overlay hidden">
     <div class="modal-window liquid-glass">
       <button class="modal-close" onclick="closeCheckout()">✕</button>
 
-      <!-- PASO 1 -->
+      <!-- PASO 1: FORMULARIO -->
       <div id="co-step-form">
         <h3 class="modal-heading">DATOS DEL TITULAR</h3>
         <p class="modal-sub">Las entradas se emitiran registradas bajo el DNI ingresado.</p>
@@ -205,7 +204,7 @@
         </form>
       </div>
 
-      <!-- PASO 2 -->
+      <!-- PASO 2: TRANSFERENCIA -->
       <div id="co-step-transfer" class="hidden">
         <h3 class="modal-heading">DATOS DE TRANSFERENCIA</h3>
         <p class="modal-sub">Envie el importe exacto para proceder con la emision de las entradas.</p>
@@ -213,8 +212,7 @@
           <div class="bank-row"><span>Monto total:</span> <strong id="transfer-amount" class="text-red">$0 ARS</strong>
           </div>
           <div class="bank-row"><span>Alias bancario:</span> <strong id="transfer-alias">HAVANNA.HALLOWEEN</strong>
-            <button onclick="copyAlias()" class="btn-copy">Copiar</button>
-          </div>
+            <button onclick="copyAlias()" class="btn-copy">Copiar</button></div>
           <div class="bank-row"><span>CBU / CVU:</span> <span>0000003100012345678901</span></div>
           <div class="bank-row"><span>Titular de cuenta:</span> <span>Alejo Nahuel Legal</span></div>
           <div class="bank-row"><span>Referencia / Orden:</span> <strong id="transfer-order-code">ORD-0000</strong>
@@ -225,7 +223,7 @@
         <button onclick="sendWhatsAppProof()" class="btn-wsp-action">ENVIAR COMPROBANTE POR WHATSAPP //➔</button>
       </div>
 
-      <!-- PASO 3 -->
+      <!-- PASO 3: EN REVISIÓN -->
       <div id="co-step-pending" class="hidden text-center">
         <div class="status-icon">// EN REVISION //</div>
         <h3 class="modal-heading">COMPROBANTE EN PROCESO</h3>
@@ -235,7 +233,7 @@
         <button onclick="checkStatusFromCurrent()" class="btn-secondary full-width mt-4">VERIFICAR ESTADO</button>
       </div>
 
-      <!-- PASO 4 -->
+      <!-- PASO 4: TICKETS -->
       <div id="co-step-ticket" class="hidden">
         <div class="security-disclaimer">
           <strong>CONTROL ESTRICTO:</strong> Prohibida la difusion o copia de este ticket. Codigo QR nominal e
@@ -247,7 +245,7 @@
     </div>
   </div>
 
-  <!-- CONSULTA DNI -->
+  <!-- MODAL CONSULTA DNI -->
   <div id="modal-lookup" class="modal-overlay hidden">
     <div class="modal-window liquid-glass">
       <button class="modal-close" onclick="closeLookupModal()">✕</button>
@@ -261,7 +259,7 @@
     </div>
   </div>
 
-  <!-- MAPA -->
+  <!-- MODAL PLANO DEL CLUB -->
   <div id="modal-map" class="modal-overlay hidden">
     <div class="modal-window modal-wide liquid-glass">
       <button class="modal-close" onclick="toggleMapModal()">✕</button>
@@ -273,7 +271,7 @@
     </div>
   </div>
 
-  <!-- LOGIN STAFF -->
+  <!-- MODAL LOGIN ADMIN -->
   <div id="modal-admin-login" class="modal-overlay hidden">
     <div class="modal-window liquid-glass">
       <button class="modal-close" onclick="closeAdminLoginModal()">✕</button>
@@ -285,7 +283,7 @@
     </div>
   </div>
 
-  <!-- DASHBOARD STAFF -->
+  <!-- MODAL DASHBOARD STAFF -->
   <div id="modal-admin-dashboard" class="modal-overlay hidden">
     <div class="modal-window modal-admin liquid-glass">
       <button class="modal-close" onclick="closeAdminDashboard()">✕</button>
@@ -302,36 +300,35 @@
       <div class="admin-tabs">
         <button id="tab-btn-approvals" class="admin-tab active" onclick="switchAdminTab('approvals')">Aprobar
           Pagos</button>
-        <button id="tab-btn-door" class="admin-tab" onclick="switchAdminTab('door')">Control en Puerta</button>
+        <button id="tab-btn-door" class="admin-tab" onclick="switchAdminTab('door')">Control en Puerta (DNI)</button>
       </div>
 
       <!-- PESTAÑA APROBACIONES -->
       <div id="adm-view-approvals" class="admin-body">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
+          <span style="font-size:0.75rem; color:#8e8e99;">ORDENES PENDIENTES DE REVISION</span>
+          <button onclick="window.cleanOldPendingOrders()" class="btn-secondary"
+            style="border-color:#ef4444; color:#ef4444; font-size:0.72rem; padding:4px 8px;">
+            [LIMPIAR PENDIENTES >24H]
+          </button>
+        </div>
         <div id="adm-pending-list"></div>
       </div>
 
-      <!-- PESTAÑA PUERTA -->
+      <!-- PESTAÑA PUERTA (EXCLUSIVO DNI) -->
       <div id="adm-view-door" class="admin-body hidden">
-        <div class="door-controls-top">
-          <button onclick="window.exportDoorListPDF()" class="btn-secondary"
-            style="border-color: #38bdf8; color: #38bdf8; font-weight: 700;">
-            [PDF] DESCARGAR PLANILLA
-          </button>
-          <button id="btn-toggle-cam" onclick="toggleQrCameraScanner()" class="btn-secondary"
-            style="border-color: #f59e0b; color: #f59e0b; font-weight: 700;">
-            [CAMARA] ACTIVAR ESCANER
-          </button>
-        </div>
-
-        <div id="qr-reader" class="hidden qr-cam-box"></div>
+        <button onclick="window.exportDoorListPDF()" class="btn-secondary"
+          style="width:100%; margin-bottom:12px; border-color:#38bdf8; color:#38bdf8; font-weight:700;">
+          [PDF] DESCARGAR PLANILLA DE CONTROL
+        </button>
 
         <div class="door-scan-bar">
-          <input type="text" id="door-input" placeholder="Tipear DNI, codigo o escanear QR..."
+          <input type="number" id="door-input" placeholder="Ingresar DNI del asistente..."
             oninput="handleDoorSearchInput(this.value)" onkeyup="handleDoorInputKey(event)">
-          <button onclick="validateDoorCheckIn()" class="btn-primary">BUSCAR / VALIDAR</button>
+          <button onclick="validateDoorCheckIn()" class="btn-primary">BUSCAR DNI</button>
         </div>
 
-        <!-- PANEL DE RESULTADOS MULTI-TICKET EN PUERTA -->
+        <!-- PANEL DESGLOSE MULTI-TICKET -->
         <div id="door-verification-panel" class="hidden"></div>
         <div id="door-msg" class="door-feedback hidden"></div>
 
@@ -342,8 +339,9 @@
     </div>
   </div>
 
+  <!-- SUPABASE & APP -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="app.js?v=4"></script>
+  <script src="app.js?v=5"></script>
 </body>
 
 </html>
