@@ -1,462 +1,469 @@
-/* ==========================================================================
-   VARIABLES DE DISEÑO Y COLOR
-   ========================================================================== */
-:root {
-  --bg-dark: #050507;
-  --red-crimson: #e50914;
-  --red-glow: rgba(229, 9, 20, 0.45);
-  --red-hover: #b80710;
-  --gold-vip: #d4af37;
-  --gold-glow: rgba(212, 175, 55, 0.35);
-  --text-white: #ffffff;
-  --text-muted: #8e8e99;
-  --text-disabled: #555562;
-  --font-anton: 'Anton', sans-serif;
-  --font-marker: 'Permanent Marker', cursive;
-  --font-mono: 'Space Mono', monospace;
-  --font-inter: 'Inter', sans-serif;
-  --transition-smooth: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
-}
-
-/* RESET GENERAL */
+/* ==========================================
+   RESET & VARIABLES GLOBALES
+   ========================================== */
 *,
 *::before,
 *::after {
+  box-sizing: border-box;
   margin: 0;
   padding: 0;
-  box-sizing: border-box;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
 }
 
+:root {
+  --font-main: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  --font-display: 'Anton', sans-serif;
+  --font-brush: 'Permanent Marker', cursive;
+  --bg-dark: #070709;
+  --text-main: #f3f4f6;
+  --text-muted: #9ca3af;
+  --blood-red: #d90429;
+  --accent-gold: #eab308;
+  --border-subtle: rgba(255, 255, 255, 0.1);
+  --border-glass: rgba(255, 255, 255, 0.15);
+  --glass-bg: rgba(18, 18, 22, 0.65);
+}
+
+html,
+/* ==========================================
+   FONDO DIRECTO EN BODY (INFALIBLE)
+   ========================================== */
 body {
-  background-color: var(--bg-dark);
-  color: var(--text-white);
-  font-family: var(--font-inter);
+  width: 100%;
   min-height: 100vh;
-  position: relative;
-  overflow-x: hidden;
-  line-height: 1.5;
-}
-
-/* ==========================================================================
-   FONDO ADAPTABLE: CELULAR (VERTICAL) vs PC (HORIZONTAL)
-   ========================================================================== */
-/* 1. MÓVIL POR DEFECTO: fondo-halloween.jpg */
-.site-bg-overlay {
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100vw;
-  height: 100dvh;
+  margin: 0;
+  padding: 0;
+  background-color: #070709;
+  /* Degradado suave + Imagen de fondo juntos */
   background:
-    radial-gradient(circle at 50% 35%, rgba(5, 5, 7, 0.55) 0%, rgba(5, 5, 7, 0.92) 70%, #050507 100%),
-    linear-gradient(to bottom, rgba(5, 5, 7, 0.7) 0%, transparent 25%, rgba(5, 5, 7, 0.8) 75%, #050507 100%),
-    url('fondo-halloween.jpg') center top / cover no-repeat;
-  z-index: -2;
-  pointer-events: none;
+    linear-gradient(to bottom, rgba(7, 7, 9, 0.45) 0%, rgba(7, 7, 9, 0.75) 50%, #070709 100%),
+    url("fondo-halloween.jpg") no-repeat center top / cover;
+  background-attachment: fixed;
+  color: var(--text-main);
+  font-family: var(--font-main);
+  overflow-x: hidden;
+  -webkit-font-smoothing: antialiased;
 }
 
-/* 2. PC & PANTALLAS ANCHAS (> 768px): fondo-halloween-pc.jpg */
+/* Pantallas de PC */
 @media (min-width: 769px) {
-  .site-bg-overlay {
+  body {
     background:
-      radial-gradient(circle at 50% 40%, rgba(5, 5, 7, 0.35) 0%, rgba(5, 5, 7, 0.88) 70%, #050507 100%),
-      linear-gradient(to bottom, rgba(5, 5, 7, 0.7) 0%, transparent 20%, transparent 75%, #050507 100%),
-      url('fondo-halloween-pc.jpg') center center / cover no-repeat;
+      linear-gradient(to bottom, rgba(7, 7, 9, 0.35) 0%, rgba(7, 7, 9, 0.8) 60%, #070709 100%),
+      url("fondo-halloween-pc.jpg") no-repeat center top / cover;
+    background-attachment: fixed;
   }
 }
 
+/* Si usás esto directo en body, podés ocultar los divs viejos */
+.site-bg-overlay,
+.site-noise-layer {
+  display: none !important;
+}
+
+/* Viñeta sutil para legibilidad del contenido sin tapar la ilustración */
 .site-noise-layer {
   position: fixed;
   top: 0;
   left: 0;
   width: 100vw;
-  height: 100vh;
-  background-image: radial-gradient(rgba(255, 255, 255, 0.015) 1px, transparent 0);
-  background-size: 24px 24px;
-  pointer-events: none;
+  height: 100dvh;
+  background: linear-gradient(to bottom, rgba(7, 7, 9, 0.25) 0%, rgba(7, 7, 9, 0.6) 45%, #070709 95%);
   z-index: -1;
+  pointer-events: none;
 }
 
 .container {
+  width: 100%;
   max-width: 1100px;
   margin: 0 auto;
-  padding: 0 1.5rem;
+  padding: 0 1.25rem;
 }
 
-/* ==========================================================================
-   LIQUID GLASS
-   ========================================================================== */
-.liquid-glass {
-  background: linear-gradient(135deg,
-      rgba(255, 255, 255, 0.05) 0%,
-      rgba(20, 20, 26, 0.65) 50%,
-      rgba(10, 10, 14, 0.85) 100%) !important;
-  backdrop-filter: blur(20px) saturate(180%);
-  -webkit-backdrop-filter: blur(20px) saturate(180%);
-  border: 1px solid rgba(255, 255, 255, 0.08) !important;
-  box-shadow:
-    0 25px 45px -15px rgba(0, 0, 0, 0.85),
-    inset 0 1px 1px 0 rgba(255, 255, 255, 0.16),
-    inset 0 -1px 1px 0 rgba(0, 0, 0, 0.4);
-}
-
-/* ==========================================================================
-   BARRA FLOTANTE CENTRADA (TOP)
-   ========================================================================== */
+/* ==========================================
+   BARRA SUPERIOR (HEADER)
+   ========================================== */
 .navbar-centered {
-  position: absolute;
-  top: 1.5rem;
-  left: 0;
-  width: 100%;
   display: flex;
   justify-content: center;
   align-items: center;
-  z-index: 100;
+  padding: 1.25rem 0;
+  position: relative;
+  z-index: 10;
 }
 
-.btn-terminal-pill {
-  background: rgba(15, 15, 20, 0.75);
-  border: 1px solid rgba(229, 9, 20, 0.4);
-  color: #ffffff;
-  font-family: var(--font-mono);
-  font-size: 0.75rem;
-  letter-spacing: 2px;
-  padding: 0.6rem 1.6rem;
-  border-radius: 50px;
+.btn-clean-pill {
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid var(--border-glass);
+  color: var(--text-main);
+  padding: 8px 20px;
+  border-radius: 9999px;
+  font-size: 0.82rem;
+  font-weight: 500;
   cursor: pointer;
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
-  box-shadow: 0 0 20px rgba(0, 0, 0, 0.7);
-  transition: var(--transition-smooth);
+  transition: all 0.25s ease;
 }
 
-.btn-terminal-pill:hover {
-  background: var(--red-crimson);
-  border-color: var(--red-crimson);
-  box-shadow: 0 0 25px var(--red-glow);
+.btn-clean-pill:hover {
+  background: rgba(255, 255, 255, 0.12);
+  border-color: rgba(255, 255, 255, 0.3);
+  transform: translateY(-1px);
 }
 
-/* ==========================================================================
-   HERO SECTION CENTRADA Y APILADA
-   ========================================================================== */
+/* ==========================================
+   LOGO OFICIAL HALLOWEEN OBSESSION EDITION
+   ========================================== */
 .hero-section {
-  padding: 6.5rem 0 2.5rem;
+  padding: 1rem 0 2rem 0;
   text-align: center;
-}
-
-.hero-content {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
 }
 
 .hero-title-group {
-  display: block;
+  display: flex;
+  justify-content: center;
+  margin-bottom: 2rem;
+}
+
+.logo-poster-wrapper {
   position: relative;
-  margin: 1.5rem auto 2.5rem;
-  width: fit-content;
-  max-width: 90vw;
-  text-align: center;
+  display: inline-flex;
+  flex-direction: column;
+  align-items: center;
+  user-select: none;
 }
 
 .banner-sub-halloween {
-  display: block;
-  font-family: var(--font-anton);
-  font-size: clamp(1.4rem, 4.2vw, 2.6rem);
-  color: var(--red-crimson);
+  font-family: var(--font-display);
+  font-size: clamp(1.8rem, 5.5vw, 3.2rem);
   letter-spacing: 5px;
-  font-style: italic;
-  text-transform: uppercase;
-  text-align: left;
-  margin-left: 2%;
-  margin-bottom: -18px;
+  color: var(--blood-red);
+  line-height: 0.85;
+  margin-bottom: -4px;
   position: relative;
-  z-index: 2;
-  text-shadow: 0 0 15px rgba(0, 0, 0, 0.95);
+}
+
+/* Efecto sangre en la H */
+.drip-letter {
+  position: relative;
+  display: inline-block;
+}
+
+.drip-letter::after {
+  content: "";
+  position: absolute;
+  left: 2px;
+  bottom: -10px;
+  width: 4px;
+  height: 12px;
+  background-color: var(--blood-red);
+  border-radius: 0 0 4px 4px;
 }
 
 .banner-main-obsession {
-  font-family: var(--font-anton);
-  font-size: clamp(4.2rem, 14vw, 9.5rem);
-  line-height: 0.88;
-  color: var(--red-crimson);
-  letter-spacing: 1px;
+  font-family: var(--font-display);
+  font-size: clamp(3.8rem, 14vw, 7.8rem);
+  letter-spacing: 2px;
+  color: var(--blood-red);
+  line-height: 0.85;
   text-transform: uppercase;
   margin: 0;
-  display: block;
-  text-shadow:
-    3px 4px 0px rgba(0, 0, 0, 0.95),
-    0 0 45px rgba(229, 9, 20, 0.55);
+  filter: drop-shadow(0 4px 10px rgba(0, 0, 0, 0.9));
 }
 
-.banner-tag-edition {
-  font-family: 'Permanent Marker', cursive !important;
+/* EDITION BROCHA BLANCA CRUZADA */
+.banner-brush-edition {
+  font-family: var(--font-brush);
+  font-size: clamp(1.6rem, 5vw, 2.6rem);
   color: #ffffff;
-  font-size: clamp(1.8rem, 5.5vw, 3.8rem);
-  text-transform: lowercase !important;
   position: absolute;
-  bottom: -20px;
-  right: -2%;
+  right: -10px;
+  bottom: -15px;
   transform: rotate(-7deg);
-  text-shadow: 2px 3px 6px rgba(0, 0, 0, 0.95);
-  z-index: 4;
+  text-shadow: 2px 2px 0px #000, 0 0 10px rgba(0, 0, 0, 0.8);
   pointer-events: none;
+}
+
+/* ==========================================
+   HERO COUNTDOWN
+   ========================================== */
+.liquid-glass {
+  background: var(--glass-bg);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid var(--border-subtle);
+  border-radius: 16px;
 }
 
 .countdown-bar {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  gap: 0.85rem;
-  padding: 0.9rem 1.8rem;
-  border-radius: 8px;
-  margin: 0 auto;
-  clear: both;
+  gap: 12px;
+  padding: 12px 24px;
+  margin: 0 auto 1.5rem auto;
 }
 
 .cd-box {
   display: flex;
   flex-direction: column;
   align-items: center;
+  min-width: 44px;
 }
 
 .cd-box span {
-  font-family: var(--font-anton);
-  font-size: 2.2rem;
+  font-family: var(--font-display);
+  font-size: 1.6rem;
+  color: #fff;
   line-height: 1;
-  color: var(--text-white);
 }
 
 .cd-box small {
-  font-family: var(--font-mono);
   font-size: 0.65rem;
   color: var(--text-muted);
+  font-weight: 600;
   letter-spacing: 1px;
   margin-top: 4px;
 }
 
 .cd-sep {
-  font-family: var(--font-anton);
-  font-size: 1.6rem;
-  color: var(--red-crimson);
+  font-size: 1.2rem;
+  color: var(--blood-red);
+  font-weight: 700;
+  margin-top: -10px;
 }
 
 .event-meta-info {
-  font-family: var(--font-mono);
   font-size: 0.85rem;
-  color: #cccccc;
-  letter-spacing: 2.5px;
-  margin-top: 1.5rem;
-  text-align: center;
-  width: 100%;
+  font-weight: 600;
+  letter-spacing: 1.5px;
+  color: #9ca3af;
+  text-transform: uppercase;
 }
 
-/* ==========================================================================
+/* ==========================================
    SECCIÓN TICKETS & CARDS
-   ========================================================================== */
+   ========================================== */
 .section-tickets {
-  padding: 3.5rem 0;
+  padding: 3rem 0;
 }
 
 .section-header {
   text-align: center;
-  margin-bottom: 2.8rem;
+  max-width: 650px;
+  margin: 0 auto 2.5rem auto;
 }
 
 .section-title {
-  font-family: var(--font-anton);
-  font-size: 2.4rem;
-  letter-spacing: 2px;
+  font-family: var(--font-display);
+  font-size: clamp(1.8rem, 5vw, 2.5rem);
+  letter-spacing: 1px;
+  color: #fff;
+  margin-bottom: 0.5rem;
 }
 
 .section-subtitle {
+  font-size: 0.85rem;
   color: var(--text-muted);
-  font-size: 0.78rem;
-  font-family: var(--font-mono);
-  margin-top: 0.4rem;
-  letter-spacing: 1px;
+  line-height: 1.5;
 }
 
 .tickets-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(290px, 1fr));
-  gap: 2rem;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 1.5rem;
   margin-bottom: 2rem;
 }
 
 .ticket-card {
-  padding: 2.2rem 1.8rem;
-  border-radius: 10px;
-  position: relative;
+  padding: 2rem;
   display: flex;
   flex-direction: column;
-  justify-content: space-between;
-  min-height: 480px;
-  transition: transform 0.25s ease, border-color 0.25s ease, box-shadow 0.25s ease;
+  position: relative;
+  transition: transform 0.25s ease, border-color 0.25s ease;
 }
 
 .ticket-card:hover {
-  transform: translateY(-5px);
-  border-color: rgba(255, 255, 255, 0.22) !important;
-}
-
-.card-general {
-  border-top: 3px solid var(--red-crimson) !important;
-}
-
-.card-vip {
-  border-top: 3px solid var(--gold-vip) !important;
-  box-shadow:
-    0 15px 35px rgba(0, 0, 0, 0.6),
-    0 0 30px rgba(212, 175, 55, 0.22);
+  transform: translateY(-3px);
+  border-color: rgba(255, 255, 255, 0.25);
 }
 
 .card-badge {
   display: inline-block;
   align-self: flex-start;
-  background: rgba(229, 9, 20, 0.15);
-  color: var(--red-crimson);
-  border: 1px solid var(--red-crimson);
-  font-family: var(--font-mono);
-  font-size: 0.65rem;
-  padding: 0.2rem 0.55rem;
-  margin-bottom: 1.1rem;
-  letter-spacing: 1px;
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  color: #d1d5db;
+  font-size: 0.7rem;
+  font-weight: 600;
+  padding: 4px 10px;
+  border-radius: 9999px;
+  margin-bottom: 1.25rem;
+  letter-spacing: 0.5px;
 }
 
 .badge-gold {
-  background: rgba(212, 175, 55, 0.15);
-  color: var(--gold-vip);
-  border-color: var(--gold-vip);
+  background: rgba(234, 179, 8, 0.15);
+  border-color: rgba(234, 179, 8, 0.35);
+  color: var(--accent-gold);
 }
 
 .tier-title {
-  font-family: var(--font-anton);
-  font-size: 1.8rem;
-  letter-spacing: 1px;
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: #fff;
+  margin-bottom: 0.5rem;
 }
 
 .title-vip {
-  color: var(--gold-vip);
+  color: #fff;
 }
 
 .tier-price {
-  font-family: var(--font-anton);
-  font-size: 2.8rem;
-  margin: 0.8rem 0 1.2rem;
-  line-height: 1;
+  font-size: 2.2rem;
+  font-weight: 800;
+  color: #fff;
+  margin-bottom: 1.5rem;
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
 }
 
-.currency {
-  font-family: var(--font-mono);
-  font-size: 0.85rem;
+.tier-price .currency {
+  font-size: 0.9rem;
+  font-weight: 500;
   color: var(--text-muted);
 }
 
 .price-gold {
-  color: var(--gold-vip);
+  color: var(--accent-gold);
 }
 
 .tier-features {
   list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
   margin-bottom: 2rem;
   flex-grow: 1;
 }
 
 .tier-features li {
-  padding: 0.55rem 0;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
-  font-size: 0.8rem;
-  font-family: var(--font-mono);
-  color: #bbbbcb;
-  letter-spacing: 0.5px;
+  font-size: 0.85rem;
+  color: #d1d5db;
+  display: flex;
+  align-items: center;
+  gap: 8px;
 }
 
-.feature-disabled {
-  color: var(--text-disabled) !important;
+.tier-features li::before {
+  content: "•";
+  color: var(--blood-red);
+  font-weight: bold;
 }
 
-.btn-ticket {
-  width: 100%;
-  padding: 1rem;
-  font-family: var(--font-anton);
-  font-size: 1.1rem;
-  letter-spacing: 1.5px;
-  border: none;
-  border-radius: 4px;
-  cursor: pointer;
-  transition: var(--transition-smooth);
-}
-
-.btn-general {
-  background: var(--red-crimson);
-  color: var(--text-white);
-}
-
-.btn-general:hover {
-  background: var(--red-hover);
-  box-shadow: 0 0 25px var(--red-glow);
-}
-
-.btn-vip {
-  background: var(--gold-vip) !important;
-  color: #000000 !important;
-  font-weight: 700 !important;
-}
-
-.btn-vip:hover {
-  background: #f0c742 !important;
-  box-shadow: 0 0 25px var(--gold-glow);
+.card-vip .tier-features li::before {
+  color: var(--accent-gold);
 }
 
 .tier-next {
   display: block;
   text-align: center;
-  font-size: 0.7rem;
+  font-size: 0.75rem;
   color: var(--text-muted);
-  margin-top: 0.8rem;
-  font-family: var(--font-mono);
+  margin-top: 10px;
 }
 
 .stock-counter {
   text-align: center;
-  margin-top: 0.8rem;
-  font-family: var(--font-mono);
-  font-size: 0.75rem;
-  color: var(--gold-vip);
+  margin-top: 10px;
+  font-size: 0.8rem;
+  color: var(--text-muted);
 }
 
+/* ==========================================
+   BOTONES CLEAN & PULIDOS
+   ========================================== */
+.btn-ticket {
+  width: 100%;
+  padding: 13px 20px;
+  border-radius: 12px;
+  font-size: 0.88rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.25s ease;
+  letter-spacing: 0.3px;
+  border: none;
+}
+
+.btn-general {
+  background: var(--blood-red);
+  color: #fff;
+}
+
+.btn-general:hover {
+  filter: brightness(1.15);
+  transform: translateY(-1px);
+}
+
+.btn-vip {
+  background: linear-gradient(135deg, #eab308 0%, #ca8a04 100%);
+  color: #000;
+  font-weight: 700;
+}
+
+.btn-vip:hover {
+  filter: brightness(1.1);
+  transform: translateY(-1px);
+}
+
+/* Botón Próximamente */
+.btn-disabled-mode {
+  background: rgba(255, 255, 255, 0.05) !important;
+  border: 1px solid rgba(255, 255, 255, 0.12) !important;
+  color: #9ca3af !important;
+  cursor: pointer !important;
+  font-weight: 600 !important;
+}
+
+.btn-disabled-mode:hover {
+  background: rgba(255, 255, 255, 0.1) !important;
+  color: #fff !important;
+  border-color: rgba(255, 255, 255, 0.25) !important;
+  transform: none !important;
+}
+
+/* Botón Plano Distribución */
 .club-map-wrapper {
-  text-align: center;
-  margin-top: 1.5rem;
+  display: flex;
+  justify-content: center;
 }
 
 .btn-map-toggle {
-  background: transparent;
-  border: 1px solid rgba(255, 255, 255, 0.2);
-  color: var(--text-white);
-  padding: 0.65rem 1.4rem;
-  border-radius: 2px;
+  background: rgba(20, 20, 25, 0.6);
+  border: 1px solid var(--border-glass);
+  color: #e5e7eb;
+  padding: 12px 26px;
+  border-radius: 12px;
+  font-size: 0.88rem;
+  font-weight: 500;
   cursor: pointer;
-  font-family: var(--font-mono);
-  font-size: 0.75rem;
-  letter-spacing: 1.5px;
-  transition: var(--transition-smooth);
+  transition: all 0.25s ease;
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
 }
 
 .btn-map-toggle:hover {
-  border-color: var(--red-crimson);
-  background: rgba(229, 9, 20, 0.1);
+  background: rgba(255, 255, 255, 0.08);
+  border-color: rgba(255, 255, 255, 0.3);
+  transform: translateY(-1px);
 }
 
-/* ==========================================================================
+/* ==========================================
    SECCIÓN COMUNIDAD
-   ========================================================================== */
+   ========================================== */
 .section-community {
-  padding: 2.5rem 0 5rem;
+  padding: 2rem 0 4rem 0;
 }
 
 .community-grid {
@@ -466,43 +473,43 @@ body {
 }
 
 .comm-card {
-  padding: 1.8rem;
-  border-radius: 8px;
+  padding: 1.75rem;
   display: flex;
   flex-direction: column;
+  position: relative;
 }
 
 .comm-status-badge {
   display: inline-block;
   align-self: flex-start;
-  font-family: var(--font-mono);
-  font-size: 0.65rem;
-  padding: 0.15rem 0.5rem;
-  background: rgba(255, 255, 255, 0.1);
-  color: var(--text-muted);
-  margin-bottom: 0.8rem;
-  letter-spacing: 1px;
+  font-size: 0.68rem;
+  font-weight: 600;
+  padding: 3px 8px;
+  border-radius: 6px;
+  background: rgba(255, 255, 255, 0.08);
+  color: #9ca3af;
+  margin-bottom: 1rem;
 }
 
 .badge-green {
-  background: rgba(29, 185, 84, 0.15);
-  color: #1db954;
+  background: rgba(34, 197, 94, 0.15);
+  color: #4ade80;
 }
 
 .badge-red {
-  background: rgba(229, 9, 20, 0.15);
-  color: var(--red-crimson);
+  background: rgba(220, 38, 38, 0.15);
+  color: #f87171;
 }
 
 .comm-title {
-  font-family: var(--font-anton);
-  font-size: 1.4rem;
-  letter-spacing: 1px;
+  font-size: 1.15rem;
+  font-weight: 700;
+  color: #fff;
   margin-bottom: 0.5rem;
 }
 
 .comm-desc {
-  font-size: 0.8rem;
+  font-size: 0.85rem;
   color: var(--text-muted);
   line-height: 1.5;
   margin-bottom: 1.5rem;
@@ -510,1086 +517,705 @@ body {
 }
 
 .lock-indicator {
-  font-family: var(--font-mono);
-  font-size: 0.75rem;
-  color: var(--red-crimson);
-  letter-spacing: 1px;
+  font-size: 0.78rem;
+  color: #6b7280;
+  font-weight: 500;
 }
 
 .btn-comm {
-  display: block;
+  display: inline-block;
   text-align: center;
+  padding: 10px 16px;
+  border-radius: 10px;
+  font-size: 0.82rem;
+  font-weight: 600;
   text-decoration: none;
-  font-family: var(--font-anton);
-  font-size: 0.95rem;
-  letter-spacing: 1.5px;
-  padding: 0.75rem;
-  border-radius: 3px;
-  transition: var(--transition-smooth);
+  transition: all 0.2s ease;
 }
 
 .btn-spotify {
-  background: #1db954;
-  color: #000000;
+  background: rgba(34, 197, 94, 0.15);
+  border: 1px solid rgba(34, 197, 94, 0.3);
+  color: #4ade80;
 }
 
 .btn-spotify:hover {
-  background: #1ed760;
-  box-shadow: 0 0 20px rgba(29, 185, 84, 0.4);
+  background: rgba(34, 197, 94, 0.25);
 }
 
 .btn-wsp {
-  background: var(--red-crimson);
-  color: #ffffff;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid var(--border-glass);
+  color: #fff;
 }
 
 .btn-wsp:hover {
-  background: var(--red-hover);
-  box-shadow: 0 0 20px var(--red-glow);
+  background: rgba(255, 255, 255, 0.12);
 }
 
-/* ==========================================================================
-   FOOTER
-   ========================================================================== */
+/* ==========================================
+   FOOTER LIMPIO
+   ========================================== */
 .footer {
-  border-top: 1px solid rgba(255, 255, 255, 0.05);
   padding: 2.5rem 0;
+  border-top: 1px solid var(--border-subtle);
   text-align: center;
 }
 
+.footer-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+}
+
 .footer-collab {
-  font-family: var(--font-mono);
-  font-size: 0.8rem;
-  letter-spacing: 2px;
-  color: var(--text-white);
-  margin-bottom: 0.4rem;
+  font-size: 0.88rem;
+  font-weight: 500;
+  color: #9ca3af;
+  letter-spacing: 0.5px;
 }
 
-.footer-content small {
-  color: var(--text-muted);
-  font-size: 0.7rem;
+/* GEN V camuflado: mismo color y cursor normal */
+.footer-collab span#secret-admin-trigger {
+  color: #9ca3af;
+  font-weight: 500;
+  cursor: default;
+  user-select: none;
+  -webkit-tap-highlight-color: transparent;
+  /* evita el destello azul al tocarlo en celular */
 }
 
-/* ==========================================================================
-   MODALES Y CONTROLES DE COMPRA
-   ========================================================================== */
+/* ==========================================
+   MODALES Y FORMULARIOS
+   ========================================== */
 .modal-overlay {
   position: fixed;
   top: 0;
   left: 0;
   width: 100vw;
   height: 100vh;
-  background: rgba(0, 0, 0, 0.88);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
+  background: rgba(0, 0, 0, 0.8);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
   display: flex;
   justify-content: center;
   align-items: center;
-  z-index: 1000;
+  z-index: 100;
   padding: 1rem;
 }
 
-.hidden {
+.modal-overlay.hidden {
   display: none !important;
 }
 
 .modal-window {
-  border-radius: 10px;
-  max-width: 480px;
   width: 100%;
-  padding: 2rem;
-  position: relative;
+  max-width: 480px;
   max-height: 90vh;
   overflow-y: auto;
+  padding: 2rem;
+  position: relative;
 }
 
 .modal-wide {
-  max-width: 720px;
-}
-
-.modal-admin {
-  max-width: 880px;
+  max-width: 800px;
 }
 
 .modal-close {
   position: absolute;
-  top: 1.1rem;
-  right: 1.2rem;
+  top: 1.25rem;
+  right: 1.25rem;
   background: transparent;
   border: none;
   color: var(--text-muted);
-  font-size: 1.25rem;
+  font-size: 1.2rem;
   cursor: pointer;
-  transition: var(--transition-smooth);
+  padding: 4px 8px;
+  border-radius: 6px;
+  transition: color 0.2s;
 }
 
 .modal-close:hover {
-  color: var(--text-white);
+  color: #fff;
 }
 
 .modal-heading {
-  font-family: var(--font-anton);
-  font-size: 1.8rem;
-  letter-spacing: 1px;
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: #fff;
+  margin-bottom: 0.25rem;
 }
 
 .modal-sub {
+  font-size: 0.82rem;
   color: var(--text-muted);
-  font-size: 0.8rem;
-  margin: 0.3rem 0 1.2rem;
-}
-
-.order-summary-box {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  background: rgba(255, 255, 255, 0.05);
-  padding: 0.8rem 1rem;
-  border-radius: 4px;
-  margin-bottom: 0.6rem;
-  font-family: var(--font-mono);
-}
-
-.qty-select {
-  background: #14141a;
-  border: 1px solid rgba(229, 9, 20, 0.4);
-  color: #fff;
-  padding: 0.35rem 0.6rem;
-  border-radius: 3px;
-  font-family: var(--font-mono);
-  font-size: 0.8rem;
-  cursor: pointer;
-}
-
-.order-total-bar {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  background: rgba(229, 9, 20, 0.1);
-  border: 1px dashed rgba(229, 9, 20, 0.3);
-  padding: 0.6rem 1rem;
-  border-radius: 4px;
-  margin-bottom: 1.2rem;
-  font-family: var(--font-mono);
-  font-size: 0.85rem;
+  margin-bottom: 1.5rem;
+  line-height: 1.4;
 }
 
 .form-group {
-  margin-bottom: 1rem;
+  margin-bottom: 1.25rem;
+  text-align: left;
 }
 
 .form-group label {
   display: block;
-  font-family: var(--font-mono);
-  font-size: 0.7rem;
+  font-size: 0.72rem;
+  font-weight: 600;
   color: var(--text-muted);
-  margin-bottom: 0.35rem;
-  letter-spacing: 1px;
+  margin-bottom: 6px;
+  letter-spacing: 0.5px;
 }
 
-.form-group input {
+.form-group input,
+.qty-select {
   width: 100%;
-  background: #14141a;
-  border: 1px solid rgba(255, 255, 255, 0.15);
-  color: #ffffff;
-  padding: 0.75rem;
-  border-radius: 4px;
+  padding: 11px 14px;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid var(--border-subtle);
+  border-radius: 8px;
+  color: #fff;
   font-size: 0.9rem;
-  transition: var(--transition-smooth);
+  outline: none;
+  transition: border-color 0.2s;
 }
 
-.form-group input:focus {
-  outline: none;
-  border-color: var(--red-crimson);
-  box-shadow: 0 0 10px var(--red-glow);
+.form-group input:focus,
+.qty-select:focus {
+  border-color: rgba(255, 255, 255, 0.4);
 }
 
 .btn-primary {
-  background: var(--red-crimson);
-  color: #ffffff;
+  background: var(--blood-red);
   border: none;
-  padding: 0.85rem;
-  font-family: var(--font-anton);
-  font-size: 1rem;
-  letter-spacing: 1.5px;
-  border-radius: 4px;
+  color: #fff;
+  padding: 12px 20px;
+  border-radius: 10px;
+  font-size: 0.88rem;
+  font-weight: 600;
   cursor: pointer;
-  transition: var(--transition-smooth);
+  transition: all 0.2s;
 }
 
 .btn-primary:hover {
-  background: var(--red-hover);
+  filter: brightness(1.15);
+  transform: translateY(-1px);
+}
+
+.btn-primary.full-width,
+.btn-secondary.full-width {
+  width: 100%;
 }
 
 .btn-secondary {
-  background: rgba(255, 255, 255, 0.08);
-  color: #ffffff;
-  border: 1px solid rgba(255, 255, 255, 0.18);
-  padding: 0.85rem;
-  font-family: var(--font-anton);
-  font-size: 1rem;
-  letter-spacing: 1.5px;
-  border-radius: 4px;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid var(--border-glass);
+  color: #fff;
+  padding: 10px 18px;
+  border-radius: 8px;
+  font-size: 0.82rem;
+  font-weight: 600;
   cursor: pointer;
-  transition: var(--transition-smooth);
+  transition: all 0.2s;
 }
 
-.full-width {
-  width: 100%;
-}
-
-.mt-4 {
-  margin-top: 1rem;
-}
-
-.text-center {
-  text-align: center;
-}
-
-.text-red {
-  color: var(--red-crimson);
-}
-
-.bank-box {
-  background: #14141a;
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  padding: 1rem;
-  border-radius: 4px;
-  margin-bottom: 1rem;
-  font-size: 0.85rem;
-}
-
-.bank-row {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 0.45rem 0;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
-}
-
-.btn-copy {
-  background: rgba(255, 255, 255, 0.15);
-  border: none;
-  color: #ffffff;
-  padding: 0.2rem 0.5rem;
-  border-radius: 3px;
-  font-size: 0.7rem;
-  cursor: pointer;
-  margin-left: 0.5rem;
-}
-
-.transfer-warning {
-  font-size: 0.75rem;
-  color: #fbbf24;
-  margin-bottom: 1.2rem;
-  line-height: 1.4;
-  font-family: var(--font-mono);
-}
-
-.btn-wsp-action {
-  width: 100%;
-  background: #25d366;
-  color: #000000;
-  border: none;
-  padding: 0.9rem;
-  font-family: var(--font-anton);
-  font-size: 1rem;
-  letter-spacing: 1.5px;
-  border-radius: 4px;
-  cursor: pointer;
-  transition: var(--transition-smooth);
-}
-
-.status-icon {
-  font-family: var(--font-mono);
-  color: #fbbf24;
-  font-size: 0.85rem;
-  letter-spacing: 2px;
-  margin-bottom: 0.5rem;
-}
-
-.pending-tip {
-  font-size: 0.8rem;
-  color: var(--text-muted);
-  line-height: 1.4;
-  margin-top: 0.5rem;
+.btn-secondary:hover {
+  background: rgba(255, 255, 255, 0.12);
 }
 
 .club-map-img {
   width: 100%;
-  border-radius: 4px;
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  height: auto;
+  border-radius: 10px;
+  border: 1px solid var(--border-subtle);
 }
 
-/* ==========================================================================
-   TICKET "ONE WISH WILLOW" (INDIVIDUAL / GRUPAL)
-   ========================================================================== */
-.one-wish-ticket {
-  background: #fbf7ee;
-  color: #1a1a1a;
-  border: 3px solid #8c1d1d;
-  border-radius: 6px;
-  display: flex;
-  flex-direction: row;
-  position: relative;
-  box-shadow: 0 15px 35px rgba(0, 0, 0, 0.65);
-  font-family: var(--font-mono);
-  overflow: hidden;
-  margin: 1.2rem 0;
-}
-
-.ticket-vip-style {
-  background: #fffcf0;
-  border: 3px solid #b8860b;
-  box-shadow: 0 0 35px rgba(212, 175, 55, 0.45);
-}
-
-.ticket-main-body {
-  flex: 1;
-  padding: 1.2rem;
-  position: relative;
-  border-right: 2px dashed #8c1d1d;
-}
-
-.ticket-vip-style .ticket-main-body {
-  border-right-color: #b8860b;
-}
-
-.ow-curve-header {
-  font-family: var(--font-anton);
-  font-size: 1.6rem;
-  text-transform: uppercase;
-  color: #8c1d1d;
-  letter-spacing: 2px;
-  line-height: 1;
-  text-align: center;
-  border-bottom: 2px solid #8c1d1d;
-  padding-bottom: 0.3rem;
-  margin-bottom: 0.6rem;
-}
-
-.ticket-vip-style .ow-curve-header {
-  color: #996515;
-  border-bottom-color: #996515;
-}
-
-.ow-legend-row {
-  display: flex;
-  justify-content: space-between;
-  font-size: 0.6rem;
-  font-weight: 700;
-  color: #666666;
-  margin-bottom: 0.8rem;
-  text-transform: uppercase;
-}
-
-.ow-data-grid {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 0.5rem;
-  font-size: 0.75rem;
-}
-
-.ow-field span {
-  display: block;
-  font-size: 0.6rem;
-  color: #777777;
-}
-
-.ow-field strong {
-  font-size: 0.8rem;
-  color: #000000;
-}
-
-.ow-vip-seal {
-  background: #fdf3d8;
-  border: 1px dashed #b8860b;
-  color: #7c5807;
-  padding: 0.4rem;
-  text-align: center;
-  font-weight: 700;
-  font-size: 0.65rem;
-  margin-top: 0.6rem;
-  border-radius: 3px;
-}
-
-.ticket-stub {
-  width: 140px;
-  background: #f4ede1;
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  align-items: center;
-  padding: 0.8rem;
-  text-align: center;
-}
-
-.ticket-vip-style .ticket-stub {
-  background: #faeed4;
-}
-
-.stub-qr-box {
-  background: #ffffff;
-  padding: 6px;
-  border: 1px solid #cccccc;
-  border-radius: 4px;
-}
-
-.stub-id {
-  font-size: 0.65rem;
-  font-weight: 700;
-  margin-top: 0.5rem;
-  color: #333333;
-}
-
-@media (max-width: 520px) {
-  .one-wish-ticket {
-    flex-direction: column;
-  }
-
-  .ticket-main-body {
-    border-right: none;
-    border-bottom: 2px dashed #8c1d1d;
-  }
-
-  .ticket-stub {
-    width: 100%;
-    padding: 1.2rem;
-  }
-}
-
-/* ==========================================================================
-   LISTA DE MÚLTIPLES TICKETS EN BUSCADOR DNI
-   ========================================================================== */
-.lookup-tickets-list {
-  display: flex;
-  flex-direction: column;
-  gap: 0.8rem;
-  margin-top: 1rem;
-  max-height: 55vh;
-  overflow-y: auto;
-  padding-right: 0.3rem;
-}
-
-.lookup-ticket-card {
-  background: #14141a;
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  padding: 0.8rem 1rem;
-  border-radius: 4px;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  font-family: var(--font-mono);
-}
-
-.lookup-ticket-card.approved {
-  border-left: 3px solid #10b981;
-}
-
-.lookup-ticket-card.pending {
-  border-left: 3px solid #fbbf24;
-}
-
-.lookup-ticket-card.used {
-  border-left: 3px solid #6b7280;
-  opacity: 0.6;
-}
-
-/* ==========================================================================
-   PANEL STAFF & PUERTA
-   ========================================================================== */
-.admin-metrics {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 1rem;
-  background: rgba(255, 255, 255, 0.05);
-  padding: 0.8rem;
-  border-radius: 4px;
-  margin: 1rem 0;
-  font-family: var(--font-mono);
-  font-size: 0.8rem;
-}
-
-.admin-tabs {
-  display: flex;
-  gap: 0.5rem;
-  margin-bottom: 1rem;
-}
-
-.admin-tab {
-  background: #14141a;
-  color: #aaaaaa;
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  padding: 0.6rem 1.2rem;
-  cursor: pointer;
-  font-family: var(--font-anton);
-  font-size: 0.9rem;
-  border-radius: 3px;
-  letter-spacing: 1px;
-}
-
-.admin-tab.active {
-  background: var(--red-crimson);
-  color: #ffffff;
-  border-color: var(--red-crimson);
-}
-
-.order-row-card {
-  background: #14141a;
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  padding: 0.8rem 1rem;
-  margin-bottom: 0.6rem;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  border-radius: 4px;
-}
-
-.btn-approve {
-  background: #10b981;
-  color: #ffffff;
-  border: none;
-  padding: 0.4rem 0.8rem;
-  border-radius: 3px;
-  cursor: pointer;
-  font-weight: 700;
-  margin-right: 0.4rem;
-}
-
-.btn-reject {
-  background: #ef4444;
-  color: #ffffff;
-  border: none;
-  padding: 0.4rem 0.8rem;
-  border-radius: 3px;
-  cursor: pointer;
-}
-
-.door-scan-bar {
-  display: flex;
-  gap: 0.5rem;
-  margin-bottom: 1rem;
-}
-
-.door-scan-bar input {
-  flex: 1;
-  background: #14141a;
-  border: 1px solid rgba(255, 255, 255, 0.2);
-  color: #ffffff;
-  padding: 0.75rem;
-  border-radius: 3px;
-}
-
-.door-feedback {
-  padding: 1rem;
-  border-radius: 4px;
-  font-family: var(--font-mono);
-  font-size: 0.9rem;
-  margin-bottom: 1rem;
-  text-align: center;
-}
-
-.door-feedback.success {
-  background: #064e3b;
-  color: #34d399;
-}
-
-.door-feedback.vip-success {
-  background: #78350f;
-  color: #fbbf24;
-  border: 2px solid #d4af37;
-  font-size: 1.1rem;
-}
-
-.door-feedback.used {
-  background: #7c2d12;
-  color: #fb923c;
-}
-
-.door-feedback.error {
-  background: #7f1d1d;
-  color: #f87171;
-}
-
-.door-row {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 0.6rem 0.8rem;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
-}
-
-.door-row.used {
-  opacity: 0.4;
-}
-
-.badge-used {
-  background: #374151;
-  color: #9ca3af;
-  padding: 0.2rem 0.5rem;
-  border-radius: 3px;
-  font-size: 0.65rem;
-}
-
-/* BOTÓN MODERNO VER TICKET */
-.btn-view-qr {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  background: rgba(225, 29, 72, 0.15);
-  border: 1px solid rgba(225, 29, 72, 0.6);
-  color: #ff3366;
-  font-family: var(--font-mono, monospace);
-  font-size: 0.72rem;
-  font-weight: 700;
-  padding: 6px 12px;
-  border-radius: 6px;
-  cursor: pointer;
-  transition: all 0.2s ease;
-  text-decoration: none;
-}
-
-.btn-view-qr:hover {
-  background: #e11d48;
-  color: #ffffff;
-  transform: translateY(-1px);
-  box-shadow: 0 4px 12px rgba(225, 29, 72, 0.4);
-}
-
-/* BOTÓN DESCARGAR TICKET INDIVIDUAL */
-.btn-download-ticket {
-  display: block;
-  width: 100%;
-  margin-top: 10px;
-  background: #1e293b;
-  border: 1px solid #334155;
-  color: #94a3b8;
-  padding: 8px;
-  border-radius: 6px;
-  font-size: 0.75rem;
-  font-family: var(--font-mono, monospace);
-  cursor: pointer;
-  transition: background 0.2s ease, color 0.2s ease;
-}
-
-.btn-download-ticket:hover {
-  background: #334155;
-  color: #ffffff;
-}
-
-/* ===================================================
-   TICKETS RETRO OBSESSION (ROJO GENERAL Y ORO VIP)
-   =================================================== */
-
-.security-disclaimer {
-  background: rgba(239, 68, 68, 0.1);
-  border: 1px dashed #ef4444;
-  color: #fca5a5;
-  font-size: 0.76rem;
-  padding: 10px 14px;
-  border-radius: 8px;
-  margin-bottom: 1.2rem;
-  line-height: 1.4;
-  text-align: center;
-}
-
+/* ==========================================
+   TICKETS "ONE WISH WILLOW" (EDITORIAL VINTAGE)
+   ========================================== */
 .retro-obsession-ticket {
   position: relative;
   display: flex;
-  flex-direction: row;
+  width: 100%;
+  max-width: 480px;
+  margin: 0 auto;
   border-radius: 12px;
-  box-shadow: 0 16px 36px rgba(0, 0, 0, 0.6);
   overflow: hidden;
-  font-family: 'Space Mono', monospace;
-  transition: transform 0.2s ease;
+  box-shadow: 0 16px 35px rgba(0, 0, 0, 0.6);
 }
 
-/* Marca de Agua Estampada Diagonal */
+.theme-general-red {
+  background-color: #fbf5eb;
+  color: #261b1b;
+  border: 2px solid #5c1010;
+}
+
+.theme-vip-yellow {
+  background-color: #fdfae7;
+  color: #2b2200;
+  border: 2px solid #634b00;
+}
+
 .ticket-watermark {
   position: absolute;
   top: 50%;
-  left: 38%;
-  transform: translate(-50%, -50%) rotate(-24deg);
-  font-size: 1.3rem;
+  left: 50%;
+  transform: translate(-50%, -50%) rotate(-25deg);
+  font-size: 0.72rem;
   font-weight: 800;
-  letter-spacing: 4px;
-  opacity: 0.08;
-  pointer-events: none;
+  color: rgba(0, 0, 0, 0.04);
   white-space: nowrap;
-  text-transform: uppercase;
-  user-select: none;
-  z-index: 1;
+  pointer-events: none;
+  letter-spacing: 2px;
 }
 
-/* PALETA 1: PISTA GENERAL (ROJO CARMESÍ RETRO / OBSESSION) */
-.theme-general-red {
-  background: #fdfaf3;
-  color: #4a0d0d;
-  border: 2px solid #8B1E1E;
-}
-
-.theme-general-red .retro-title {
-  color: #8B1E1E;
-}
-
-.theme-general-red .retro-stub {
-  background: #f4ecdc;
-  border-left: 2px dashed #8B1E1E;
-}
-
-.theme-general-red .stub-code-badge {
-  background: #8B1E1E;
-  color: #fff;
-}
-
-.theme-general-red .val-text {
-  color: #1a1a1a;
-}
-
-/* PALETA 2: ZONA VIP (ORO AMARILLO VINTAGE) */
-.theme-vip-yellow {
-  background: #fffdf5;
-  color: #3b2c00;
-  border: 2px solid #b8860b;
-}
-
-.theme-vip-yellow .retro-title {
-  color: #996515;
-}
-
-.theme-vip-yellow .retro-stub {
-  background: #f7eed3;
-  border-left: 2px dashed #b8860b;
-}
-
-.theme-vip-yellow .stub-code-badge {
-  background: #996515;
-  color: #fff;
-}
-
-.theme-vip-yellow .val-text {
-  color: #111;
-}
-
-/* Estructura del Cuerpo del Ticket */
 .retro-ticket-body {
   flex: 1;
-  padding: 20px;
+  padding: 1.25rem;
   display: flex;
   flex-direction: column;
   justify-content: space-between;
-  position: relative;
-  z-index: 2;
 }
 
 .retro-banner-head {
-  border-bottom: 2px solid currentColor;
+  border-bottom: 1.5px solid rgba(0, 0, 0, 0.15);
   padding-bottom: 8px;
-  margin-bottom: 14px;
+  margin-bottom: 10px;
+  text-align: center;
 }
 
 .retro-sub {
-  font-size: 0.65rem;
-  letter-spacing: 2px;
-  font-weight: 700;
   display: block;
+  font-size: 0.58rem;
+  font-weight: 800;
+  letter-spacing: 1px;
 }
 
 .retro-title {
-  font-family: 'Anton', sans-serif;
+  font-family: var(--font-display);
   font-size: 1.8rem;
   line-height: 1;
-  margin: 4px 0 2px 0;
   letter-spacing: 1px;
+  margin: 2px 0;
 }
 
 .retro-motto {
-  font-size: 0.62rem;
-  letter-spacing: 1px;
-  font-weight: 600;
-  opacity: 0.85;
+  font-size: 0.6rem;
+  font-weight: 700;
+  letter-spacing: 0.5px;
 }
 
 .retro-fields-grid {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 10px 14px;
-  margin-bottom: 12px;
+  gap: 8px;
+  margin-bottom: 10px;
 }
 
 .field-box label {
   display: block;
-  font-size: 0.58rem;
-  font-weight: 700;
+  font-size: 0.52rem;
+  font-weight: 800;
   opacity: 0.7;
-  letter-spacing: 0.5px;
 }
 
 .field-box .val-text {
-  font-size: 0.85rem;
+  font-size: 0.78rem;
   font-weight: 700;
+  word-break: break-word;
 }
 
 .retro-bottom-badge {
-  font-size: 0.66rem;
+  font-size: 0.56rem;
   font-weight: 800;
-  padding: 5px 8px;
-  background: rgba(0, 0, 0, 0.05);
-  border-radius: 4px;
   text-align: center;
+  border-top: 1px solid rgba(0, 0, 0, 0.15);
+  padding-top: 6px;
   letter-spacing: 0.5px;
 }
 
-/* Talón Stub con Muescas Troqueladas */
 .retro-stub {
-  width: 140px;
-  padding: 16px 12px;
+  width: 120px;
+  border-left: 2px dashed rgba(0, 0, 0, 0.3);
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
+  padding: 10px;
   position: relative;
-  z-index: 2;
 }
 
 .stub-notch {
   position: absolute;
-  left: -8px;
-  width: 14px;
-  height: 14px;
-  background: #090a0f;
-  /* Color del fondo de la ventana */
+  width: 16px;
+  height: 16px;
+  background-color: var(--bg-dark);
   border-radius: 50%;
+  left: -8px;
 }
 
 .notch-top {
-  top: -7px;
+  top: -8px;
 }
 
 .notch-bottom {
-  bottom: -7px;
+  bottom: -8px;
 }
 
 .stub-qr-container {
-  padding: 6px;
   background: #fff;
-  border-radius: 6px;
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
-  margin-bottom: 8px;
+  padding: 4px;
+  border-radius: 4px;
+  display: inline-block;
+  margin-bottom: 6px;
 }
 
 .stub-code-badge {
-  font-size: 0.72rem;
-  font-weight: 700;
-  padding: 3px 8px;
-  border-radius: 4px;
-  letter-spacing: 1px;
-  margin-bottom: 4px;
+  font-size: 0.65rem;
+  font-weight: 800;
+  letter-spacing: 0.5px;
 }
 
 .stub-notice {
-  font-size: 0.52rem;
+  font-size: 0.5rem;
   font-weight: 700;
-  letter-spacing: 1px;
-  opacity: 0.7;
+  opacity: 0.6;
 }
 
-/* Adaptación Mobile de los Tickets */
-@media (max-width: 600px) {
-  .retro-obsession-ticket {
-    flex-direction: column;
-  }
-
-  .theme-general-red .retro-stub,
-  .theme-vip-yellow .retro-stub {
-    width: 100%;
-    border-left: none;
-    border-top: 2px dashed currentColor;
-    padding: 16px 0;
-  }
-
-  .stub-notch {
-    display: none;
-  }
-}
-
-/* ===================================================
-   INTERFAZ DE CÁMARA & PUERTA STAFF
-   =================================================== */
-
-.camera-scanner-wrapper {
-  margin-bottom: 1rem;
-}
-
-.btn-cam-scanner {
-  width: 100%;
-  padding: 11px;
-  border-radius: 8px;
+.btn-download-ticket {
+  background: var(--blood-red);
   border: none;
-  background: #2563eb;
   color: #fff;
-  font-weight: 700;
-  font-size: 0.82rem;
+  padding: 10px;
+  border-radius: 8px;
+  font-size: 0.78rem;
+  font-weight: 600;
   cursor: pointer;
-  letter-spacing: 0.5px;
   transition: opacity 0.2s;
 }
 
-.qr-cam-box {
-  width: 100%;
-  max-width: 320px;
-  margin: 12px auto;
-  border: 2px solid #2563eb;
-  border-radius: 12px;
-  overflow: hidden;
-  background: #000;
+.btn-download-ticket:hover {
+  opacity: 0.9;
 }
 
-.door-feedback {
-  padding: 14px;
+/* ==========================================
+   PANEL DE STAFF & CONTROL EN PUERTA
+   ========================================== */
+.modal-admin {
+  max-width: 750px;
+}
+
+.admin-header {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  border-bottom: 1px solid var(--border-subtle);
+  padding-bottom: 1rem;
+  margin-bottom: 1.25rem;
+}
+
+.admin-header h2 {
+  font-size: 1.4rem;
+  color: #fff;
+}
+
+.admin-metrics {
+  display: flex;
+  gap: 1.5rem;
+  flex-wrap: wrap;
+  font-size: 0.82rem;
+  color: var(--text-muted);
+}
+
+.admin-metrics strong {
+  color: #fff;
+}
+
+.admin-tabs {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 1.5rem;
+}
+
+.admin-tab {
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid var(--border-subtle);
+  color: var(--text-muted);
+  padding: 8px 16px;
   border-radius: 8px;
-  margin-bottom: 1rem;
-  font-size: 0.88rem;
-  text-align: center;
-  line-height: 1.4;
+  font-size: 0.82rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
 }
 
-.door-feedback.success {
-  background: rgba(52, 211, 153, 0.15);
-  border: 1px solid #34d399;
+.admin-tab.active {
+  background: rgba(255, 255, 255, 0.12);
+  color: #fff;
+  border-color: rgba(255, 255, 255, 0.3);
+}
+
+.btn-clean-secondary {
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid var(--border-subtle);
+  color: #9ca3af;
+  padding: 6px 12px;
+  border-radius: 8px;
+  font-size: 0.75rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.btn-clean-secondary:hover {
+  background: rgba(255, 255, 255, 0.09);
+  color: #fff;
+}
+
+.order-row-card {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px solid var(--border-subtle);
+  padding: 12px 14px;
+  border-radius: 10px;
+  margin-bottom: 8px;
+}
+
+.btn-approve {
+  background: rgba(16, 185, 129, 0.15);
+  border: 1px solid rgba(16, 185, 129, 0.4);
   color: #34d399;
+  border-radius: 8px;
+  padding: 6px 12px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  cursor: pointer;
 }
 
-.door-feedback.vip-success {
-  background: rgba(251, 191, 36, 0.2);
-  border: 1px solid #fbbf24;
-  color: #fbbf24;
+.btn-approve:hover {
+  background: rgba(16, 185, 129, 0.25);
 }
 
-.door-feedback.used,
-.door-feedback.error {
-  background: rgba(239, 68, 68, 0.2);
-  border: 1px solid #ef4444;
-  color: #ef4444;
+.btn-reject {
+  background: rgba(239, 68, 68, 0.15);
+  border: 1px solid rgba(239, 68, 68, 0.4);
+  color: #f87171;
+  border-radius: 8px;
+  padding: 6px 12px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  cursor: pointer;
 }
 
-/* ===================================================
-   PANEL MULTI-TICKET Y PUERTA OPERATIVA
-   =================================================== */
+.btn-reject:hover {
+  background: rgba(239, 68, 68, 0.25);
+}
 
-.door-controls-top {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 10px;
-  margin-bottom: 12px;
+/* Buscador en Puerta */
+.door-scan-bar {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 1.25rem;
+}
+
+.door-scan-bar input {
+  flex: 1;
+  padding: 12px 16px;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid var(--border-glass);
+  border-radius: 10px;
+  color: #fff;
+  font-size: 0.95rem;
+  outline: none;
 }
 
 .door-multi-panel {
-  background: rgba(255, 255, 255, 0.04);
-  border: 1px solid rgba(255, 255, 255, 0.12);
-  border-radius: 8px;
-  padding: 14px;
-  margin-bottom: 14px;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid var(--border-subtle);
+  border-radius: 12px;
+  padding: 1.25rem;
+  margin-bottom: 1.25rem;
 }
 
 .panel-header-info {
   display: flex;
   justify-content: space-between;
   align-items: flex-start;
-  margin-bottom: 10px;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
-  padding-bottom: 8px;
+  border-bottom: 1px solid var(--border-subtle);
+  padding-bottom: 10px;
+  margin-bottom: 12px;
+}
+
+.label-sub {
+  font-size: 0.65rem;
+  color: var(--text-muted);
+  font-weight: 700;
+  display: block;
 }
 
 .holder-name {
   font-size: 1.15rem;
   color: #fff;
-  margin: 0;
+  font-weight: 700;
 }
 
 .holder-dni {
   font-size: 0.8rem;
-  color: #a3a3a3;
+  color: #9ca3af;
 }
 
 .count-badge {
-  display: block;
   font-size: 0.75rem;
-  font-weight: 700;
-  color: #34d399;
-  letter-spacing: 0.5px;
+  background: rgba(255, 255, 255, 0.08);
+  padding: 4px 8px;
+  border-radius: 6px;
+  font-weight: 600;
+  color: #fff;
 }
 
 .badge-vip-pill {
-  display: inline-block;
-  font-size: 0.68rem;
+  display: block;
+  font-size: 0.7rem;
+  color: var(--accent-gold);
   font-weight: 700;
-  color: #fbbf24;
   margin-top: 4px;
 }
 
 .btn-checkin-all {
   width: 100%;
-  padding: 10px;
-  background: #16a34a;
-  color: #fff;
+  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
   border: none;
-  border-radius: 6px;
-  font-weight: 700;
+  color: #fff;
+  padding: 10px;
+  border-radius: 8px;
   font-size: 0.82rem;
+  font-weight: 700;
   cursor: pointer;
-  margin-bottom: 10px;
-}
-
-.tickets-breakdown-list {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
+  margin-bottom: 12px;
 }
 
 .breakdown-item {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 8px 12px;
-  border-radius: 6px;
-  font-size: 0.8rem;
-}
-
-.breakdown-item.item-active {
-  background: rgba(255, 255, 255, 0.06);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-}
-
-.breakdown-item.item-used {
+  padding: 8px 10px;
+  border-radius: 8px;
   background: rgba(255, 255, 255, 0.02);
-  opacity: 0.5;
+  margin-bottom: 6px;
 }
 
-.tk-type {
-  font-weight: 700;
+.breakdown-item .tk-type {
+  font-weight: 600;
+  font-size: 0.82rem;
   display: block;
   color: #fff;
 }
 
-.tk-id {
-  font-size: 0.7rem;
-  color: #888;
+.breakdown-item .tk-id {
+  font-size: 0.72rem;
+  color: var(--text-muted);
 }
 
 .status-used-tag {
   font-size: 0.7rem;
-  color: #737373;
   font-weight: 700;
+  color: #6b7280;
+  padding: 4px 8px;
 }
 
 .btn-checkin-single {
-  background: #2563eb;
-  color: #fff;
-  border: none;
+  background: rgba(16, 185, 129, 0.15);
+  border: 1px solid rgba(16, 185, 129, 0.4);
+  color: #34d399;
+  border-radius: 6px;
   padding: 5px 10px;
-  border-radius: 4px;
   font-size: 0.72rem;
-  font-weight: 700;
+  font-weight: 600;
   cursor: pointer;
+}
+
+.door-feedback {
+  padding: 12px;
+  border-radius: 8px;
+  text-align: center;
+  font-size: 0.85rem;
+  font-weight: 600;
+  margin-bottom: 1rem;
+}
+
+.door-feedback.error {
+  background: rgba(239, 68, 68, 0.15);
+  border: 1px solid rgba(239, 68, 68, 0.3);
+  color: #f87171;
+}
+
+.door-feedback.used {
+  background: rgba(234, 179, 8, 0.15);
+  border: 1px solid rgba(234, 179, 8, 0.3);
+  color: #facc15;
+}
+
+.door-list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  max-height: 280px;
+  overflow-y: auto;
+}
+
+.door-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px;
+  background: rgba(255, 255, 255, 0.02);
+  border-radius: 8px;
+}
+
+.door-row.used {
+  opacity: 0.45;
+}
+
+.badge-used {
+  font-size: 0.7rem;
+  font-weight: 700;
+  color: #9ca3af;
+}
+
+/* ==========================================
+   RESPONSIVE MÓVIL
+   ========================================== */
+@media (max-width: 600px) {
+  .retro-obsession-ticket {
+    flex-direction: column;
+  }
+
+  .retro-stub {
+    width: 100%;
+    border-left: none;
+    border-top: 2px dashed rgba(0, 0, 0, 0.3);
+    padding: 14px;
+  }
+
+  .stub-notch {
+    top: -8px;
+    bottom: auto;
+  }
+
+  .notch-top {
+    left: -8px;
+  }
+
+  .notch-bottom {
+    left: auto;
+    right: -8px;
+  }
+
+  .banner-brush-edition {
+    right: -5px;
+    bottom: -10px;
+  }
 }
