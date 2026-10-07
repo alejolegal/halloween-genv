@@ -10,16 +10,16 @@
   <link rel="icon"
     href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><filter id=%22glow%22><feGaussianBlur stdDeviation=%224%22 result=%22coloredBlur%22/><feMerge><feMergeNode in=%22coloredBlur%22/><feMergeNode in=%22SourceGraphic%22/></feMerge></filter><text y=%22.88em%22 font-size=%2286%22 filter=%22url(%23glow)%22>🎃</text></svg>">
 
-  <!-- Tipografias Oficiales -->
+  <!-- Tipografías: Anton (Impacto afiche) + Inter (Clean & Moderna) -->
+  <!-- Tipografías Oficiales del Evento -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link
-    href="https://fonts.googleapis.com/css2?family=Anton&family=Space+Mono:ital,wght@0,400;0,700;1,400&family=Inter:wght@400;500;600;700;800;900&display=swap"
+    href="https://fonts.googleapis.com/css2?family=Anton&family=Inter:wght@400;500;600;700;800&family=Permanent+Marker&display=swap"
     rel="stylesheet">
 
-  <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="style.css?v=2">
 
-  <!-- Librerias de QR, Confetti, Canvas y PDF -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
@@ -32,8 +32,8 @@
 
   <!-- BARRA SUPERIOR -->
   <header class="navbar-centered">
-    <button onclick="openLookupModal()" class="btn-terminal-pill">
-      CONSULTAR MI ENTRADA [DNI]
+    <button onclick="openLookupModal()" class="btn-clean-pill">
+      Consultar mi entrada
     </button>
   </header>
 
@@ -41,13 +41,15 @@
   <main class="hero-section">
     <div class="container hero-content">
       <div class="hero-title-group">
-        <span class="banner-sub-halloween">HALLOWEEN</span>
-        <h1 class="banner-main-obsession">OBSESSION</h1>
-        <span class="banner-tag-edition">EDITION</span>
+        <div class="logo-poster-wrapper">
+          <span class="banner-sub-halloween"><span class="drip-letter">H</span>ALLOWEEN</span>
+          <h1 class="banner-main-obsession">OBSESSION</h1>
+          <span class="banner-brush-edition">edition</span>
+        </div>
       </div>
 
       <div class="countdown-bar liquid-glass">
-        <div class="cd-box"><span id="cd-days">00</span><small>DIAS</small></div>
+        <div class="cd-box"><span id="cd-days">00</span><small>DÍAS</small></div>
         <div class="cd-sep">:</div>
         <div class="cd-box"><span id="cd-hours">00</span><small>HS</small></div>
         <div class="cd-sep">:</div>
@@ -57,7 +59,7 @@
       </div>
 
       <div class="event-meta-info">
-        31 DE OCTUBRE // HAVANNA CLUB • ITA IBATE
+        31 DE OCTUBRE // HAVANNA CLUB • ITÁ IBATÉ
       </div>
     </div>
   </main>
@@ -67,46 +69,49 @@
     <div class="container">
       <div class="section-header">
         <h2 class="section-title">VENTA DE TICKETS OFICIALES</h2>
-        <p class="section-subtitle">ACCESO DIGITAL CON CODIGO QR UNICO E INTRANSFERIBLE. INGRESO OBLIGATORIO CON DNI
-          FISICO EN MANO.</p>
+        <p class="section-subtitle">Acceso digital nominal con código QR intransferible. Ingreso con DNI físico en mano.
+        </p>
       </div>
 
       <div class="tickets-grid">
         <!-- GENERAL -->
         <div class="ticket-card card-general liquid-glass">
-          <div class="card-badge">PREVENTA 1 ACTIVA</div>
+          <div class="card-badge">TANDA 1 // PREVENTA</div>
           <h3 class="tier-title">PISTA GENERAL</h3>
           <div class="tier-price">$5.000 <span class="currency">ARS</span></div>
           <ul class="tier-features">
-            <li>// ACCESO A PISTA GENERAL</li>
-            <li>// BARRA PRINCIPAL HABILITADA</li>
-            <li>// SEGURIDAD EN TODO EL PREDIO</li>
+            <li>Acceso a pista principal</li>
+            <li>Barra general de bebidas</li>
+            <li>Seguridad en todo el predio</li>
           </ul>
-          <button onclick="openCheckout('Pista General', 5000)" class="btn-ticket btn-general">COMPRAR GENERAL</button>
-          <small class="tier-next">Fase siguiente: Preventa 2 ($7.000)</small>
+          <!-- Modo Próximamente -->
+          <button onclick="alertComingSoon()" class="btn-ticket btn-general btn-disabled-mode">PRÓXIMAMENTE
+            DISPONIBLE</button>
+          <small class="tier-next">Apertura de ventas en los próximos días</small>
         </div>
 
         <!-- VIP -->
         <div class="ticket-card card-vip liquid-glass">
-          <div class="card-badge badge-gold">CUPO LIMITADO: 50 ACCESOS</div>
-          <h3 class="tier-title title-vip">ZONA VIP + CONSUMICION</h3>
+          <div class="card-badge badge-gold">CUPO LIMITADO: 50 PLAZAS</div>
+          <h3 class="tier-title title-vip">ZONA VIP EXCLUSIVA</h3>
           <div class="tier-price price-gold">$15.000 <span class="currency">ARS</span></div>
           <ul class="tier-features">
-            <li>// 1 CONSUMICION GIN TONIC INCLUIDA</li>
-            <li>// ACCESO EXCLUSIVO A BALCON ELEVADO</li>
-            <li>// BARRA VIP PRIVADA SIN ESPERAS</li>
-            <li>// CUPO ESTRICTO: 50 PLAZAS</li>
+            <li>1 consumición de regalo incluida</li>
+            <li>Barra de tragos personalizada y exclusiva</li>
+            <li>Acceso exclusivo a balcón panorámico</li>
+            <li>Atención preferencial sin filas</li>
           </ul>
-          <button id="btn-buy-vip" onclick="openCheckout('Zona VIP', 15000)" class="btn-ticket btn-vip">COMPRAR
-            VIP</button>
+          <!-- Modo Próximamente -->
+          <button id="btn-buy-vip" onclick="alertComingSoon()" class="btn-ticket btn-vip btn-disabled-mode">PRÓXIMAMENTE
+            DISPONIBLE</button>
           <div class="stock-counter">
-            <span id="vip-stock-label">Cupos restantes: <strong>50/50</strong></span>
+            <span id="vip-stock-label">Cupos totales: <strong>50 plazas</strong></span>
           </div>
         </div>
       </div>
 
       <div class="club-map-wrapper">
-        <button class="btn-map-toggle" onclick="toggleMapModal()">VER PLANO DE DISTRIBUCION [HAVANNA CLUB]</button>
+        <button class="btn-map-toggle" onclick="toggleMapModal()">Ver plano de distribución del club</button>
       </div>
     </div>
   </section>
@@ -116,35 +121,37 @@
     <div class="container">
       <div class="community-grid">
         <div class="comm-card comm-lineup liquid-glass">
-          <div class="comm-status-badge">CLASSIFIED</div>
-          <h3 class="comm-title">LINE UP & ARTISTAS</h3>
-          <p class="comm-desc">Los DJs y propuestas de la noche se develaran proximamente en canales oficiales.</p>
-          <div class="lock-indicator">// ACCESO BLOQUEADO // FASE 1</div>
+          <div class="comm-status-badge">PRÓXIMAMENTE</div>
+          <h3 class="comm-title">Line Up & Artistas</h3>
+          <p class="comm-desc">Los DJs y propuestas artísticas de la noche se develarán muy pronto en nuestras redes
+            oficiales.</p>
+          <div class="lock-indicator">Acceso bloqueado • Fase inicial</div>
         </div>
 
         <div class="comm-card comm-spotify liquid-glass">
           <div class="comm-status-badge badge-green">PLAYLIST</div>
-          <h3 class="comm-title">PLAYLIST COLABORATIVA</h3>
-          <p class="comm-desc">Suma tus temas recomendados para la previa y pista principal en Spotify.</p>
-          <a href="#" target="_blank" id="btn-spotify-link" class="btn-comm btn-spotify">ABRIR EN SPOTIFY //➔</a>
+          <h3 class="comm-title">Playlist Colaborativa</h3>
+          <p class="comm-desc">Sumá tus temas recomendados para la previa y pista principal en Spotify.</p>
+          <a href="#" target="_blank" id="btn-spotify-link" class="btn-comm btn-spotify">Abrir en Spotify →</a>
         </div>
 
         <div class="comm-card comm-wsp liquid-glass">
           <div class="comm-status-badge badge-red">OFICIAL</div>
-          <h3 class="comm-title">COMUNIDAD EXCLUSIVA</h3>
-          <p class="comm-desc">Avisos anticipados de cambios de fase, beneficios y accesos directos.</p>
-          <a href="#" target="_blank" id="btn-wsp-group-link" class="btn-comm btn-wsp">UNIRSE AL CANAL //➔</a>
+          <h3 class="comm-title">Comunidad Exclusiva</h3>
+          <p class="comm-desc">Enterate antes que nadie del inicio de ventas y beneficios especiales.</p>
+          <a href="#" target="_blank" id="btn-wsp-group-link" class="btn-comm btn-wsp">Unirse al canal →</a>
         </div>
       </div>
     </div>
   </section>
 
-  <!-- FOOTER CON ACCESO SECRET STAFF EN "GEN V" -->
+  <!-- FOOTER LIMPIO -->
   <footer class="footer">
     <div class="container footer-content">
-      <p class="footer-collab">ALEJO LEGAL × HAVANNA CLUB × <span id="secret-admin-trigger"
-          style="cursor: pointer; user-select: none;">GEN V</span></p>
-      <small>ITA IBATE, CORRIENTES • Ingreso estricto para mayores de 18 anos con DNI fisico vigente.</small>
+      <p class="footer-collab">
+        ALEJO LEGAL × HAVANNA CLUB × <span id="secret-admin-trigger">GEN V</span>
+      </p>
+      <small style="color: #6b7280; font-size: 0.8rem;">Itá Ibaté, Corrientes</small>
     </div>
   </footer>
 
@@ -152,109 +159,16 @@
        MODALES
        ========================================== -->
 
-  <!-- MODAL CHECKOUT -->
-  <div id="modal-checkout" class="modal-overlay hidden">
-    <div class="modal-window liquid-glass">
-      <button class="modal-close" onclick="closeCheckout()">✕</button>
-
-      <!-- PASO 1: FORMULARIO -->
-      <div id="co-step-form">
-        <h3 class="modal-heading">DATOS DEL TITULAR</h3>
-        <p class="modal-sub">Las entradas se emitiran registradas bajo el DNI ingresado.</p>
-
-        <div class="order-summary-box">
-          <div>
-            <span id="co-ticket-name" style="display:block; font-weight:700">Tipo de Ticket</span>
-            <small style="color:var(--text-muted)">Unitario: <span id="co-unit-price">$0</span></small>
-          </div>
-          <div style="text-align:right">
-            <label style="font-size:0.65rem; color:var(--text-muted); display:block; margin-bottom:2px">CANTIDAD</label>
-            <select id="cust-qty" onchange="updateCheckoutTotal()" class="qty-select">
-              <option value="1">1 Entrada</option>
-              <option value="2">2 Entradas</option>
-              <option value="3">3 Entradas</option>
-              <option value="4">4 Entradas</option>
-            </select>
-          </div>
-        </div>
-
-        <div class="order-total-bar">
-          <span>TOTAL A TRANSFERIR:</span>
-          <strong id="co-ticket-price" class="text-red">$0 ARS</strong>
-        </div>
-
-        <form id="orderForm" onsubmit="handleOrderSubmit(event)">
-          <div class="form-group">
-            <label>NOMBRE Y APELLIDO (COMPRADOR / TITULAR)</label>
-            <input type="text" id="cust-name" required placeholder="Ej: Lucas Romero">
-          </div>
-          <div class="form-group">
-            <label>DNI (DOCUMENTO NACIONAL DE IDENTIDAD)</label>
-            <input type="number" id="cust-dni" required placeholder="Numero continuo sin puntos">
-          </div>
-          <div class="form-group">
-            <label>NUMERO DE WHATSAPP</label>
-            <input type="tel" id="cust-phone" required placeholder="Ej: 3794123456">
-          </div>
-          <div class="form-group">
-            <label>CORREO ELECTRONICO</label>
-            <input type="email" id="cust-email" required placeholder="correo@gmail.com">
-          </div>
-          <button type="submit" class="btn-primary full-width">CONTINUAR A TRANSFERENCIA //➔</button>
-        </form>
-      </div>
-
-      <!-- PASO 2: TRANSFERENCIA -->
-      <div id="co-step-transfer" class="hidden">
-        <h3 class="modal-heading">DATOS DE TRANSFERENCIA</h3>
-        <p class="modal-sub">Envie el importe exacto para proceder con la emision de las entradas.</p>
-        <div class="bank-box">
-          <div class="bank-row"><span>Monto total:</span> <strong id="transfer-amount" class="text-red">$0 ARS</strong>
-          </div>
-          <div class="bank-row"><span>Alias bancario:</span> <strong id="transfer-alias">HAVANNA.HALLOWEEN</strong>
-            <button onclick="copyAlias()" class="btn-copy">Copiar</button></div>
-          <div class="bank-row"><span>CBU / CVU:</span> <span>0000003100012345678901</span></div>
-          <div class="bank-row"><span>Titular de cuenta:</span> <span>Alejo Nahuel Legal</span></div>
-          <div class="bank-row"><span>Referencia / Orden:</span> <strong id="transfer-order-code">ORD-0000</strong>
-          </div>
-        </div>
-        <p class="transfer-warning">[AVISO] Luego de realizar la operacion, envie el comprobante adjunto por WhatsApp
-          para habilitacion en sistema.</p>
-        <button onclick="sendWhatsAppProof()" class="btn-wsp-action">ENVIAR COMPROBANTE POR WHATSAPP //➔</button>
-      </div>
-
-      <!-- PASO 3: EN REVISIÓN -->
-      <div id="co-step-pending" class="hidden text-center">
-        <div class="status-icon">// EN REVISION //</div>
-        <h3 class="modal-heading">COMPROBANTE EN PROCESO</h3>
-        <p class="modal-sub">Orden <strong id="pend-code"></strong> para <span id="pend-name"></span> (DNI: <span
-            id="pend-dni"></span>).</p>
-        <p class="pending-tip">El personal corroborara la recepcion del pago para liberar los codigos QR.</p>
-        <button onclick="checkStatusFromCurrent()" class="btn-secondary full-width mt-4">VERIFICAR ESTADO</button>
-      </div>
-
-      <!-- PASO 4: TICKETS -->
-      <div id="co-step-ticket" class="hidden">
-        <div class="security-disclaimer">
-          <strong>CONTROL ESTRICTO:</strong> Prohibida la difusion o copia de este ticket. Codigo QR nominal e
-          intransferible. Se exigira exhibir el DNI fisico registrado en puerta.
-        </div>
-        <div id="ticket-render-box"></div>
-        <button onclick="closeCheckout()" class="btn-secondary full-width mt-4">FINALIZAR Y CERRAR</button>
-      </div>
-    </div>
-  </div>
-
   <!-- MODAL CONSULTA DNI -->
   <div id="modal-lookup" class="modal-overlay hidden">
     <div class="modal-window liquid-glass">
       <button class="modal-close" onclick="closeLookupModal()">✕</button>
-      <h3 class="modal-heading">CONSULTAR MIS ENTRADAS</h3>
-      <p class="modal-sub">Ingrese el DNI del titular o codigo de orden registrado.</p>
+      <h3 class="modal-heading">Consultar mis entradas</h3>
+      <p class="modal-sub">Ingresá tu DNI o código de ticket registrado.</p>
       <div class="form-group">
-        <input type="number" id="lookup-dni-input" placeholder="Numero de DNI sin puntos">
+        <input type="number" id="lookup-dni-input" placeholder="Número de DNI sin puntos">
       </div>
-      <button onclick="executeLookup()" class="btn-primary full-width">BUSCAR ENTRADAS</button>
+      <button onclick="executeLookup()" class="btn-primary full-width">Buscar entradas</button>
       <div id="lookup-response" class="lookup-result hidden"></div>
     </div>
   </div>
@@ -263,8 +177,8 @@
   <div id="modal-map" class="modal-overlay hidden">
     <div class="modal-window modal-wide liquid-glass">
       <button class="modal-close" onclick="toggleMapModal()">✕</button>
-      <h3 class="modal-heading">DISTRIBUCION HAVANNA CLUB</h3>
-      <p class="modal-sub">Sector General, Balcon VIP y accesos tecnicos.</p>
+      <h3 class="modal-heading">Distribución Havanna Club</h3>
+      <p class="modal-sub">Sector General, Balcón VIP y barras.</p>
       <div class="map-image-box">
         <img src="mapa-havanna.png" alt="Plano Havanna Club" class="club-map-img">
       </div>
@@ -275,11 +189,11 @@
   <div id="modal-admin-login" class="modal-overlay hidden">
     <div class="modal-window liquid-glass">
       <button class="modal-close" onclick="closeAdminLoginModal()">✕</button>
-      <h3 class="modal-heading">STAFF ACCESS</h3>
+      <h3 class="modal-heading">Acceso Staff</h3>
       <div class="form-group">
-        <input type="password" id="admin-pin-input" placeholder="PIN de autorizacion" maxlength="6">
+        <input type="password" id="admin-pin-input" placeholder="PIN de autorización" maxlength="6">
       </div>
-      <button onclick="authenticateAdmin()" class="btn-primary full-width">INGRESAR //➔</button>
+      <button onclick="authenticateAdmin()" class="btn-primary full-width">Ingresar al panel</button>
     </div>
   </div>
 
@@ -288,47 +202,45 @@
     <div class="modal-window modal-admin liquid-glass">
       <button class="modal-close" onclick="closeAdminDashboard()">✕</button>
       <div class="admin-header">
-        <h2>PANEL DE CONTROL // HAVANNA 2026</h2>
+        <h2>Panel de Control // Havanna 2026</h2>
         <div class="admin-metrics">
           <div>Pendientes: <strong id="adm-metric-pending">0</strong></div>
           <div>Aprobadas: <strong id="adm-metric-approved">0</strong></div>
           <div>VIPs: <strong id="adm-metric-vip">0/50</strong></div>
-          <div>Recaudacion: <strong id="adm-metric-revenue">$0</strong></div>
+          <div>Recaudación: <strong id="adm-metric-revenue">$0</strong></div>
         </div>
       </div>
 
       <div class="admin-tabs">
-        <button id="tab-btn-approvals" class="admin-tab active" onclick="switchAdminTab('approvals')">Aprobar
-          Pagos</button>
+        <button id="tab-btn-approvals" class="admin-tab active"
+          onclick="switchAdminTab('approvals')">Aprobaciones</button>
         <button id="tab-btn-door" class="admin-tab" onclick="switchAdminTab('door')">Control en Puerta (DNI)</button>
       </div>
 
       <!-- PESTAÑA APROBACIONES -->
       <div id="adm-view-approvals" class="admin-body">
         <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
-          <span style="font-size:0.75rem; color:#8e8e99;">ORDENES PENDIENTES DE REVISION</span>
-          <button onclick="window.cleanOldPendingOrders()" class="btn-secondary"
-            style="border-color:#ef4444; color:#ef4444; font-size:0.72rem; padding:4px 8px;">
-            [LIMPIAR PENDIENTES >24H]
+          <span style="font-size:0.8rem; color:#9ca3af;">Órdenes pendientes de revisión</span>
+          <button onclick="window.cleanOldPendingOrders()" class="btn-clean-secondary">
+            Limpiar pendientes (>24h)
           </button>
         </div>
         <div id="adm-pending-list"></div>
       </div>
 
-      <!-- PESTAÑA PUERTA (EXCLUSIVO DNI) -->
+      <!-- PESTAÑA PUERTA -->
       <div id="adm-view-door" class="admin-body hidden">
-        <button onclick="window.exportDoorListPDF()" class="btn-secondary"
-          style="width:100%; margin-bottom:12px; border-color:#38bdf8; color:#38bdf8; font-weight:700;">
-          [PDF] DESCARGAR PLANILLA DE CONTROL
+        <button onclick="window.exportDoorListPDF()" class="btn-clean-secondary"
+          style="width:100%; margin-bottom:14px; border-color:#38bdf8; color:#38bdf8;">
+          Descargar planilla de control (PDF)
         </button>
 
         <div class="door-scan-bar">
           <input type="number" id="door-input" placeholder="Ingresar DNI del asistente..."
             oninput="handleDoorSearchInput(this.value)" onkeyup="handleDoorInputKey(event)">
-          <button onclick="validateDoorCheckIn()" class="btn-primary">BUSCAR DNI</button>
+          <button onclick="validateDoorCheckIn()" class="btn-primary">Buscar DNI</button>
         </div>
 
-        <!-- PANEL DESGLOSE MULTI-TICKET -->
         <div id="door-verification-panel" class="hidden"></div>
         <div id="door-msg" class="door-feedback hidden"></div>
 
@@ -339,9 +251,8 @@
     </div>
   </div>
 
-  <!-- SUPABASE & APP -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="app.js?v=5"></script>
+  <script src="app.js?v=6"></script>
 </body>
 
 </html>
