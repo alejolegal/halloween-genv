@@ -15,7 +15,7 @@
   const CONFIG = {
     adminPin: '2026',
     whatsappPhone: '5493794000000', // Modificá acá tu número de atención
-    maxVipStock: 50,
+    maxVipStock: 30, // Cupo limitado a 30 plazas
     spotifyUrl: 'https://open.spotify.com',
     wspGroupUrl: 'https://chat.whatsapp.com',
     instagramUrl: 'https://instagram.com/'
@@ -164,17 +164,10 @@
     }
 
     if (btn) {
-      if (remaining === 0) {
-        btn.disabled = true;
-        btn.textContent = 'AGOTADO';
-        btn.style.opacity = '0.5';
-        btn.style.cursor = 'not-allowed';
-      } else {
-        btn.disabled = false;
-        btn.textContent = 'COMPRAR VIP';
-        btn.style.opacity = '1';
-        btn.style.cursor = 'pointer';
-      }
+      // Forzamos a que siempre mantenga el modo preventa / próximamente
+      btn.textContent = 'PRÓXIMAMENTE DISPONIBLE';
+      btn.classList.add('btn-disabled-mode');
+      btn.onclick = alertComingSoon;
     }
   }
 
@@ -604,21 +597,24 @@
   let staffTapTimer = null;
   const staffTrigger = document.getElementById('secret-admin-trigger');
 
-  if (staffTrigger) {
-    staffTrigger.addEventListener('click', (e) => {
-      e.preventDefault();
-      staffTapCount++;
-      clearTimeout(staffTapTimer);
+  function handleStaffTrigger(e) {
+    if (e) e.preventDefault();
+    staffTapCount++;
+    clearTimeout(staffTapTimer);
 
-      if (staffTapCount >= 3) {
+    if (staffTapCount >= 3) {
+      staffTapCount = 0;
+      openAdminModal();
+    } else {
+      staffTapTimer = setTimeout(() => {
         staffTapCount = 0;
-        openAdminModal();
-      } else {
-        staffTapTimer = setTimeout(() => {
-          staffTapCount = 0;
-        }, 900);
-      }
-    });
+      }, 1000);
+    }
+  }
+
+  if (staffTrigger) {
+    staffTrigger.addEventListener('click', handleStaffTrigger);
+    staffTrigger.addEventListener('touchend', handleStaffTrigger);
   }
 
   function openAdminModal() {
@@ -1015,6 +1011,19 @@
     doc.save(`Havanna_Puerta_${new Date().toISOString().slice(0, 10)}.pdf`);
   }
 
+  // ==========================================
+  // MODALES SECUNDARIOS
+  // ==========================================
+  function toggleMapModal() {
+    const modal = document.getElementById('modal-map');
+    if (modal) modal.classList.toggle('hidden');
+  }
+
+  function toggleVipDrinksModal() {
+    const modal = document.getElementById('modal-vip-drinks');
+    if (modal) modal.classList.toggle('hidden');
+  }
+
   // EXPOSICION GLOBAL DE FUNCIONES
   window.openCheckout = openCheckout;
   window.closeCheckout = closeCheckout;
@@ -1028,7 +1037,8 @@
   window.executeLookup = executeLookup;
   window.openAllApprovedFromLookup = openAllApprovedFromLookup;
   window.openSingleTicketFromLookup = openSingleTicketFromLookup;
-  window.toggleMapModal = () => document.getElementById('modal-map').classList.toggle('hidden');
+  window.toggleMapModal = toggleMapModal;
+  window.toggleVipDrinksModal = toggleVipDrinksModal;
   window.openAdminModal = openAdminModal;
   window.closeAdminLoginModal = closeAdminLoginModal;
   window.authenticateAdmin = authenticateAdmin;
@@ -1059,4 +1069,10 @@
   } else {
     start();
   }
+
+  function alertComingSoon() {
+    alert("¡La preventa oficial se habilitará en breve! Mantenete atento a los canales oficiales.");
+  }
+  window.alertComingSoon = alertComingSoon;
+
 })();
