@@ -14,10 +14,10 @@
 
   const CONFIG = {
     adminPin: '2026',
-    whatsappPhone: '5493794000000', // Modificá acá tu número de atención
-    maxVipStock: 30, // Cupo limitado a 30 plazas
-    spotifyUrl: 'https://open.spotify.com',
-    wspGroupUrl: 'https://chat.whatsapp.com',
+    whatsappPhone: '5493781441325', // Tu número directo para recibir comprobantes
+    maxVipStock: 30,
+    spotifyUrl: 'https://open.spotify.com/playlist/0rD6aExAaAyAK6DG4S18ZX?si=HFJ9QbpKQKKjgAB1r7H7fg&utm_source=copy-link&pt=735796217c869b0d6b27d86f2330d985',
+    wspGroupUrl: 'https://chat.whatsapp.com/IOwMiR3TikK5y9Z0kn8Jl4',
     instagramUrl: 'https://instagram.com/'
   };
 
@@ -125,6 +125,7 @@
           const curId = activeCreatedOrders[0].orderId;
           const fresh = cloudOrders.filter(o => o.orderId === curId);
           if (fresh.some(o => o.status === 'approved')) {
+            clearSavedPendingOrder();
             const pendScreen = document.getElementById('co-step-pending');
             if (pendScreen && !pendScreen.classList.contains('hidden')) {
               pendScreen.classList.add('hidden');
@@ -164,11 +165,64 @@
     }
 
     if (btn) {
-      // Forzamos a que siempre mantenga el modo preventa / próximamente
-      btn.textContent = 'PRÓXIMAMENTE DISPONIBLE';
-      btn.classList.add('btn-disabled-mode');
-      btn.onclick = alertComingSoon;
+      if (remaining === 0) {
+        btn.disabled = true;
+        btn.textContent = 'AGOTADO';
+        btn.classList.add('btn-disabled-mode');
+        btn.style.cursor = 'not-allowed';
+      } else {
+        btn.disabled = false;
+        btn.textContent = 'COMPRAR VIP';
+        btn.classList.remove('btn-disabled-mode');
+        btn.style.cursor = 'pointer';
+        btn.onclick = () => openCheckout('ZONA VIP EXCLUSIVA', 15000);
+      }
     }
+  }
+
+  // ==========================================
+  // PERSISTENCIA DE COMPRA (ANTI-DUPLICADOS)
+  // ==========================================
+  const STORAGE_KEY = 'havanna_pending_order_2026';
+
+  function savePendingOrder(orderData) {
+    try {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(orderData));
+    } catch (e) { }
+  }
+
+  function getSavedPendingOrder() {
+    try {
+      const data = localStorage.getItem(STORAGE_KEY);
+      return data ? JSON.parse(data) : null;
+    } catch (e) {
+      return null;
+    }
+  }
+
+  function clearSavedPendingOrder() {
+    try {
+      localStorage.removeItem(STORAGE_KEY);
+    } catch (e) { }
+  }
+
+  function checkExistingSavedOrder() {
+    const saved = getSavedPendingOrder();
+    if (!saved || !saved.orders || saved.orders.length === 0) return;
+
+    activeCreatedOrders = saved.orders;
+    const o = activeCreatedOrders[0];
+    const qty = activeCreatedOrders.length;
+    const total = o.amount * qty;
+
+    // Abrir directamente la pantalla de transferencia con los datos guardados
+    document.getElementById('co-step-form').classList.add('hidden');
+    document.getElementById('transfer-order-code').textContent = o.orderId;
+    document.getElementById('transfer-amount').textContent = `$${total.toLocaleString('es-AR')} ARS`;
+    document.getElementById('co-step-transfer').classList.remove('hidden');
+    document.getElementById('co-step-pending').classList.add('hidden');
+    document.getElementById('co-step-ticket').classList.add('hidden');
+    document.getElementById('modal-checkout').classList.remove('hidden');
   }
 
   // ==========================================
@@ -178,6 +232,13 @@
   let activeCreatedOrders = [];
 
   function openCheckout(name, price) {
+    // Si ya tiene una orden generada pendiente, lo lleva a transferir directamente
+    const saved = getSavedPendingOrder();
+    if (saved && saved.orders && saved.orders.length > 0) {
+      checkExistingSavedOrder();
+      return;
+    }
+
     activePlan = { name, unitPrice: price };
 
     document.getElementById('co-ticket-name').textContent = name;
@@ -215,7 +276,6 @@
 
   function closeCheckout() {
     document.getElementById('modal-checkout').classList.add('hidden');
-    activeCreatedOrders = [];
   }
 
   async function handleOrderSubmit(e) {
@@ -229,18 +289,18 @@
     const qty = parseInt(document.getElementById('cust-qty').value) || 1;
 
     if (!dni || dni.length < 7 || dni.length > 9) {
-      alert("Ingrese un numero de DNI valido (entre 7 y 9 digitos).");
+      alert("Ingrese un número de DNI válido (entre 7 y 9 dígitos).");
       return;
     }
 
     const pendingOrders = cloudOrders.filter(o => o.dni === dni && o.status === 'pending');
     if (pendingOrders.length >= 2) {
-      alert("Ya registra ordenes pendientes para este DNI. Aguarde la validacion o envie su comprobante por WhatsApp.");
+      alert("Ya registra órdenes pendientes para este DNI. Aguarde la validación o envíe su comprobante por WhatsApp.");
       return;
     }
 
     if (qty > 4 || qty < 1) {
-      alert("Limite maximo: 4 entradas por transaccion.");
+      alert("Límite máximo: 4 entradas por transacción.");
       return;
     }
 
@@ -294,6 +354,9 @@
         ticketType: o.ticket_type
       }));
 
+      // Guardamos la orden localmente para evitar duplicados al recargar
+      savePendingOrder({ orders: activeCreatedOrders });
+
       document.getElementById('co-step-form').classList.add('hidden');
       document.getElementById('transfer-order-code').textContent = sharedOrderId;
       document.getElementById('co-step-transfer').classList.remove('hidden');
@@ -318,13 +381,13 @@
     const qty = activeCreatedOrders.length;
     const total = o.amount * qty;
 
-    const text = `Hola Alejo. Realice la transferencia para HAVANNA CLUB // HALLOWEEN OBSESSION 2026.%0A%0A` +
+    const text = `Hola Alejo. Realicé la transferencia para HAVANNA CLUB // HALLOWEEN OBSESSION 2026.%0A%0A` +
       `• Orden: ${o.orderId} (${qty} ticket${qty > 1 ? 's' : ''})%0A` +
       `• Titular: ${o.buyerName || o.name}%0A` +
       `• DNI: ${o.dni}%0A` +
       `• Sector: ${o.ticketType}%0A` +
       `• Monto: $${total.toLocaleString('es-AR')} ARS%0A%0A` +
-      `Adjunto comprobante para validacion en sistema.`;
+      `Adjunto comprobante para validación en sistema.`;
 
     window.open(`https://wa.me/${CONFIG.whatsappPhone}?text=${text}`, '_blank');
     showPendingScreen();
@@ -347,10 +410,11 @@
     const approved = freshOrders.filter(o => o.status === 'approved');
 
     if (approved.length > 0) {
+      clearSavedPendingOrder();
       document.getElementById('co-step-pending').classList.add('hidden');
       renderMultipleTicketsUI(approved);
     } else {
-      alert('La orden sigue en revision.');
+      alert('La orden sigue en revisión.');
     }
   }
 
@@ -401,7 +465,7 @@
           </div>
 
           <div class="retro-bottom-badge">
-            ${isVip ? '[BALCON VIP] INCLUYE 1 CONSUMICION GIN TONIC' : 'AMAZE YOUR FRIENDS! • YOU ONLY GET ONE WISH'}
+            ${isVip ? '[BALCÓN VIP] INCLUYE 1 CONSUMICIÓN GIN TONIC' : 'AMAZE YOUR FRIENDS! • YOU ONLY GET ONE WISH'}
           </div>
         </div>
 
@@ -531,7 +595,7 @@
     matchedOrders.forEach((o) => {
       const isApproved = o.status === 'approved';
       const isUsed = o.used;
-      const statusLabel = isUsed ? 'INGRESADO' : (isApproved ? 'HABILITADO' : 'EN REVISION');
+      const statusLabel = isUsed ? 'INGRESADO' : (isApproved ? 'HABILITADO' : 'EN REVISIÓN');
       const statusColor = isUsed ? '#9ca3af' : (isApproved ? '#34d399' : '#fbbf24');
 
       html += `
@@ -641,7 +705,7 @@
       renderApprovalsList();
       updateMetrics();
     } else {
-      alert('PIN invalido.');
+      alert('PIN inválido.');
     }
   }
 
@@ -696,7 +760,7 @@
     const pendings = cloudOrders.filter(o => o.status === 'pending');
 
     if (pendings.length === 0) {
-      list.innerHTML = '<div style="text-align:center; padding:3rem; color:#8e8e99; font-size:0.8rem">No hay ordenes pendientes de revision.</div>';
+      list.innerHTML = '<div style="text-align:center; padding:3rem; color:#8e8e99; font-size:0.8rem">No hay órdenes pendientes de revisión.</div>';
       return;
     }
 
@@ -733,9 +797,9 @@
       const cleanPhone = String(phone || '').replace(/\D/g, '');
       if (cleanPhone) {
         const msg = `Hola ${name}. Tu pago para HAVANNA OBSESSION 2026 fue APROBADO.%0A%0A` +
-          `Podes consultar tus tickets habilitados ingresando tu DNI en:%0A` +
+          `Podés consultar tus tickets habilitados ingresando tu DNI en:%0A` +
           `https://alejolegal.com/%0A%0A` +
-          `Ingreso obligatorio con DNI fisico en mano.`;
+          `Ingreso obligatorio con DNI físico en mano.`;
         window.open(`https://wa.me/${cleanPhone.startsWith('54') ? cleanPhone : '54' + cleanPhone}?text=${msg}`, '_blank');
       }
     } catch (err) {
@@ -744,7 +808,7 @@
   }
 
   async function rejectOrder(id) {
-    if (!confirm("Confirmar rechazo de orden?")) return;
+    if (!confirm("¿Confirmar rechazo de orden?")) return;
     try {
       const { error } = await client.from('orders').update({ status: 'rejected' }).eq('id', id);
       if (error) throw error;
@@ -760,11 +824,11 @@
     const oldPendings = cloudOrders.filter(o => o.status === 'pending' && o.createdAt < oneDayAgo);
 
     if (oldPendings.length === 0) {
-      alert("No hay ordenes pendientes con mas de 24 horas de antiguedad.");
+      alert("No hay órdenes pendientes con más de 24 horas de antigüedad.");
       return;
     }
 
-    if (!confirm(`Se encontraron ${oldPendings.length} tickets pendientes de mas de 24 hs. Desea descartarlos para liberar cupos?`)) {
+    if (!confirm(`Se encontraron ${oldPendings.length} tickets pendientes de más de 24 hs. ¿Desea descartarlos para liberar cupos?`)) {
       return;
     }
 
@@ -773,7 +837,7 @@
       const { error } = await client.from('orders').update({ status: 'rejected' }).in('id', idsToDelete);
       if (error) throw error;
 
-      alert(`Se descartaron ${oldPendings.length} ordenes viejas.`);
+      alert(`Se descartaron ${oldPendings.length} órdenes viejas.`);
       await fetchOrders();
     } catch (err) {
       alert("Error al limpiar: " + err.message);
@@ -806,12 +870,11 @@
 
     if (!cleanQ) {
       msg.className = 'door-feedback error';
-      msg.textContent = 'Ingrese un numero de DNI.';
+      msg.textContent = 'Ingrese un número de DNI.';
       playAudioTone('error');
       return;
     }
 
-    // Busca todas las compras aprobadas de ese DNI
     const userTickets = cloudOrders.filter(o => o.status === 'approved' && o.dni === cleanQ);
 
     if (userTickets.length === 0) {
@@ -835,7 +898,7 @@
         </div>
         <div style="text-align:right;">
           <span class="count-badge">${pendingToEnter.length} / ${userTickets.length} DISPONIBLES</span>
-          ${hasVip ? '<span class="badge-vip-pill">[INCLUYE BALCON VIP]</span>' : ''}
+          ${hasVip ? '<span class="badge-vip-pill">[INCLUYE BALCÓN VIP]</span>' : ''}
         </div>
       </div>
 
@@ -867,7 +930,7 @@
       await manualCheckIn(first.firestoreId);
     } else if (pendingToEnter.length === 0) {
       msg.className = 'door-feedback used';
-      msg.innerHTML = `[ATENCION] Todas las entradas de este DNI ya fueron ingresadas.`;
+      msg.innerHTML = `[ATENCIÓN] Todas las entradas de este DNI ya fueron ingresadas.`;
       playAudioTone('error');
     } else {
       playAudioTone(hasVip ? 'vip' : 'success');
@@ -942,7 +1005,7 @@
   // ==========================================
   function exportDoorListPDF() {
     if (typeof window.jspdf === 'undefined') {
-      alert("Cargando modulo PDF...");
+      alert("Cargando módulo PDF...");
       return;
     }
 
@@ -964,7 +1027,7 @@
     doc.setFontSize(9);
     doc.setFont("helvetica", "normal");
     doc.text(`PLANILLA DE CONTROL EN PUERTA • TOTAL: ${approved.length} ASISTENTES`, 14, 21);
-    doc.text(`Fecha emision: ${new Date().toLocaleString('es-AR')}`, 14, 26);
+    doc.text(`Fecha emisión: ${new Date().toLocaleString('es-AR')}`, 14, 26);
     doc.line(14, 28, 196, 28);
 
     doc.setFont("helvetica", "bold");
@@ -1062,6 +1125,9 @@
     const wspLink = document.getElementById('btn-wsp-group-link');
     if (spLink) spLink.href = CONFIG.spotifyUrl;
     if (wspLink) wspLink.href = CONFIG.wspGroupUrl;
+
+    // Si el usuario tenía una compra abierta antes de salir, se restaura
+    checkExistingSavedOrder();
   }
 
   if (document.readyState === 'loading') {
@@ -1069,10 +1135,5 @@
   } else {
     start();
   }
-
-  function alertComingSoon() {
-    alert("¡La preventa oficial se habilitará en breve! Mantenete atento a los canales oficiales.");
-  }
-  window.alertComingSoon = alertComingSoon;
 
 })();
