@@ -23,9 +23,13 @@
   --glass-bg: rgba(18, 18, 22, 0.65);
 }
 
-html,
+html {
+  background-color: var(--bg-dark);
+  color-scheme: dark;
+}
+
 /* ==========================================
-   FONDO DIRECTO EN BODY (INFALIBLE)
+   FONDO DIRECTO EN BODY
    ========================================== */
 body {
   width: 100%;
@@ -33,7 +37,6 @@ body {
   margin: 0;
   padding: 0;
   background-color: #070709;
-  /* Degradado suave + Imagen de fondo juntos */
   background:
     linear-gradient(to bottom, rgba(7, 7, 9, 0.45) 0%, rgba(7, 7, 9, 0.75) 50%, #070709 100%),
     url("fondo-halloween.jpg") no-repeat center top / cover;
@@ -54,29 +57,16 @@ body {
   }
 }
 
-/* Si usás esto directo en body, podés ocultar los divs viejos */
-.site-bg-overlay,
-.site-noise-layer {
-  display: none !important;
-}
-
-/* Viñeta sutil para legibilidad del contenido sin tapar la ilustración */
-.site-noise-layer {
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100vw;
-  height: 100dvh;
-  background: linear-gradient(to bottom, rgba(7, 7, 9, 0.25) 0%, rgba(7, 7, 9, 0.6) 45%, #070709 95%);
-  z-index: -1;
-  pointer-events: none;
-}
-
 .container {
   width: 100%;
   max-width: 1100px;
   margin: 0 auto;
   padding: 0 1.25rem;
+}
+
+/* REGLA VITAL PARA OCULTAR MODALES Y PASOS */
+.hidden {
+  display: none !important;
 }
 
 /* ==========================================
@@ -583,7 +573,6 @@ body {
   cursor: default;
   user-select: none;
   -webkit-tap-highlight-color: transparent;
-  /* evita el destello azul al tocarlo en celular */
 }
 
 /* ==========================================
@@ -603,10 +592,6 @@ body {
   align-items: center;
   z-index: 100;
   padding: 1rem;
-}
-
-.modal-overlay.hidden {
-  display: none !important;
 }
 
 .modal-window {
@@ -684,6 +669,17 @@ body {
 .form-group input:focus,
 .qty-select:focus {
   border-color: rgba(255, 255, 255, 0.4);
+}
+
+/* Selector desplegable con fondo oscuro y texto claro */
+select.qty-select {
+  background-color: #12131a;
+  color: #ffffff;
+}
+
+select.qty-select option {
+  background-color: #181924;
+  color: #ffffff;
 }
 
 .btn-primary {
@@ -883,20 +879,41 @@ body {
   opacity: 0.6;
 }
 
+/* BOTÓN DE DESCARGA EN TICKET DE ANCHO COMPLETO */
 .btn-download-ticket {
-  background: var(--blood-red);
-  border: none;
-  color: #fff;
-  padding: 10px;
+  width: 100%;
+  padding: 12px;
   border-radius: 8px;
-  font-size: 0.78rem;
-  font-weight: 600;
+  border: none;
+  background: var(--blood-red);
+  color: #fff;
+  font-weight: 700;
+  font-size: 0.85rem;
   cursor: pointer;
   transition: opacity 0.2s;
 }
 
 .btn-download-ticket:hover {
   opacity: 0.9;
+}
+
+/* BOTÓN VER TICKET EN CONSULTA DNI */
+.btn-view-qr {
+  background: rgba(220, 38, 38, 0.2);
+  color: #fca5a5;
+  border: 1px solid rgba(220, 38, 38, 0.5);
+  border-radius: 6px;
+  padding: 6px 12px;
+  font-size: 0.75rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  white-space: nowrap;
+}
+
+.btn-view-qr:hover {
+  background: #dc2626;
+  color: #ffffff;
 }
 
 /* ==========================================
@@ -1218,20 +1235,4 @@ body {
     right: -5px;
     bottom: -10px;
   }
-}
-
-/* REGLA VITAL PARA OCULTAR MODALES Y PASOS */
-.hidden {
-  display: none !important;
-}
-
-/* FORZAR CONTRASTE EN SELECTORES DESPLEGABLES */
-select.qty-select {
-  background-color: #12131a;
-  color: #ffffff;
-}
-
-select.qty-select option {
-  background-color: #181924;
-  color: #ffffff;
 }
