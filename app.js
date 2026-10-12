@@ -104,15 +104,15 @@
           ticketId: o.ticket_id,
           ticketIndex: o.ticket_index,
           ticketTotal: o.ticket_total,
-          name: o.name,
-          buyerName: o.buyer_name,
+          name: o.name || o.buyer_name || 'Asistente',
+          buyerName: o.buyer_name || o.name || 'Asistente',
           dni: cleanDni(o.dni),
           phone: o.phone,
           email: o.email,
-          ticketType: o.ticket_type,
+          ticketType: o.ticket_type || 'PISTA GENERAL',
           amount: Number(o.amount) || 0,
           status: o.status,
-          used: o.used,
+          used: Boolean(o.used), // Normalización booleana infalible
           createdAt: o.created_at
         }));
 
@@ -272,8 +272,11 @@
     document.getElementById('transfer-amount').textContent = `$${total.toLocaleString('es-AR')} ARS`;
   }
 
+  // AL CERRAR LA VENTANA SE LIMPIA EL BLOQUEO LOCAL
   function closeCheckout() {
     document.getElementById('modal-checkout').classList.add('hidden');
+    clearSavedPendingOrder();
+    activeCreatedOrders = [];
   }
 
   async function handleOrderSubmit(e) {
@@ -712,8 +715,8 @@
       btnDoor?.classList.add('active');
       btnApp?.classList.remove('active');
       viewDoor?.classList.remove('hidden');
-      viewDoor?.classList.add('hidden');
-      renderDoorList();
+      viewApp?.classList.add('hidden');
+      renderDoorList(); // Carga forzada de la lista completa de puerta
     }
   }
 
@@ -908,7 +911,6 @@
       </div>
     `;
 
-    // NO SE AUTO-INGRESA: Se muestra la ficha para que el staff presione "DAR INGRESO //➔"
     if (pendingToEnter.length === 0) {
       msg.className = 'door-feedback used';
       msg.innerHTML = `[ATENCIÓN] Todas las entradas de este DNI ya fueron ingresadas.`;
@@ -967,7 +969,7 @@
       row.className = `door-row ${order.used ? 'used' : ''}`;
       row.innerHTML = `
         <div>
-          <strong style="color:${isVip ? '#eab308' : '#fff'}; display:block">${order.name} ${isVip ? '[VIP]' : ''}</strong>
+          <strong style="color:${isVip ? '#eab308' : '#fff'}; display:block">${order.name || order.buyerName} ${isVip ? '[VIP]' : ''}</strong>
           <span style="color:#8e8e99; font-size:0.75rem">DNI: ${order.dni} • ${order.ticketId}</span>
         </div>
         <div>
