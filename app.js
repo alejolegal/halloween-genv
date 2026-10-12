@@ -215,7 +215,6 @@
     const qty = activeCreatedOrders.length;
     const total = o.amount * qty;
 
-    // Abrir directamente la pantalla de transferencia con los datos guardados
     document.getElementById('co-step-form').classList.add('hidden');
     document.getElementById('transfer-order-code').textContent = o.orderId;
     document.getElementById('transfer-amount').textContent = `$${total.toLocaleString('es-AR')} ARS`;
@@ -232,7 +231,6 @@
   let activeCreatedOrders = [];
 
   function openCheckout(name, price) {
-    // Si ya tiene una orden generada pendiente, lo lleva a transferir directamente
     const saved = getSavedPendingOrder();
     if (saved && saved.orders && saved.orders.length > 0) {
       checkExistingSavedOrder();
@@ -354,7 +352,6 @@
         ticketType: o.ticket_type
       }));
 
-      // Guardamos la orden localmente para evitar duplicados al recargar
       savePendingOrder({ orders: activeCreatedOrders });
 
       document.getElementById('co-step-form').classList.add('hidden');
@@ -480,30 +477,16 @@
         </div>
       `;
 
+      // BOTÓN ÚNICO DE DESCARGA
       const btnGroup = document.createElement('div');
-      btnGroup.style.display = 'flex';
-      btnGroup.style.gap = '8px';
-      btnGroup.style.marginTop = '10px';
+      btnGroup.style.marginTop = '12px';
 
       const btnDownload = document.createElement('button');
       btnDownload.className = 'btn-download-ticket';
-      btnDownload.style.flex = '1';
       btnDownload.innerHTML = `Descargar Ticket (${order.ticketId})`;
       btnDownload.onclick = () => downloadTicketAsImage(order.ticketId, order.name);
 
-      const btnShare = document.createElement('button');
-      btnShare.className = 'btn-download-ticket';
-      btnShare.style.flex = '1';
-      btnShare.style.background = '#15803d';
-      btnShare.innerHTML = `Compartir Datos`;
-      btnShare.onclick = () => {
-        const shareMsg = `Entrada oficial Havanna Club Halloween 2026 para ${order.name} (DNI ${order.dni}). Acceso con DNI en https://alejolegal.com/`;
-        window.open(`https://wa.me/?text=${encodeURIComponent(shareMsg)}`, '_blank');
-      };
-
       btnGroup.appendChild(btnDownload);
-      btnGroup.appendChild(btnShare);
-
       cardWrapper.appendChild(card);
       cardWrapper.appendChild(btnGroup);
       box.appendChild(cardWrapper);
@@ -656,7 +639,6 @@
     }
   });
 
-  // Acceso Staff por 3 toques sobre "GEN V"
   let staffTapCount = 0;
   let staffTapTimer = null;
   const staffTrigger = document.getElementById('secret-admin-trigger');
@@ -730,7 +712,7 @@
       btnDoor?.classList.add('active');
       btnApp?.classList.remove('active');
       viewDoor?.classList.remove('hidden');
-      viewApp?.classList.add('hidden');
+      viewDoor?.classList.add('hidden');
       renderDoorList();
     }
   }
@@ -926,9 +908,8 @@
       </div>
     `;
 
-    if (userTickets.length === 1 && !first.used) {
-      await manualCheckIn(first.firestoreId);
-    } else if (pendingToEnter.length === 0) {
+    // NO SE AUTO-INGRESA: Se muestra la ficha para que el staff presione "DAR INGRESO //➔"
+    if (pendingToEnter.length === 0) {
       msg.className = 'door-feedback used';
       msg.innerHTML = `[ATENCIÓN] Todas las entradas de este DNI ya fueron ingresadas.`;
       playAudioTone('error');
@@ -1126,7 +1107,6 @@
     if (spLink) spLink.href = CONFIG.spotifyUrl;
     if (wspLink) wspLink.href = CONFIG.wspGroupUrl;
 
-    // Si el usuario tenía una compra abierta antes de salir, se restaura
     checkExistingSavedOrder();
   }
 
