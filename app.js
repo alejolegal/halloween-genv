@@ -14,7 +14,7 @@
 
   const CONFIG = {
     adminPin: '2026',
-    whatsappPhone: '5493781441325', // Tu número directo para recibir comprobantes
+    whatsappPhone: '5493781441325', // Número directo para recibir comprobantes
     maxVipStock: 30,
     spotifyUrl: 'https://open.spotify.com/playlist/0rD6aExAaAyAK6DG4S18ZX?si=HFJ9QbpKQKKjgAB1r7H7fg&utm_source=copy-link&pt=735796217c869b0d6b27d86f2330d985',
     wspGroupUrl: 'https://chat.whatsapp.com/IOwMiR3TikK5y9Z0kn8Jl4',
@@ -25,6 +25,17 @@
 
   function cleanDni(val) {
     return String(val || '').replace(/\D/g, '').trim();
+  }
+
+  // ==========================================
+  // MANEJO DE BLOQUEO DE SCROLL DE FONDO
+  // ==========================================
+  function lockBackgroundScroll() {
+    document.body.classList.add('no-scroll');
+  }
+
+  function unlockBackgroundScroll() {
+    document.body.classList.remove('no-scroll');
   }
 
   // ==========================================
@@ -112,7 +123,7 @@
           ticketType: o.ticket_type || 'PISTA GENERAL',
           amount: Number(o.amount) || 0,
           status: o.status,
-          used: Boolean(o.used), // Normalización booleana infalible
+          used: Boolean(o.used),
           createdAt: o.created_at
         }));
 
@@ -215,6 +226,7 @@
     const qty = activeCreatedOrders.length;
     const total = o.amount * qty;
 
+    lockBackgroundScroll();
     document.getElementById('co-step-form').classList.add('hidden');
     document.getElementById('transfer-order-code').textContent = o.orderId;
     document.getElementById('transfer-amount').textContent = `$${total.toLocaleString('es-AR')} ARS`;
@@ -231,6 +243,8 @@
   let activeCreatedOrders = [];
 
   function openCheckout(name, price) {
+    lockBackgroundScroll();
+
     const saved = getSavedPendingOrder();
     if (saved && saved.orders && saved.orders.length > 0) {
       checkExistingSavedOrder();
@@ -272,8 +286,8 @@
     document.getElementById('transfer-amount').textContent = `$${total.toLocaleString('es-AR')} ARS`;
   }
 
-  // AL CERRAR LA VENTANA SE LIMPIA EL BLOQUEO LOCAL
   function closeCheckout() {
+    unlockBackgroundScroll();
     document.getElementById('modal-checkout').classList.add('hidden');
     clearSavedPendingOrder();
     activeCreatedOrders = [];
@@ -480,7 +494,6 @@
         </div>
       `;
 
-      // BOTÓN ÚNICO DE DESCARGA
       const btnGroup = document.createElement('div');
       btnGroup.style.marginTop = '12px';
 
@@ -533,12 +546,14 @@
   // CONSULTA DNI CLIENTE
   // ==========================================
   function openLookupModal() {
+    lockBackgroundScroll();
     document.getElementById('modal-lookup').classList.remove('hidden');
     document.getElementById('lookup-response').classList.add('hidden');
     document.getElementById('lookup-dni-input').value = '';
   }
 
   function closeLookupModal() {
+    unlockBackgroundScroll();
     document.getElementById('modal-lookup').classList.add('hidden');
   }
 
@@ -613,6 +628,7 @@
     );
     if (approved.length === 0) return;
 
+    lockBackgroundScroll();
     document.getElementById('modal-checkout').classList.remove('hidden');
     document.getElementById('co-step-form').classList.add('hidden');
     document.getElementById('co-step-transfer').classList.add('hidden');
@@ -625,6 +641,7 @@
     const order = cloudOrders.find(o => o.ticketId === ticketId);
     if (!order) return;
 
+    lockBackgroundScroll();
     document.getElementById('modal-checkout').classList.remove('hidden');
     document.getElementById('co-step-form').classList.add('hidden');
     document.getElementById('co-step-transfer').classList.add('hidden');
@@ -667,6 +684,7 @@
   }
 
   function openAdminModal() {
+    lockBackgroundScroll();
     const modalLogin = document.getElementById('modal-admin-login');
     const pinInput = document.getElementById('admin-pin-input');
     if (modalLogin) modalLogin.classList.remove('hidden');
@@ -674,6 +692,7 @@
   }
 
   function closeAdminLoginModal() {
+    unlockBackgroundScroll();
     const modalLogin = document.getElementById('modal-admin-login');
     if (modalLogin) modalLogin.classList.add('hidden');
   }
@@ -683,7 +702,8 @@
     const pin = pinInput ? pinInput.value.trim() : '';
 
     if (pin === CONFIG.adminPin) {
-      closeAdminLoginModal();
+      const modalLogin = document.getElementById('modal-admin-login');
+      if (modalLogin) modalLogin.classList.add('hidden');
       const modalDash = document.getElementById('modal-admin-dashboard');
       if (modalDash) modalDash.classList.remove('hidden');
       switchAdminTab('approvals');
@@ -695,6 +715,7 @@
   }
 
   function closeAdminDashboard() {
+    unlockBackgroundScroll();
     const modalDash = document.getElementById('modal-admin-dashboard');
     if (modalDash) modalDash.classList.add('hidden');
   }
@@ -716,7 +737,7 @@
       btnApp?.classList.remove('active');
       viewDoor?.classList.remove('hidden');
       viewApp?.classList.add('hidden');
-      renderDoorList(); // Carga forzada de la lista completa de puerta
+      renderDoorList();
     }
   }
 
@@ -1058,16 +1079,30 @@
   }
 
   // ==========================================
-  // MODALES SECUNDARIOS
+  // MODALES SECUNDARIOS (CON BLOQUEO DE SCROLL)
   // ==========================================
   function toggleMapModal() {
     const modal = document.getElementById('modal-map');
-    if (modal) modal.classList.toggle('hidden');
+    if (modal) {
+      const isHidden = modal.classList.toggle('hidden');
+      if (isHidden) {
+        unlockBackgroundScroll();
+      } else {
+        lockBackgroundScroll();
+      }
+    }
   }
 
   function toggleVipDrinksModal() {
     const modal = document.getElementById('modal-vip-drinks');
-    if (modal) modal.classList.toggle('hidden');
+    if (modal) {
+      const isHidden = modal.classList.toggle('hidden');
+      if (isHidden) {
+        unlockBackgroundScroll();
+      } else {
+        lockBackgroundScroll();
+      }
+    }
   }
 
   // EXPOSICION GLOBAL DE FUNCIONES
