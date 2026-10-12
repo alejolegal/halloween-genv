@@ -1219,3 +1219,19 @@ body {
     bottom: -10px;
   }
 }
+
+/* REGLA VITAL PARA OCULTAR MODALES Y PASOS */
+.hidden {
+  display: none !important;
+}
+
+/* FORZAR CONTRASTE EN SELECTORES DESPLEGABLES */
+select.qty-select {
+  background-color: #12131a;
+  color: #ffffff;
+}
+
+select.qty-select option {
+  background-color: #181924;
+  color: #ffffff;
+}
