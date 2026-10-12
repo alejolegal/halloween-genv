@@ -17,7 +17,7 @@
     href="https://fonts.googleapis.com/css2?family=Anton&family=Inter:wght@400;500;600;700;800&family=Permanent+Marker&display=swap"
     rel="stylesheet">
 
-  <link rel="stylesheet" href="style.css?v=3">
+  <link rel="stylesheet" href="style.css?v=4">
 
   <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
@@ -80,10 +80,8 @@
             <li>Barra general de bebidas</li>
             <li>Seguridad en todo el predio</li>
           </ul>
-          <!-- Modo Próximamente -->
-          <button onclick="alertComingSoon()" class="btn-ticket btn-general btn-disabled-mode">PRÓXIMAMENTE
-            DISPONIBLE</button>
-          <small class="tier-next">Apertura de ventas en los próximos días</small>
+          <button onclick="openCheckout('PISTA GENERAL', 5000)" class="btn-ticket btn-general">COMPRAR ENTRADA</button>
+          <small class="tier-next">Disponibilidad inmediata por transferencia</small>
         </div>
 
         <!-- VIP -->
@@ -97,16 +95,15 @@
             <li>Acceso exclusivo a balcón panorámico</li>
             <li>Atención preferencial sin filas</li>
           </ul>
-          <!-- Modo Próximamente -->
-          <button id="btn-buy-vip" onclick="alertComingSoon()" class="btn-ticket btn-vip btn-disabled-mode">PRÓXIMAMENTE
-            DISPONIBLE</button>
+          <button id="btn-buy-vip" onclick="openCheckout('ZONA VIP EXCLUSIVA', 15000)"
+            class="btn-ticket btn-vip">COMPRAR VIP</button>
           <div class="stock-counter">
-            <span id="vip-stock-label">Cupos totales: <strong>30 plazas</strong></span>
+            <span id="vip-stock-label">Cupos restantes: <strong>30/30</strong></span>
           </div>
         </div>
       </div>
 
-      <!-- BOTONES DISTRIBUCIÓN Y TRAGOS VIP -->
+      <!-- BOTONES MODALES -->
       <div class="club-map-wrapper" style="display: flex; gap: 12px; justify-content: center; flex-wrap: wrap;">
         <button class="btn-map-toggle" onclick="toggleMapModal()">Ver plano de distribución del club</button>
         <button class="btn-map-toggle" onclick="toggleVipDrinksModal()">Ver carta de tragos VIP</button>
@@ -129,20 +126,22 @@
           <div class="comm-status-badge badge-green">PLAYLIST</div>
           <h3 class="comm-title">Playlist Colaborativa</h3>
           <p class="comm-desc">Sumá tus temas recomendados para la previa y pista principal en Spotify.</p>
-          <a href="#" target="_blank" id="btn-spotify-link" class="btn-comm btn-spotify">Abrir en Spotify →</a>
+          <a href="https://open.spotify.com/playlist/0rD6aExAaAyAK6DG4S18ZX?si=HFJ9QbpKQKKjgAB1r7H7fg&utm_source=copy-link&pt=735796217c869b0d6b27d86f2330d985"
+            target="_blank" id="btn-spotify-link" class="btn-comm btn-spotify">Abrir en Spotify →</a>
         </div>
 
         <div class="comm-card comm-wsp liquid-glass">
           <div class="comm-status-badge badge-red">OFICIAL</div>
           <h3 class="comm-title">Comunidad Exclusiva</h3>
-          <p class="comm-desc">Enterate antes que nadie del inicio de ventas y beneficios especiales.</p>
-          <a href="#" target="_blank" id="btn-wsp-group-link" class="btn-comm btn-wsp">Unirse al canal →</a>
+          <p class="comm-desc">Enterate antes que nadie de las novedades, sorteos y anuncios oficiales.</p>
+          <a href="https://chat.whatsapp.com/IOwMiR3TikK5y9Z0kn8Jl4" target="_blank" id="btn-wsp-group-link"
+            class="btn-comm btn-wsp">Unirse al canal →</a>
         </div>
       </div>
     </div>
   </section>
 
-  <!-- FOOTER LIMPIO -->
+  <!-- FOOTER -->
   <footer class="footer">
     <div class="container footer-content">
       <p class="footer-collab">
@@ -156,7 +155,7 @@
        MODALES
        ========================================== -->
 
-  <!-- MODAL CHECKOUT COMPRA (CON DATOS PREX PRE-CONFIGURADOS) -->
+  <!-- MODAL CHECKOUT COMPRA -->
   <div id="modal-checkout" class="modal-overlay hidden">
     <div class="modal-window liquid-glass">
       <button class="modal-close" onclick="closeCheckout()">✕</button>
@@ -368,7 +367,7 @@
   </div>
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="app.js?v=7"></script>
+  <script src="app.js?v=8"></script>
 </body>
 
 </html>
