@@ -13,9 +13,10 @@
   }
 
   const CONFIG = {
-    adminKey: 'ODQyMDkx', 
+    adminKey: 'ODQyMDkx', // Clave ofuscada (PIN real: 842091)
     whatsappPhone: '5493781441325',
     maxVipStock: 30,
+    maxGeneralStock: 100, // Límite de 100 cupos para 1ra tanda
     spotifyUrl: 'https://open.spotify.com/playlist/0rD6aExAaAyAK6DG4S18ZX?si=HFJ9QbpKQKKjgAB1r7H7fg&utm_source=copy-link&pt=735796217c869b0d6b27d86f2330d985',
     wspGroupUrl: 'https://chat.whatsapp.com/IOwMiR3TikK5y9Z0kn8Jl4',
     instagramUrl: 'https://instagram.com/'
@@ -132,6 +133,7 @@
         renderApprovalsList();
         renderDoorList();
         checkVipAvailability();
+        checkGeneralAvailability();
 
         if (activeCreatedOrders.length > 0) {
           const curId = activeCreatedOrders[0].orderId;
@@ -188,6 +190,40 @@
         btn.classList.remove('btn-disabled-mode');
         btn.style.cursor = 'pointer';
         btn.onclick = () => openCheckout('ZONA VIP EXCLUSIVA', 15000);
+      }
+    }
+  }
+
+  function checkGeneralAvailability() {
+    const generalCount = cloudOrders.filter(o =>
+      (!o.ticketType || !o.ticketType.includes('VIP')) && o.status === 'approved'
+    ).length;
+
+    const remaining = Math.max(0, CONFIG.maxGeneralStock - generalCount);
+    const btn = document.getElementById('btn-buy-general');
+    const label = document.getElementById('general-stock-label');
+
+    if (label) {
+      if (remaining <= 10 && remaining > 0) {
+        label.classList.remove('hidden');
+        label.innerHTML = `🔥 <strong style="color: #ef4444;">¡ÚLTIMOS ${remaining} CUPOS DISPONIBLES!</strong>`;
+      } else {
+        label.classList.add('hidden');
+      }
+    }
+
+    if (btn) {
+      if (remaining === 0) {
+        btn.disabled = true;
+        btn.textContent = '1RA TANDA AGOTADA';
+        btn.classList.add('btn-disabled-mode');
+        btn.style.cursor = 'not-allowed';
+      } else {
+        btn.disabled = false;
+        btn.textContent = 'COMPRAR GENERAL';
+        btn.classList.remove('btn-disabled-mode');
+        btn.style.cursor = 'pointer';
+        btn.onclick = () => openCheckout('PISTA GENERAL', 8000);
       }
     }
   }
@@ -267,7 +303,11 @@
           opt.disabled = parseInt(opt.value) > remaining;
         });
       } else {
-        Array.from(selectQty.options).forEach(opt => opt.disabled = false);
+        const genCount = cloudOrders.filter(o => (!o.ticketType || !o.ticketType.includes('VIP')) && o.status !== 'rejected').length;
+        const remaining = Math.max(0, CONFIG.maxGeneralStock - genCount);
+        Array.from(selectQty.options).forEach(opt => {
+          opt.disabled = parseInt(opt.value) > remaining;
+        });
       }
     }
 
@@ -324,6 +364,12 @@
       const vipApprovedCount = cloudOrders.filter(o => o.ticketType && o.ticketType.includes('VIP') && o.status === 'approved').length;
       if (vipApprovedCount + qty > CONFIG.maxVipStock) {
         alert(`Cupos VIP insuficientes. Restantes: ${CONFIG.maxVipStock - vipApprovedCount}.`);
+        return;
+      }
+    } else {
+      const genApprovedCount = cloudOrders.filter(o => (!o.ticketType || !o.ticketType.includes('VIP')) && o.status === 'approved').length;
+      if (genApprovedCount + qty > CONFIG.maxGeneralStock) {
+        alert(`Cupos de 1ra tanda insuficientes. Restantes: ${CONFIG.maxGeneralStock - genApprovedCount}.`);
         return;
       }
     }
