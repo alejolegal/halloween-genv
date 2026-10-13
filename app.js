@@ -13,7 +13,7 @@
   }
 
   const CONFIG = {
-    adminPin: '842091',
+    adminKey: 'ODQyMDkx', // Clave ofuscada (PIN real: 842091)
     whatsappPhone: '5493781441325',
     maxVipStock: 30,
     spotifyUrl: 'https://open.spotify.com/playlist/0rD6aExAaAyAK6DG4S18ZX?si=HFJ9QbpKQKKjgAB1r7H7fg&utm_source=copy-link&pt=735796217c869b0d6b27d86f2330d985',
@@ -601,7 +601,7 @@
       const statusColor = isUsed ? '#9ca3af' : (isApproved ? '#34d399' : '#fbbf24');
 
       html += `
-        <div class="lookup-ticket-card" style="display:flex; justify-content:space-between; align-items:center; padding:12px; margin-bottom:8px; background:rgba(255,255,255,0.03); border:1px solid rgba(255,255,200,0.08); border-radius:8px;">
+        <div class="lookup-ticket-card" style="display:flex; justify-content:space-between; align-items:center; padding:12px; margin-bottom:8px; background:rgba(255,255,255,0.03); border:1px solid rgba(255,255,255,0.08); border-radius:8px;">
           <div>
             <strong style="color:#fff; display:block; font-size:0.88rem">${o.ticketType}</strong>
             <small style="color:#8e8e99">${o.name} • ${o.ticketId}</small>
@@ -651,7 +651,7 @@
   }
 
   // ==========================================
-  // PANEL STAFF (PIN DIRECTO Y SEGURO)
+  // PANEL STAFF (PIN OFUSCADO SIN PROMESAS)
   // ==========================================
   window.addEventListener('keydown', (e) => {
     if (e.ctrlKey && e.shiftKey && e.code === 'KeyS') {
@@ -705,7 +705,7 @@
     const pinInput = document.getElementById('admin-pin-input');
     const pin = pinInput ? pinInput.value.trim() : '';
 
-    if (pin === CONFIG.adminPin) {
+    if (btoa(pin) === CONFIG.adminKey) {
       isAdminAuthenticated = true;
       closeAdminLoginModal();
       const modalDash = document.getElementById('modal-admin-dashboard');
