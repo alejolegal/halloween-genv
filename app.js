@@ -13,7 +13,7 @@
   }
 
   const CONFIG = {
-    adminKey: 'ODQyMDkx', // Clave ofuscada (PIN real: 842091)
+    adminKey: 'ODQyMDkx', 
     whatsappPhone: '5493781441325',
     maxVipStock: 30,
     spotifyUrl: 'https://open.spotify.com/playlist/0rD6aExAaAyAK6DG4S18ZX?si=HFJ9QbpKQKKjgAB1r7H7fg&utm_source=copy-link&pt=735796217c869b0d6b27d86f2330d985',
