@@ -12,9 +12,8 @@
     client = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
   }
 
-  // Clave cifrada SHA-256 para el PIN: 842091 (No visible en texto plano)
   const CONFIG = {
-    adminPinHash: '8b7f8c0e29b197992fb25381cebbdb7335faaa15f3cb9350de444ea723ae7367',
+    adminPin: '842091',
     whatsappPhone: '5493781441325',
     maxVipStock: 30,
     spotifyUrl: 'https://open.spotify.com/playlist/0rD6aExAaAyAK6DG4S18ZX?si=HFJ9QbpKQKKjgAB1r7H7fg&utm_source=copy-link&pt=735796217c869b0d6b27d86f2330d985',
@@ -23,7 +22,7 @@
   };
 
   let cloudOrders = [];
-  let isAdminAuthenticated = false; // Candado de seguridad para el staff
+  let isAdminAuthenticated = false;
 
   function cleanDni(val) {
     return String(val || '').replace(/\D/g, '').trim();
@@ -194,7 +193,7 @@
   }
 
   // ==========================================
-  // PERSISTENCIA (ANTI-DUPLICADOS)
+  // PERSISTENCIA DE COMPRA (ANTI-DUPLICADOS)
   // ==========================================
   const STORAGE_KEY = 'havanna_pending_order_2026';
 
@@ -239,7 +238,7 @@
   }
 
   // ==========================================
-  // CHECKOUT
+  // CHECKOUT MULTI-CANTIDAD
   // ==========================================
   let activePlan = { name: '', unitPrice: 0 };
   let activeCreatedOrders = [];
@@ -602,7 +601,7 @@
       const statusColor = isUsed ? '#9ca3af' : (isApproved ? '#34d399' : '#fbbf24');
 
       html += `
-        <div class="lookup-ticket-card" style="display:flex; justify-content:space-between; align-items:center; padding:12px; margin-bottom:8px; background:rgba(255,255,255,0.03); border:1px solid rgba(255,255,255,0.08); border-radius:8px;">
+        <div class="lookup-ticket-card" style="display:flex; justify-content:space-between; align-items:center; padding:12px; margin-bottom:8px; background:rgba(255,255,255,0.03); border:1px solid rgba(255,255,200,0.08); border-radius:8px;">
           <div>
             <strong style="color:#fff; display:block; font-size:0.88rem">${o.ticketType}</strong>
             <small style="color:#8e8e99">${o.name} • ${o.ticketId}</small>
@@ -652,7 +651,7 @@
   }
 
   // ==========================================
-  // PANEL STAFF (AUTENTICACION CIFRADA)
+  // PANEL STAFF (PIN DIRECTO Y SEGURO)
   // ==========================================
   window.addEventListener('keydown', (e) => {
     if (e.ctrlKey && e.shiftKey && e.code === 'KeyS') {
@@ -690,7 +689,10 @@
     const modalLogin = document.getElementById('modal-admin-login');
     const pinInput = document.getElementById('admin-pin-input');
     if (modalLogin) modalLogin.classList.remove('hidden');
-    if (pinInput) pinInput.value = '';
+    if (pinInput) {
+      pinInput.value = '';
+      setTimeout(() => pinInput.focus(), 100);
+    }
   }
 
   function closeAdminLoginModal() {
@@ -699,23 +701,12 @@
     if (modalLogin) modalLogin.classList.add('hidden');
   }
 
-  async function hashPin(text) {
-    const encoder = new TextEncoder();
-    const data = encoder.encode(text);
-    const hashBuffer = await crypto.subtle.digest('SHA-256', data);
-    const hashArray = Array.from(new Uint8Array(hashBuffer));
-    return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
-  }
-
-  async function authenticateAdmin() {
+  function authenticateAdmin() {
     const pinInput = document.getElementById('admin-pin-input');
     const pin = pinInput ? pinInput.value.trim() : '';
-    if (!pin) return;
 
-    const enteredHash = await hashPin(pin);
-
-    if (enteredHash === CONFIG.adminPinHash) {
-      isAdminAuthenticated = true; // Activa permiso de sesión
+    if (pin === CONFIG.adminPin) {
+      isAdminAuthenticated = true;
       closeAdminLoginModal();
       const modalDash = document.getElementById('modal-admin-dashboard');
       if (modalDash) modalDash.classList.remove('hidden');
@@ -729,7 +720,7 @@
 
   function closeAdminDashboard() {
     unlockBackgroundScroll();
-    isAdminAuthenticated = false; // Bloquea al salir
+    isAdminAuthenticated = false;
     const modalDash = document.getElementById('modal-admin-dashboard');
     if (modalDash) modalDash.classList.add('hidden');
   }
@@ -809,7 +800,7 @@
   }
 
   async function approveOrderAndNotify(id, phone, name) {
-    if (!isAdminAuthenticated) return; // Bloqueo si no hay login
+    if (!isAdminAuthenticated) return;
     try {
       const { error } = await client.from('orders').update({ status: 'approved' }).eq('id', id);
       if (error) throw error;
@@ -829,7 +820,7 @@
   }
 
   async function rejectOrder(id) {
-    if (!isAdminAuthenticated) return; // Bloqueo si no hay login
+    if (!isAdminAuthenticated) return;
     if (!confirm("¿Confirmar rechazo de orden?")) return;
     try {
       const { error } = await client.from('orders').update({ status: 'rejected' }).eq('id', id);
@@ -841,7 +832,7 @@
   }
 
   async function cleanOldPendingOrders() {
-    if (!isAdminAuthenticated) return; // Bloqueo si no hay login
+    if (!isAdminAuthenticated) return;
     const oneDayAgo = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
     const oldPendings = cloudOrders.filter(o => o.status === 'pending' && o.createdAt < oneDayAgo);
 
