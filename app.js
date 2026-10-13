@@ -13,7 +13,7 @@
   }
 
   const CONFIG = {
-    adminKey: 'ODQyMDkx', // Clave ofuscada (PIN real: 842091)
+    adminKey: 'ODQyMDkx', 
     whatsappPhone: '5493781441325',
     maxVipStock: 30,
     maxGeneralStock: 100, // Límite de 100 cupos para 1ra tanda
@@ -220,10 +220,10 @@
         btn.style.cursor = 'not-allowed';
       } else {
         btn.disabled = false;
-        btn.textContent = 'COMPRAR GENERAL';
+        btn.textContent = 'COMPRAR ENTRADA';
         btn.classList.remove('btn-disabled-mode');
         btn.style.cursor = 'pointer';
-        btn.onclick = () => openCheckout('PISTA GENERAL', 8000);
+        btn.onclick = () => openCheckout('PISTA GENERAL', 5000); // 5000 ARS asegurado
       }
     }
   }
