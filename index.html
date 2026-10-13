@@ -80,7 +80,10 @@
             <li>Barra general de bebidas</li>
             <li>Seguridad en todo el predio</li>
           </ul>
-          <button onclick="openCheckout('PISTA GENERAL', 5000)" class="btn-ticket btn-general">COMPRAR ENTRADA</button>
+          <!-- AVISO DE CUPOS RESTANTES GENERAL -->
+          <div id="general-stock-label" class="hidden" style="font-size: 0.85rem; margin-bottom: 8px;"></div>
+          <button id="btn-buy-general" onclick="openCheckout('PISTA GENERAL', 5000)"
+            class="btn-ticket btn-general">COMPRAR ENTRADA</button>
           <small class="tier-next">Disponibilidad inmediata por transferencia</small>
         </div>
 
@@ -367,7 +370,7 @@
   </div>
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="app.js?v=11"></script>
+  <script src="app.js?v=13"></script>
 </body>
 
 </html>
