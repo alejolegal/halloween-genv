@@ -12,9 +12,10 @@
     client = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
   }
 
+  // Clave cifrada SHA-256 para el PIN: 842091 (No visible en texto plano)
   const CONFIG = {
-    adminPin: '2026',
-    whatsappPhone: '5493781441325', // Número directo para recibir comprobantes
+    adminPinHash: '8b7f8c0e29b197992fb25381cebbdb7335faaa15f3cb9350de444ea723ae7367',
+    whatsappPhone: '5493781441325',
     maxVipStock: 30,
     spotifyUrl: 'https://open.spotify.com/playlist/0rD6aExAaAyAK6DG4S18ZX?si=HFJ9QbpKQKKjgAB1r7H7fg&utm_source=copy-link&pt=735796217c869b0d6b27d86f2330d985',
     wspGroupUrl: 'https://chat.whatsapp.com/IOwMiR3TikK5y9Z0kn8Jl4',
@@ -22,13 +23,14 @@
   };
 
   let cloudOrders = [];
+  let isAdminAuthenticated = false; // Candado de seguridad para el staff
 
   function cleanDni(val) {
     return String(val || '').replace(/\D/g, '').trim();
   }
 
   // ==========================================
-  // MANEJO DE BLOQUEO DE SCROLL DE FONDO
+  // BLOQUEO SCROLL DE FONDO
   // ==========================================
   function lockBackgroundScroll() {
     document.body.classList.add('no-scroll');
@@ -192,7 +194,7 @@
   }
 
   // ==========================================
-  // PERSISTENCIA DE COMPRA (ANTI-DUPLICADOS)
+  // PERSISTENCIA (ANTI-DUPLICADOS)
   // ==========================================
   const STORAGE_KEY = 'havanna_pending_order_2026';
 
@@ -237,7 +239,7 @@
   }
 
   // ==========================================
-  // CHECKOUT MULTI-CANTIDAD
+  // CHECKOUT
   // ==========================================
   let activePlan = { name: '', unitPrice: 0 };
   let activeCreatedOrders = [];
@@ -433,7 +435,7 @@
   }
 
   // ==========================================
-  // RENDER TICKETS EDITORIAL "ONE WISH WILLOW"
+  // RENDER TICKETS
   // ==========================================
   function renderMultipleTicketsUI(ordersList) {
     document.getElementById('co-step-ticket').classList.remove('hidden');
@@ -650,7 +652,7 @@
   }
 
   // ==========================================
-  // PANEL STAFF
+  // PANEL STAFF (AUTENTICACION CIFRADA)
   // ==========================================
   window.addEventListener('keydown', (e) => {
     if (e.ctrlKey && e.shiftKey && e.code === 'KeyS') {
@@ -697,13 +699,24 @@
     if (modalLogin) modalLogin.classList.add('hidden');
   }
 
-  function authenticateAdmin() {
+  async function hashPin(text) {
+    const encoder = new TextEncoder();
+    const data = encoder.encode(text);
+    const hashBuffer = await crypto.subtle.digest('SHA-256', data);
+    const hashArray = Array.from(new Uint8Array(hashBuffer));
+    return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+  }
+
+  async function authenticateAdmin() {
     const pinInput = document.getElementById('admin-pin-input');
     const pin = pinInput ? pinInput.value.trim() : '';
+    if (!pin) return;
 
-    if (pin === CONFIG.adminPin) {
-      const modalLogin = document.getElementById('modal-admin-login');
-      if (modalLogin) modalLogin.classList.add('hidden');
+    const enteredHash = await hashPin(pin);
+
+    if (enteredHash === CONFIG.adminPinHash) {
+      isAdminAuthenticated = true; // Activa permiso de sesión
+      closeAdminLoginModal();
       const modalDash = document.getElementById('modal-admin-dashboard');
       if (modalDash) modalDash.classList.remove('hidden');
       switchAdminTab('approvals');
@@ -716,6 +729,7 @@
 
   function closeAdminDashboard() {
     unlockBackgroundScroll();
+    isAdminAuthenticated = false; // Bloquea al salir
     const modalDash = document.getElementById('modal-admin-dashboard');
     if (modalDash) modalDash.classList.add('hidden');
   }
@@ -795,6 +809,7 @@
   }
 
   async function approveOrderAndNotify(id, phone, name) {
+    if (!isAdminAuthenticated) return; // Bloqueo si no hay login
     try {
       const { error } = await client.from('orders').update({ status: 'approved' }).eq('id', id);
       if (error) throw error;
@@ -814,6 +829,7 @@
   }
 
   async function rejectOrder(id) {
+    if (!isAdminAuthenticated) return; // Bloqueo si no hay login
     if (!confirm("¿Confirmar rechazo de orden?")) return;
     try {
       const { error } = await client.from('orders').update({ status: 'rejected' }).eq('id', id);
@@ -824,8 +840,8 @@
     }
   }
 
-  // AUTO-LIMPIEZA DE PENDIENTES > 24H
   async function cleanOldPendingOrders() {
+    if (!isAdminAuthenticated) return; // Bloqueo si no hay login
     const oneDayAgo = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
     const oldPendings = cloudOrders.filter(o => o.status === 'pending' && o.createdAt < oneDayAgo);
 
@@ -851,7 +867,7 @@
   }
 
   // ==========================================
-  // CONTROL EN PUERTA (100% POR DNI)
+  // CONTROL EN PUERTA
   // ==========================================
   function handleDoorInputKey(e) {
     if (e.key === 'Enter') {
@@ -942,6 +958,7 @@
   }
 
   async function checkInAllPending(dni) {
+    if (!isAdminAuthenticated) return;
     const pendings = cloudOrders.filter(o => o.status === 'approved' && o.dni === dni && !o.used);
     for (const t of pendings) {
       await client.from('orders').update({ used: true }).eq('id', t.firestoreId);
@@ -957,6 +974,7 @@
   }
 
   async function manualCheckIn(id) {
+    if (!isAdminAuthenticated) return;
     try {
       const { error } = await client.from('orders').update({ used: true }).eq('id', id);
       if (error) throw error;
@@ -1005,9 +1023,10 @@
   }
 
   // ==========================================
-  // EXPORTAR PLANILLA A PDF
+  // EXPORTAR PDF
   // ==========================================
   function exportDoorListPDF() {
+    if (!isAdminAuthenticated) return;
     if (typeof window.jspdf === 'undefined') {
       alert("Cargando módulo PDF...");
       return;
@@ -1079,17 +1098,14 @@
   }
 
   // ==========================================
-  // MODALES SECUNDARIOS (CON BLOQUEO DE SCROLL)
+  // MODALES SECUNDARIOS
   // ==========================================
   function toggleMapModal() {
     const modal = document.getElementById('modal-map');
     if (modal) {
       const isHidden = modal.classList.toggle('hidden');
-      if (isHidden) {
-        unlockBackgroundScroll();
-      } else {
-        lockBackgroundScroll();
-      }
+      if (isHidden) unlockBackgroundScroll();
+      else lockBackgroundScroll();
     }
   }
 
@@ -1097,15 +1113,12 @@
     const modal = document.getElementById('modal-vip-drinks');
     if (modal) {
       const isHidden = modal.classList.toggle('hidden');
-      if (isHidden) {
-        unlockBackgroundScroll();
-      } else {
-        lockBackgroundScroll();
-      }
+      if (isHidden) unlockBackgroundScroll();
+      else lockBackgroundScroll();
     }
   }
 
-  // EXPOSICION GLOBAL DE FUNCIONES
+  // EXPOSICION GLOBAL DE FUNCIONES NECESARIAS
   window.openCheckout = openCheckout;
   window.closeCheckout = closeCheckout;
   window.updateCheckoutTotal = updateCheckoutTotal;
