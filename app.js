@@ -13,7 +13,7 @@
   }
 
   const CONFIG = {
-    adminKey: 'ODQyMDkx', 
+    adminKey: 'ODQyMDkx', // Clave ofuscada (PIN real: 842091)
     whatsappPhone: '5493781441325',
     maxVipStock: 30,
     maxGeneralStock: 100, // Límite de 100 cupos para 1ra tanda
@@ -95,6 +95,27 @@
     }
     setInterval(tick, 1000);
     tick();
+  }
+
+  // ==========================================
+  // METRICAS DEL PANEL
+  // ==========================================
+  function updateMetrics() {
+    const pending = cloudOrders.filter(o => o.status === 'pending').length;
+    const approved = cloudOrders.filter(o => o.status === 'approved');
+    const vips = approved.filter(o => o.ticketType && o.ticketType.includes('VIP')).length;
+    const generals = approved.length - vips;
+    const revenue = approved.reduce((acc, o) => acc + (o.amount || 0), 0);
+
+    const elPending = document.getElementById('adm-metric-pending');
+    const elApproved = document.getElementById('adm-metric-approved');
+    const elVip = document.getElementById('adm-metric-vip');
+    const elRevenue = document.getElementById('adm-metric-revenue');
+
+    if (elPending) elPending.textContent = pending;
+    if (elApproved) elApproved.textContent = `${generals}/100`; // Muestra Generales vs el tope de 100
+    if (elVip) elVip.textContent = `${vips}/30`;
+    if (elRevenue) elRevenue.textContent = `$${revenue.toLocaleString('es-AR')}`;
   }
 
   // ==========================================
@@ -790,23 +811,6 @@
       viewApp?.classList.add('hidden');
       renderDoorList();
     }
-  }
-
-  function updateMetrics() {
-    const pending = cloudOrders.filter(o => o.status === 'pending').length;
-    const approved = cloudOrders.filter(o => o.status === 'approved');
-    const vips = approved.filter(o => o.ticketType && o.ticketType.includes('VIP')).length;
-    const revenue = approved.reduce((acc, o) => acc + (o.amount || 0), 0);
-
-    const elPending = document.getElementById('adm-metric-pending');
-    const elApproved = document.getElementById('adm-metric-approved');
-    const elVip = document.getElementById('adm-metric-vip');
-    const elRevenue = document.getElementById('adm-metric-revenue');
-
-    if (elPending) elPending.textContent = pending;
-    if (elApproved) elApproved.textContent = approved.length;
-    if (elVip) elVip.textContent = `${vips}/${CONFIG.maxVipStock}`;
-    if (elRevenue) elRevenue.textContent = `$${revenue.toLocaleString('es-AR')}`;
   }
 
   function renderApprovalsList() {
