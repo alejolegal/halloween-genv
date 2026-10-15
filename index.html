@@ -17,7 +17,7 @@
     href="https://fonts.googleapis.com/css2?family=Anton&family=Inter:wght@400;500;600;700;800&family=Permanent+Marker&display=swap"
     rel="stylesheet">
 
-  <link rel="stylesheet" href="style.css?v=4">
+  <link rel="stylesheet" href="style.css?v=5">
 
   <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
@@ -72,16 +72,31 @@
       <div class="tickets-grid">
         <!-- GENERAL -->
         <div class="ticket-card card-general liquid-glass">
-          <div class="card-badge">TANDA 1 // PREVENTA</div>
+          <div id="general-badge-container">
+            <div class="card-badge">TANDA 2 // GENERAL</div>
+          </div>
+
           <h3 class="tier-title">PISTA GENERAL</h3>
-          <div class="tier-price">$5.000 <span class="currency">ARS</span></div>
+
+          <!-- Aviso Tanda 1 Sold Out -->
+          <div id="tanda1-soldout-banner" class="soldout-tag-box hidden">
+            🔥 1RA TANDA SOLD OUT (100/100)
+          </div>
+
+          <div class="tier-price">$7.000 <span class="currency">ARS</span></div>
+
           <ul class="tier-features">
             <li>Acceso a pista principal</li>
             <li>Barra general de bebidas</li>
+            <li>Seguridad en todo el predio</li>
           </ul>
-          <!-- AVISO DE CUPOS RESTANTES GENERAL -->
-          <div id="general-stock-label" class="hidden" style="font-size: 0.85rem; margin-bottom: 8px;"></div>
-          <button id="btn-buy-general" onclick="openCheckout('PISTA GENERAL', 5000)"
+
+          <!-- CONTADOR FOMO Y STOCK -->
+          <div id="general-stock-label" class="fomo-counter-box" style="font-size: 0.85rem; margin-bottom: 12px;">
+            Cargando disponibilidad...
+          </div>
+
+          <button id="btn-buy-general" onclick="openCheckout('PISTA GENERAL - TANDA 2', 7000)"
             class="btn-ticket btn-general">COMPRAR ENTRADA</button>
           <small class="tier-next">Disponibilidad inmediata por transferencia</small>
         </div>
@@ -95,8 +110,8 @@
             <li>1 consumición de regalo incluida</li>
             <li>Barra de tragos exclusivos de Aloha</li>
             <li>Barra de bebidas preferencial sin filas</li>
-            <li>Sector con asientos y acceso al balcón</li>
-            <li>Acceso libre a pista principal</li>
+            <li>Sector con asientos y balcón exclusivo</li>
+            <li>Acceso libre a pista general y sectores</li>
           </ul>
           <button id="btn-buy-vip" onclick="openCheckout('ZONA VIP EXCLUSIVA', 15000)"
             class="btn-ticket btn-vip">COMPRAR VIP</button>
@@ -371,7 +386,7 @@
   </div>
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="app.js?v=13"></script>
+  <script src="app.js?v=14"></script>
 </body>
 
 </html>
