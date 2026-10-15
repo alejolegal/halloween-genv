@@ -13,7 +13,7 @@
   }
 
   const CONFIG = {
-    adminKey: 'ODQyMDkx', // Clave ofuscada (PIN real: 842091)
+    adminKey: 'ODQyMDkx',
     whatsappPhone: '5493781441325',
     maxVipStock: 30,
     maxGeneralStock: 200, // 100 Tanda 1 + 100 Tanda 2
