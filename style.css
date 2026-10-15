@@ -1236,3 +1236,38 @@ select.qty-select option {
     bottom: -10px;
   }
 }
+
+/* BLOQUEO TOTAL DE SCROLL DEL FONDO AL ABRIR VENTANAS */
+body.no-scroll {
+  overflow: hidden !important;
+  height: 100vh !important;
+  touch-action: none;
+}
+
+/* Estilos para Sold Out Tanda 1 y Contador FOMO */
+.soldout-tag-box {
+  background: rgba(239, 68, 68, 0.15);
+  border: 1px solid rgba(239, 68, 68, 0.4);
+  color: #ef4444;
+  padding: 6px 10px;
+  border-radius: 6px;
+  font-size: 0.78rem;
+  font-weight: 700;
+  text-align: center;
+  margin-bottom: 12px;
+  letter-spacing: 0.5px;
+}
+
+.fomo-counter-box {
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  padding: 10px;
+  border-radius: 8px;
+  text-align: center;
+  color: #d1d5db;
+  line-height: 1.4;
+}
+
+.fomo-counter-box strong {
+  color: #38bdf8;
+}
