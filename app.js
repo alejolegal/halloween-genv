@@ -16,7 +16,7 @@
     adminKey: 'ODQyMDkx', // Clave ofuscada (PIN real: 842091)
     whatsappPhone: '5493781441325',
     maxVipStock: 30,
-    maxGeneralStock: 100, // Límite de 100 cupos para 1ra tanda
+    maxGeneralStock: 200, // 100 Tanda 1 + 100 Tanda 2
     spotifyUrl: 'https://open.spotify.com/playlist/0rD6aExAaAyAK6DG4S18ZX?si=HFJ9QbpKQKKjgAB1r7H7fg&utm_source=copy-link&pt=735796217c869b0d6b27d86f2330d985',
     wspGroupUrl: 'https://chat.whatsapp.com/IOwMiR3TikK5y9Z0kn8Jl4',
     instagramUrl: 'https://instagram.com/'
@@ -113,7 +113,7 @@
     const elRevenue = document.getElementById('adm-metric-revenue');
 
     if (elPending) elPending.textContent = pending;
-    if (elApproved) elApproved.textContent = `${generals}/100`; // Muestra Generales vs el tope de 100
+    if (elApproved) elApproved.textContent = `${generals}/200`;
     if (elVip) elVip.textContent = `${vips}/30`;
     if (elRevenue) elRevenue.textContent = `$${revenue.toLocaleString('es-AR')}`;
   }
@@ -223,20 +223,46 @@
     const remaining = Math.max(0, CONFIG.maxGeneralStock - generalCount);
     const btn = document.getElementById('btn-buy-general');
     const label = document.getElementById('general-stock-label');
+    const priceEl = document.querySelector('.card-general .tier-price');
+    const badgeContainer = document.getElementById('general-badge-container');
+    const tanda1SoldOutBanner = document.getElementById('tanda1-soldout-banner');
 
-    if (label) {
-      if (remaining <= 10 && remaining > 0) {
-        label.classList.remove('hidden');
-        label.innerHTML = `🔥 <strong style="color: #ef4444;">¡ÚLTIMOS ${remaining} CUPOS DISPONIBLES!</strong>`;
+    const isTanda2 = generalCount >= 100;
+    const currentPrice = isTanda2 ? 7000 : 5000;
+    const tierName = isTanda2 ? 'PISTA GENERAL - TANDA 2' : 'PISTA GENERAL';
+
+    // Badge y carteles de Tanda
+    if (badgeContainer) {
+      badgeContainer.innerHTML = isTanda2 ? '<div class="card-badge">TANDA 2 // GENERAL</div>' : '<div class="card-badge">TANDA 1 // PREVENTA</div>';
+    }
+
+    if (tanda1SoldOutBanner) {
+      if (isTanda2) {
+        tanda1SoldOutBanner.classList.remove('hidden');
       } else {
-        label.classList.add('hidden');
+        tanda1SoldOutBanner.classList.add('hidden');
+      }
+    }
+
+    if (priceEl) {
+      priceEl.innerHTML = `$${currentPrice.toLocaleString('es-AR')} <span class="currency">ARS</span>`;
+    }
+
+    // Contador FOMO y Stock
+    if (label) {
+      const t2Remaining = Math.max(0, 200 - generalCount);
+      if (isTanda2) {
+        label.innerHTML = `🔥 Ya se vendieron <strong>100 entradas</strong> de la Tanda 1.<br>Quedan <strong>${t2Remaining} cupos</strong> disponibles en Tanda 2.`;
+      } else {
+        const t1Remaining = Math.max(0, 100 - generalCount);
+        label.innerHTML = `⚡ <strong>${generalCount} de 100</strong> entradas vendidas en Tanda 1.<br>¡Quedan <strong>${t1Remaining} cupos</strong> al precio inicial!`;
       }
     }
 
     if (btn) {
       if (remaining === 0) {
         btn.disabled = true;
-        btn.textContent = '1RA TANDA AGOTADA';
+        btn.textContent = 'SOLD OUT // TODO AGOTADO';
         btn.classList.add('btn-disabled-mode');
         btn.style.cursor = 'not-allowed';
       } else {
@@ -244,7 +270,7 @@
         btn.textContent = 'COMPRAR ENTRADA';
         btn.classList.remove('btn-disabled-mode');
         btn.style.cursor = 'pointer';
-        btn.onclick = () => openCheckout('PISTA GENERAL', 5000); // 5000 ARS asegurado
+        btn.onclick = () => openCheckout(tierName, currentPrice);
       }
     }
   }
@@ -390,7 +416,7 @@
     } else {
       const genApprovedCount = cloudOrders.filter(o => (!o.ticketType || !o.ticketType.includes('VIP')) && o.status === 'approved').length;
       if (genApprovedCount + qty > CONFIG.maxGeneralStock) {
-        alert(`Cupos de 1ra tanda insuficientes. Restantes: ${CONFIG.maxGeneralStock - genApprovedCount}.`);
+        alert(`Cupos generales insuficientes. Restantes: ${CONFIG.maxGeneralStock - genApprovedCount}.`);
         return;
       }
     }
