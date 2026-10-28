@@ -17,7 +17,7 @@
     href="https://fonts.googleapis.com/css2?family=Anton&family=Inter:wght@400;500;600;700;800&family=Permanent+Marker&display=swap"
     rel="stylesheet">
 
-  <link rel="stylesheet" href="style.css?v=5">
+  <link rel="stylesheet" href="style.css?v=6">
 
   <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
@@ -118,6 +118,33 @@
             <span id="vip-stock-label">Cupos restantes: <strong>30/30</strong></span>
           </div>
         </div>
+
+        <!-- CONSERVADORA (ACTUALIZADO) -->
+        <div class="ticket-card card-cooler liquid-glass" style="border-color: rgba(56, 189, 248, 0.3);">
+          <div class="card-badge"
+            style="background: rgba(56, 189, 248, 0.15); color: #38bdf8; border-color: rgba(56, 189, 248, 0.3);">CUPO
+            EXCLUSIVO: 15 PLAZAS</div>
+          <h3 class="tier-title" style="color: #38bdf8;">ACCESO CONSERVADORA</h3>
+          <div class="tier-price" style="color: #38bdf8;">$30.000 <span class="currency">ARS</span></div>
+
+          <ul class="tier-features">
+            <li>Exclusivo para asistentes con entrada previa</li>
+            <li><strong>No se vende en puerta</strong></li>
+          </ul>
+
+          <!-- BOTÓN REGLAMENTO -->
+          <button onclick="toggleCoolerRulesModal()" class="btn-clean-secondary"
+            style="width: 100%; margin-bottom: 12px; border-color: rgba(56, 189, 248, 0.4); color: #38bdf8;">
+            Ver reglamento de conservadoras
+          </button>
+
+          <div id="cooler-stock-label" class="stock-counter" style="margin-bottom: 12px; color: #38bdf8;">
+            Cupos restantes: <strong>15/15</strong>
+          </div>
+          <button id="btn-buy-cooler" onclick="openCheckout('ACCESO CONSERVADORA', 30000)" class="btn-ticket"
+            style="background: #38bdf8; color: #090a0f; font-weight: 800;">COMPRAR CONSERVADORA</button>
+          <small class="tier-next">Requisito: Poseer entrada general o VIP previa</small>
+        </div>
       </div>
     </div>
 
@@ -126,25 +153,75 @@
       <button class="btn-map-toggle" onclick="toggleMapModal()">Ver plano de distribución del club</button>
       <button class="btn-map-toggle" onclick="toggleVipDrinksModal()">Ver carta de tragos VIP</button>
     </div>
+  </section>
+
+  <!-- CRONOGRAMA & ATRACCIONES OFICIALES -->
+  <section class="section-community">
+    <div class="container">
+      <div class="section-header" style="margin-bottom: 2rem;">
+        <h2 class="section-title">LINE UP & EXPERIENCIAS OFICIALES</h2>
+        <p class="section-subtitle">Todo lo confirmado para romper la noche de Halloween.</p>
+      </div>
+
+      <div class="community-grid">
+        <!-- DJ & MUSICA -->
+        <div class="comm-card liquid-glass">
+          <div class="comm-status-badge badge-green">PRINCIPAL</div>
+          <h3 class="comm-title">DJ Juanse</h3>
+          <p class="comm-desc">Llegando directamente desde <strong>Corrientes Capital y Resistencia (Chaco)</strong> a
+            Itá Ibaté.</p>
+        </div>
+
+        <!-- EXPERIENCIAS -->
+        <div class="comm-card liquid-glass">
+          <div class="comm-status-badge badge-red">HIGHLIGHTS</div>
+          <h3 class="comm-title">SHOWS</h3>
+          <p class="comm-desc" style="font-size: 0.85rem; line-height: 1.6;">
+            • <strong>Neon Party</strong>Toda la noche<br>
+            • <strong>Maquilladora Gratuita</strong>Maquillajes simples<br>
+            • <strong>Fotógrafa en la noche</strong>cubriendo todo<br>
+            • <strong>Tequila Gratis</strong> en el ingreso
+          </p>
+        </div>
+
+        <!-- PREMIOS Y CONCURSOS -->
+        <div class="comm-card liquid-glass">
+          <div class="comm-status-badge"
+            style="background: rgba(234, 179, 8, 0.15); color: #eab308; border-color: rgba(234, 179, 8, 0.3);">PREMIOS
+          </div>
+          <h3 class="comm-title">Premios & Sponsors</h3>
+          <p class="comm-desc" style="font-size: 0.85rem; line-height: 1.6;">
+            • <strong>Mejor Disfraz:</strong> 3 Packs de cerveza (Auspicia <em>Maxikiosco 24 al paso</em>)<br>
+            • <strong>Mejor Disfraz en Dúo:</strong> 1 cena para 2 todo pago (Auspicia <em>Aloha</em>)<br>
+            • <strong>Grupo más fiestero:</strong> ¡Premio sorpresa!
+          </p>
+        </div>
+      </div>
+
+      <!-- SHOW DE LUCES DESTACADO -->
+      <div class="liquid-glass"
+        style="margin-top: 1.5rem; padding: 1.5rem; text-align: center; border: 1px solid rgba(239, 68, 68, 0.3); background: rgba(239, 68, 68, 0.04);">
+        <span
+          style="color: #ef4444; font-weight: 800; font-size: 0.85rem; letter-spacing: 1px; display:block; margin-bottom:4px;">MOMENTO
+          CUMBRE</span>
+        <h3
+          style="font-family: 'Anton', sans-serif; font-size: 1.8rem; letter-spacing: 1px; margin-bottom: 4px; color: #fff;">
+          SHOW DE LUCES // 03:00 A.M.</h3>
+        <p style="color: #9ca3af; font-size: 0.9rem; margin: 0;">Preparate para una puesta visual inigualable en el
+          corazón de la madrugada.</p>
+      </div>
     </div>
   </section>
 
-  <!-- COMUNIDAD -->
-  <section class="section-community">
+  <!-- COMUNIDAD (WHATSAPP & SPOTIFY) -->
+  <section class="section-community" style="padding-top: 0;">
     <div class="container">
       <div class="community-grid">
-        <div class="comm-card comm-lineup liquid-glass">
-          <div class="comm-status-badge">PRÓXIMAMENTE</div>
-          <h3 class="comm-title">Line Up</h3>
-          <p class="comm-desc">Próximamente disponible con el cronograma completo de la joda.</p>
-          <div class="lock-indicator">Acceso bloqueado • Fase inicial</div>
-        </div>
-
         <div class="comm-card comm-spotify liquid-glass">
           <div class="comm-status-badge badge-green">PLAYLIST</div>
           <h3 class="comm-title">Playlist Colaborativa</h3>
           <p class="comm-desc">Sumá tus temas recomendados para la previa y pista principal en Spotify.</p>
-          <a href="https://open.spotify.com/playlist/0rD6aExAaAyAK6DG4S18ZX?si=HFJ9QbpKQKKjgAB1r7H7fg&utm_source=copy-link&pt=735796217c869b0d6b27d86f2330d985"
+          <a href="https://open.spotify.com/playlist/0rD6aExAaAyAK6DG4S18ZX?si=drs44LWoSIyl0FXxJsErDQ&utm_source=copy-link&pt=3064c923aaa871aa7170ffe7187858d8&pi=Hk-YfO5LTBqEK"
             target="_blank" id="btn-spotify-link" class="btn-comm btn-spotify">Abrir en Spotify →</a>
         </div>
 
@@ -185,24 +262,27 @@
         </p>
 
         <form id="orderForm" onsubmit="handleOrderSubmit(event)">
-          <div class="form-group">
-            <label>CANTIDAD DE ENTRADAS (MÁX 4)</label>
+          <div class="form-group" id="qty-container-group">
+            <label>CANTIDAD (MÁX 4)</label>
             <select id="cust-qty" class="qty-select" onchange="updateCheckoutTotal()">
-              <option value="1">1 Entrada</option>
-              <option value="2">2 Entradas</option>
-              <option value="3">3 Entradas</option>
-              <option value="4">4 Entradas</option>
+              <option value="1">1 Unidad</option>
+              <option value="2">2 Unidades</option>
+              <option value="3">3 Unidades</option>
+              <option value="4">4 Unidades</option>
             </select>
+          </div>
+
+          <div class="form-group">
+            <label>DNI (PARA INGRESO / VALIDACIÓN)</label>
+            <input type="number" id="cust-dni" required placeholder="Sin puntos ni espacios"
+              onblur="handleDniBlur(this.value)">
+            <small id="dni-feedback-msg"
+              style="font-size: 0.7rem; color: #38bdf8; display: block; margin-top: 4px;"></small>
           </div>
 
           <div class="form-group">
             <label>NOMBRE COMPLETO DEL TITULAR</label>
             <input type="text" id="cust-name" required placeholder="Ej: Juan Pérez">
-          </div>
-
-          <div class="form-group">
-            <label>DNI (PARA INGRESO EN PUERTA)</label>
-            <input type="number" id="cust-dni" required placeholder="Sin puntos ni espacios">
           </div>
 
           <div class="form-group">
@@ -262,7 +342,7 @@
             style="color:#fff"></strong>.</p>
         <p style="font-size:0.85rem; color:#9ca3af; margin-bottom:1.5rem">
           Titular: <span id="pend-name"></span> (DNI: <span id="pend-dni"></span>)<br>
-          En cuanto validemos tu pago, tus entradas quedarán habilitadas en la web.
+          En cuanto validemos tu pago, tus accesos quedarán habilitados.
         </p>
         <button onclick="checkStatusFromCurrent()" class="btn-secondary full-width" style="margin-bottom:8px">Comprobar
           Estado Ahora</button>
@@ -271,7 +351,7 @@
 
       <!-- PASO 4: TICKETS RENDERIZADOS -->
       <div id="co-step-ticket" class="hidden">
-        <h3 class="modal-heading" style="text-align:center; color:#34d399">¡Entradas Aprobadas!</h3>
+        <h3 class="modal-heading" style="text-align:center; color:#34d399">¡Acceso Aprobado!</h3>
         <p class="modal-sub" style="text-align:center">Presentá este ticket digital o tu DNI físico en puerta.</p>
         <div id="ticket-render-box"></div>
         <button onclick="closeCheckout()" class="btn-clean-secondary full-width"
@@ -315,6 +395,56 @@
       <div class="map-image-box">
         <img src="tragos-vip.png" alt="Carta de Tragos VIP" class="club-map-img">
       </div>
+    </div>
+  </div>
+
+  <!-- MODAL REGLAS DE CONSERVADORA (SIN EMOJIS) -->
+  <div id="modal-cooler-rules" class="modal-overlay hidden">
+    <div class="modal-window liquid-glass" style="max-width: 550px;">
+      <button class="modal-close" onclick="toggleCoolerRulesModal()">✕</button>
+      <h3 class="modal-heading" style="color: #38bdf8; margin-bottom: 0.5rem;">Reglamento Oficial // Conservadoras</h3>
+      <p class="modal-sub">Normas obligatorias para el ingreso y permanencia con conservadoras dentro del predio.</p>
+
+      <div
+        style="text-align: left; font-size: 0.85rem; color: #d1d5db; display: flex; flex-direction: column; gap: 12px; max-height: 60vh; overflow-y: auto; padding-right: 4px;">
+        <div
+          style="background: rgba(255,255,255,0.03); padding: 10px; border-radius: 8px; border-left: 3px solid #ef4444;">
+          <strong style="color: #fff; display: block; margin-bottom: 2px;">Prohibido el vidrio</strong>
+          Queda terminantemente prohibido el ingreso de envases, botellas o cualquier elemento de vidrio dentro de la
+          conservadora. Ante cualquier rotura, se pone en riesgo la integridad física de los presentes.
+        </div>
+
+        <div
+          style="background: rgba(255,255,255,0.03); padding: 10px; border-radius: 8px; border-left: 3px solid #38bdf8;">
+          <strong style="color: #fff; display: block; margin-bottom: 2px;">Manos libres</strong>
+          No se permite ingresar al lugar portando elementos en las manos al mismo tiempo que se transporta la
+          conservadora.
+        </div>
+
+        <div
+          style="background: rgba(255,255,255,0.03); padding: 10px; border-radius: 8px; border-left: 3px solid #38bdf8;">
+          <strong style="color: #fff; display: block; margin-bottom: 2px;">Ubicación obligatoria de las bebidas</strong>
+          Todo tipo de bebida que ingrese debe estar guardada estrictamente en el interior de la conservadora. No se
+          permite llevar bebidas sueltas o fuera de ella.
+        </div>
+
+        <div
+          style="background: rgba(255,255,255,0.03); padding: 10px; border-radius: 8px; border-left: 3px solid #ef4444;">
+          <strong style="color: #fff; display: block; margin-bottom: 2px;">Cero elementos cortopunzantes</strong>
+          Está totalmente prohibido el ingreso de cuchillos, navajas, abrelatas filosos o cualquier objeto punzocortante
+          que pueda representar un peligro en aglomeraciones.
+        </div>
+
+        <div
+          style="background: rgba(255,255,255,0.03); padding: 10px; border-radius: 8px; border-left: 3px solid #eab308;">
+          <strong style="color: #fff; display: block; margin-bottom: 2px;">Control de capacidad y contenido</strong>
+          La organización se reserva el derecho de inspeccionar el interior de la conservadora en el acceso para
+          verificar el cumplimiento de estas normas.
+        </div>
+      </div>
+
+      <button onclick="toggleCoolerRulesModal()" class="btn-primary full-width"
+        style="margin-top: 1.5rem;">Entendido</button>
     </div>
   </div>
 
@@ -385,7 +515,7 @@
   </div>
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="app.js?v=14"></script>
+  <script src="app.js?v=17"></script>
 </body>
 
 </html>
