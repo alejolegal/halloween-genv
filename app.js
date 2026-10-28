@@ -13,10 +13,11 @@
   }
 
   const CONFIG = {
-    adminKey: 'ODQyMDkx',
+    adminKey: 'ODQyMDkx', // Clave ofuscada (PIN real: 842091)
     whatsappPhone: '5493781441325',
     maxVipStock: 30,
     maxGeneralStock: 200, // 100 Tanda 1 + 100 Tanda 2
+    maxCoolerStock: 15,   // <--- Límite estricto de conservadoras
     spotifyUrl: 'https://open.spotify.com/playlist/0rD6aExAaAyAK6DG4S18ZX?si=HFJ9QbpKQKKjgAB1r7H7fg&utm_source=copy-link&pt=735796217c869b0d6b27d86f2330d985',
     wspGroupUrl: 'https://chat.whatsapp.com/IOwMiR3TikK5y9Z0kn8Jl4',
     instagramUrl: 'https://instagram.com/'
@@ -104,7 +105,8 @@
     const pending = cloudOrders.filter(o => o.status === 'pending').length;
     const approved = cloudOrders.filter(o => o.status === 'approved');
     const vips = approved.filter(o => o.ticketType && o.ticketType.includes('VIP')).length;
-    const generals = approved.length - vips;
+    const generals = approved.filter(o => !o.ticketType || (!o.ticketType.includes('VIP') && !o.ticketType.includes('CONSERVADORA'))).length;
+    const coolers = approved.filter(o => o.ticketType && o.ticketType.includes('CONSERVADORA')).length;
     const revenue = approved.reduce((acc, o) => acc + (o.amount || 0), 0);
 
     const elPending = document.getElementById('adm-metric-pending');
@@ -113,7 +115,7 @@
     const elRevenue = document.getElementById('adm-metric-revenue');
 
     if (elPending) elPending.textContent = pending;
-    if (elApproved) elApproved.textContent = `${generals}/200`;
+    if (elApproved) elApproved.textContent = `${generals}/200 (Gen) | ${coolers} (Cons)`;
     if (elVip) elVip.textContent = `${vips}/30`;
     if (elRevenue) elRevenue.textContent = `$${revenue.toLocaleString('es-AR')}`;
   }
@@ -155,6 +157,7 @@
         renderDoorList();
         checkVipAvailability();
         checkGeneralAvailability();
+        checkCoolerAvailability();
 
         if (activeCreatedOrders.length > 0) {
           const curId = activeCreatedOrders[0].orderId;
@@ -217,7 +220,7 @@
 
   function checkGeneralAvailability() {
     const generalCount = cloudOrders.filter(o =>
-      (!o.ticketType || !o.ticketType.includes('VIP')) && o.status === 'approved'
+      (!o.ticketType || (!o.ticketType.includes('VIP') && !o.ticketType.includes('CONSERVADORA'))) && o.status === 'approved'
     ).length;
 
     const remaining = Math.max(0, CONFIG.maxGeneralStock - generalCount);
@@ -231,7 +234,6 @@
     const currentPrice = isTanda2 ? 7000 : 5000;
     const tierName = isTanda2 ? 'PISTA GENERAL - TANDA 2' : 'PISTA GENERAL';
 
-    // Badge y carteles de Tanda
     if (badgeContainer) {
       badgeContainer.innerHTML = isTanda2 ? '<div class="card-badge">TANDA 2 // GENERAL</div>' : '<div class="card-badge">TANDA 1 // PREVENTA</div>';
     }
@@ -248,7 +250,6 @@
       priceEl.innerHTML = `$${currentPrice.toLocaleString('es-AR')} <span class="currency">ARS</span>`;
     }
 
-    // Contador FOMO y Stock
     if (label) {
       const t2Remaining = Math.max(0, 200 - generalCount);
       if (isTanda2) {
@@ -271,6 +272,35 @@
         btn.classList.remove('btn-disabled-mode');
         btn.style.cursor = 'pointer';
         btn.onclick = () => openCheckout(tierName, currentPrice);
+      }
+    }
+  }
+
+  function checkCoolerAvailability() {
+    const coolerCount = cloudOrders.filter(o =>
+      o.ticketType && o.ticketType.includes('CONSERVADORA') && o.status === 'approved'
+    ).length;
+
+    const remaining = Math.max(0, CONFIG.maxCoolerStock - coolerCount);
+    const label = document.getElementById('cooler-stock-label');
+    const btn = document.getElementById('btn-buy-cooler');
+
+    if (label) {
+      label.innerHTML = `Cupos restantes: <strong>${remaining}/${CONFIG.maxCoolerStock}</strong>`;
+    }
+
+    if (btn) {
+      if (remaining === 0) {
+        btn.disabled = true;
+        btn.textContent = 'SOLD OUT // CONSERVADORAS AGOTADAS';
+        btn.classList.add('btn-disabled-mode');
+        btn.style.cursor = 'not-allowed';
+      } else {
+        btn.disabled = false;
+        btn.textContent = 'COMPRAR CONSERVADORA';
+        btn.classList.remove('btn-disabled-mode');
+        btn.style.cursor = 'pointer';
+        btn.onclick = () => openCheckout('ACCESO CONSERVADORA', 30000);
       }
     }
   }
@@ -321,7 +351,7 @@
   }
 
   // ==========================================
-  // CHECKOUT MULTI-CANTIDAD
+  // CHECKOUT MULTI-CANTIDAD & CONSERVADORA
   // ==========================================
   let activePlan = { name: '', unitPrice: 0 };
   let activeCreatedOrders = [];
@@ -341,20 +371,30 @@
     document.getElementById('co-unit-price').textContent = `$${price.toLocaleString('es-AR')} ARS`;
 
     const selectQty = document.getElementById('cust-qty');
-    if (selectQty) {
-      selectQty.value = "1";
-      if (name.includes('VIP')) {
-        const vipCount = cloudOrders.filter(o => o.ticketType && o.ticketType.includes('VIP') && o.status !== 'rejected').length;
-        const remaining = Math.max(0, CONFIG.maxVipStock - vipCount);
-        Array.from(selectQty.options).forEach(opt => {
-          opt.disabled = parseInt(opt.value) > remaining;
-        });
-      } else {
-        const genCount = cloudOrders.filter(o => (!o.ticketType || !o.ticketType.includes('VIP')) && o.status !== 'rejected').length;
-        const remaining = Math.max(0, CONFIG.maxGeneralStock - genCount);
-        Array.from(selectQty.options).forEach(opt => {
-          opt.disabled = parseInt(opt.value) > remaining;
-        });
+    const qtyGroup = document.getElementById('qty-container-group');
+    const dniMsg = document.getElementById('dni-feedback-msg');
+    if (dniMsg) dniMsg.textContent = '';
+
+    if (name.includes('CONSERVADORA')) {
+      if (qtyGroup) qtyGroup.classList.add('hidden');
+      if (selectQty) selectQty.value = "1";
+    } else {
+      if (qtyGroup) qtyGroup.classList.remove('hidden');
+      if (selectQty) {
+        selectQty.value = "1";
+        if (name.includes('VIP')) {
+          const vipCount = cloudOrders.filter(o => o.ticketType && o.ticketType.includes('VIP') && o.status !== 'rejected').length;
+          const remaining = Math.max(0, CONFIG.maxVipStock - vipCount);
+          Array.from(selectQty.options).forEach(opt => {
+            opt.disabled = parseInt(opt.value) > remaining;
+          });
+        } else {
+          const genCount = cloudOrders.filter(o => (!o.ticketType || (!o.ticketType.includes('VIP') && !o.ticketType.includes('CONSERVADORA'))) && o.status !== 'rejected').length;
+          const remaining = Math.max(0, CONFIG.maxGeneralStock - genCount);
+          Array.from(selectQty.options).forEach(opt => {
+            opt.disabled = parseInt(opt.value) > remaining;
+          });
+        }
       }
     }
 
@@ -367,8 +407,37 @@
     document.getElementById('modal-checkout').classList.remove('hidden');
   }
 
+  // Autocompletado inteligente por DNI para Conservadora
+  window.handleDniBlur = function (dniVal) {
+    const cleanD = cleanDni(dniVal);
+    const dniMsg = document.getElementById('dni-feedback-msg');
+    if (!activePlan.name.includes('CONSERVADORA') || cleanD.length < 7) {
+      if (dniMsg) dniMsg.textContent = '';
+      return;
+    }
+
+    const previousOrder = cloudOrders.find(o =>
+      o.dni === cleanD && o.status === 'approved' && !o.ticketType.includes('CONSERVADORA')
+    );
+
+    if (previousOrder) {
+      document.getElementById('cust-name').value = previousOrder.buyerName || previousOrder.name;
+      document.getElementById('cust-phone').value = previousOrder.phone || '';
+      document.getElementById('cust-email').value = previousOrder.email || '';
+      if (dniMsg) {
+        dniMsg.style.color = '#34d399';
+        dniMsg.textContent = `✅ Entrada vinculada correctamente (${previousOrder.ticketType}). Datos autocompletados.`;
+      }
+    } else {
+      if (dniMsg) {
+        dniMsg.style.color = '#ef4444';
+        dniMsg.textContent = `⚠️ No se encontró una entrada General o VIP aprobada con este DNI.`;
+      }
+    }
+  };
+
   function updateCheckoutTotal() {
-    const qty = parseInt(document.getElementById('cust-qty').value) || 1;
+    const qty = activePlan.name.includes('CONSERVADORA') ? 1 : (parseInt(document.getElementById('cust-qty').value) || 1);
     const total = activePlan.unitPrice * qty;
     document.getElementById('co-ticket-price').textContent = `$${total.toLocaleString('es-AR')} ARS`;
     document.getElementById('transfer-amount').textContent = `$${total.toLocaleString('es-AR')} ARS`;
@@ -389,11 +458,33 @@
     const dni = cleanDni(document.getElementById('cust-dni').value);
     const phone = document.getElementById('cust-phone').value.trim();
     const email = document.getElementById('cust-email').value.trim();
-    const qty = parseInt(document.getElementById('cust-qty').value) || 1;
+    const qty = activePlan.name.includes('CONSERVADORA') ? 1 : (parseInt(document.getElementById('cust-qty').value) || 1);
 
     if (!dni || dni.length < 7 || dni.length > 9) {
       alert("Ingrese un número de DNI válido (entre 7 y 9 dígitos).");
       return;
+    }
+
+    // Validación estricta para Conservadora
+    if (activePlan.name.includes('CONSERVADORA')) {
+      const hasValidTicket = cloudOrders.some(o =>
+        o.dni === dni && o.status === 'approved' && !o.ticketType.includes('CONSERVADORA')
+      );
+
+      if (!hasValidTicket) {
+        alert("❌ Para adquirir el pase de conservadora, el DNI ingresado debe contar con una entrada General o VIP previamente aprobada.");
+        if (btnSubmit) {
+          btnSubmit.disabled = false;
+          btnSubmit.textContent = "CONTINUAR A TRANSFERENCIA //➔";
+        }
+        return;
+      }
+
+      const coolerApprovedCount = cloudOrders.filter(o => o.ticketType && o.ticketType.includes('CONSERVADORA') && o.status === 'approved').length;
+      if (coolerApprovedCount + 1 > CONFIG.maxCoolerStock) {
+        alert(`Cupos de conservadoras agotados.`);
+        return;
+      }
     }
 
     const pendingOrders = cloudOrders.filter(o => o.dni === dni && o.status === 'pending');
@@ -402,7 +493,7 @@
       return;
     }
 
-    if (qty > 4 || qty < 1) {
+    if (!activePlan.name.includes('CONSERVADORA') && (qty > 4 || qty < 1)) {
       alert("Límite máximo: 4 entradas por transacción.");
       return;
     }
@@ -413,8 +504,8 @@
         alert(`Cupos VIP insuficientes. Restantes: ${CONFIG.maxVipStock - vipApprovedCount}.`);
         return;
       }
-    } else {
-      const genApprovedCount = cloudOrders.filter(o => (!o.ticketType || !o.ticketType.includes('VIP')) && o.status === 'approved').length;
+    } else if (!activePlan.name.includes('CONSERVADORA')) {
+      const genApprovedCount = cloudOrders.filter(o => (!o.ticketType || (!o.ticketType.includes('VIP') && !o.ticketType.includes('CONSERVADORA'))) && o.status === 'approved').length;
       if (genApprovedCount + qty > CONFIG.maxGeneralStock) {
         alert(`Cupos generales insuficientes. Restantes: ${CONFIG.maxGeneralStock - genApprovedCount}.`);
         return;
@@ -490,7 +581,7 @@
     const total = o.amount * qty;
 
     const text = `Hola Alejo. Realicé la transferencia para HAVANNA CLUB // HALLOWEEN OBSESSION 2026.%0A%0A` +
-      `• Orden: ${o.orderId} (${qty} ticket${qty > 1 ? 's' : ''})%0A` +
+      `• Orden: ${o.orderId} (${qty > 1 ? qty + ' tickets' : o.ticketType})%0A` +
       `• Titular: ${o.buyerName || o.name}%0A` +
       `• DNI: ${o.dni}%0A` +
       `• Sector: ${o.ticketType}%0A` +
@@ -537,6 +628,7 @@
 
     ordersList.forEach(order => {
       const isVip = order.ticketType && order.ticketType.includes('VIP');
+      const isCooler = order.ticketType && order.ticketType.includes('CONSERVADORA');
       const cardWrapper = document.createElement('div');
       cardWrapper.style.marginBottom = "2rem";
 
@@ -549,7 +641,7 @@
         <div class="retro-ticket-body">
           <div class="retro-banner-head">
             <span class="retro-sub">SPARK THE MIDDLE AND BREAK IT IN HALF!</span>
-            <h2 class="retro-title">${isVip ? 'VIP OBSESSION' : 'ONE WISH WILLOW'}</h2>
+            <h2 class="retro-title">${isCooler ? 'PASE CONSERVADORA' : (isVip ? 'VIP OBSESSION' : 'ONE WISH WILLOW')}</h2>
             <div class="retro-motto">HAVANNA CLUB • ITÁ IBATÉ // HALLOWEEN 2026</div>
           </div>
 
@@ -573,7 +665,7 @@
           </div>
 
           <div class="retro-bottom-badge">
-            ${isVip ? '[BALCÓN VIP] INCLUYE 1 CONSUMICIÓN GIN TONIC' : 'AMAZE YOUR FRIENDS! • YOU ONLY GET ONE WISH'}
+            ${isCooler ? '[ACCESO CONSERVADORA] PRESENTAR CON ENTRADA PREVIA' : (isVip ? '[BALCÓN VIP] INCLUYE 1 CONSUMICIÓN GIN TONIC' : 'AMAZE YOUR FRIENDS! • YOU ONLY GET ONE WISH')}
           </div>
         </div>
 
@@ -853,13 +945,15 @@
 
     pendings.forEach(order => {
       const isVip = order.ticketType && order.ticketType.includes('VIP');
+      const isCooler = order.ticketType && order.ticketType.includes('CONSERVADORA');
+      const badgeColor = isCooler ? '#38bdf8' : (isVip ? '#eab308' : '#fff');
       const item = document.createElement('div');
       item.className = 'order-row-card';
       item.innerHTML = `
         <div>
           <div>
             <strong style="color:#fff">${order.orderId}</strong> — 
-            <span style="color:${isVip ? '#eab308' : '#fff'}">${order.ticketType}</span> — 
+            <span style="color:${badgeColor}">${order.ticketType}</span> — 
             <strong style="color:#34d399">$${(order.amount || 0).toLocaleString('es-AR')}</strong>
           </div>
           <div style="color:#8e8e99; font-size:0.75rem; margin-top:3px">
@@ -885,7 +979,7 @@
       const cleanPhone = String(phone || '').replace(/\D/g, '');
       if (cleanPhone) {
         const msg = `Hola ${name}. Tu pago para HAVANNA OBSESSION 2026 fue APROBADO.%0A%0A` +
-          `Podés consultar tus tickets habilitados ingresando tu DNI en:%0A` +
+          `Podés consultar tus accesos habilitados ingresando tu DNI en:%0A` +
           `https://alejolegal.com/%0A%0A` +
           `Ingreso obligatorio con DNI físico en mano.`;
         window.open(`https://wa.me/${cleanPhone.startsWith('54') ? cleanPhone : '54' + cleanPhone}?text=${msg}`, '_blank');
@@ -968,7 +1062,7 @@
 
     if (userTickets.length === 0) {
       msg.className = 'door-feedback error';
-      msg.innerHTML = `[SIN ACCESO] No hay tickets aprobados para el DNI: <strong>${cleanQ}</strong>.`;
+      msg.innerHTML = `[SIN ACCESO] No hay accesos aprobados para el DNI: <strong>${cleanQ}</strong>.`;
       playAudioTone('error');
       return;
     }
@@ -976,6 +1070,7 @@
     const first = userTickets[0];
     const pendingToEnter = userTickets.filter(o => !o.used);
     const hasVip = userTickets.some(o => o.ticketType && o.ticketType.includes('VIP'));
+    const hasCooler = userTickets.some(o => o.ticketType && o.ticketType.includes('CONSERVADORA'));
 
     panel.className = 'door-multi-panel';
     panel.innerHTML = `
@@ -988,12 +1083,13 @@
         <div style="text-align:right;">
           <span class="count-badge">${pendingToEnter.length} / ${userTickets.length} DISPONIBLES</span>
           ${hasVip ? '<span class="badge-vip-pill">[INCLUYE BALCÓN VIP]</span>' : ''}
+          ${hasCooler ? '<span class="badge-vip-pill" style="color:#38bdf8;">[INCLUYE PASE CONSERVADORA]</span>' : ''}
         </div>
       </div>
 
       ${pendingToEnter.length > 1 ? `
         <button onclick="window.checkInAllPending('${first.dni}')" class="btn-checkin-all">
-          [+] INGRESAR TODAS LAS ENTRADAS PENDIENTES (${pendingToEnter.length})
+          [+] INGRESAR TODOS LOS ACCESOS PENDIENTES (${pendingToEnter.length})
         </button>
       ` : ''}
 
@@ -1002,7 +1098,7 @@
           <div class="breakdown-item ${t.used ? 'item-used' : 'item-active'}">
             <div>
               <span class="tk-type">${t.ticketType}</span>
-              <span class="tk-id">${t.name} •${t.ticketId}</span>
+              <span class="tk-id">${t.name} • ${t.ticketId}</span>
             </div>
             <div>
               ${t.used ?
@@ -1017,7 +1113,7 @@
 
     if (pendingToEnter.length === 0) {
       msg.className = 'door-feedback used';
-      msg.innerHTML = `[ATENCIÓN] Todas las entradas de este DNI ya fueron ingresadas.`;
+      msg.innerHTML = `[ATENCIÓN] Todos los accesos de este DNI ya fueron ingresados.`;
       playAudioTone('error');
     } else {
       playAudioTone(hasVip ? 'vip' : 'success');
@@ -1071,11 +1167,13 @@
 
     approved.forEach(order => {
       const isVip = order.ticketType && order.ticketType.includes('VIP');
+      const isCooler = order.ticketType && order.ticketType.includes('CONSERVADORA');
+      const tagColor = isCooler ? '#38bdf8' : (isVip ? '#eab308' : '#fff');
       const row = document.createElement('div');
       row.className = `door-row ${order.used ? 'used' : ''}`;
       row.innerHTML = `
         <div>
-          <strong style="color:${isVip ? '#eab308' : '#fff'}; display:block">${order.name || order.buyerName} ${isVip ? '[VIP]' : ''}</strong>
+          <strong style="color:${tagColor}; display:block">${order.name || order.buyerName} ${isCooler ? '[CONSERVADORA]' : (isVip ? '[VIP]' : '')}</strong>
           <span style="color:#8e8e99; font-size:0.75rem">DNI: ${order.dni} • ${order.ticketId}</span>
         </div>
         <div>
@@ -1151,11 +1249,14 @@
       }
 
       const isVip = o.ticketType && o.ticketType.includes('VIP');
+      const isCooler = o.ticketType && o.ticketType.includes('CONSERVADORA');
+      const sectorText = isCooler ? "CONSERVADORA" : (isVip ? "VIP + GIN" : "GENERAL");
+
       doc.text(String(index + 1), 14, y);
       doc.text(o.name.substring(0, 30), 22, y);
       doc.text(o.dni, 85, y);
       doc.text(o.ticketId, 115, y);
-      doc.text(isVip ? "VIP + GIN" : "GENERAL", 145, y);
+      doc.text(sectorText, 145, y);
       doc.rect(185, y - 3.5, 4, 4);
 
       y += 6;
@@ -1165,7 +1266,7 @@
   }
 
   // ==========================================
-  // MODALES SECUNDARIOS
+  // MODALES SECUNDARIOS Y REGLAS CONSERVADORA
   // ==========================================
   function toggleMapModal() {
     const modal = document.getElementById('modal-map');
@@ -1178,6 +1279,15 @@
 
   function toggleVipDrinksModal() {
     const modal = document.getElementById('modal-vip-drinks');
+    if (modal) {
+      const isHidden = modal.classList.toggle('hidden');
+      if (isHidden) unlockBackgroundScroll();
+      else lockBackgroundScroll();
+    }
+  }
+
+  function toggleCoolerRulesModal() {
+    const modal = document.getElementById('modal-cooler-rules');
     if (modal) {
       const isHidden = modal.classList.toggle('hidden');
       if (isHidden) unlockBackgroundScroll();
@@ -1200,6 +1310,7 @@
   window.openSingleTicketFromLookup = openSingleTicketFromLookup;
   window.toggleMapModal = toggleMapModal;
   window.toggleVipDrinksModal = toggleVipDrinksModal;
+  window.toggleCoolerRulesModal = toggleCoolerRulesModal;
   window.openAdminModal = openAdminModal;
   window.closeAdminLoginModal = closeAdminLoginModal;
   window.authenticateAdmin = authenticateAdmin;
