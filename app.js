@@ -13,12 +13,12 @@
   }
 
   const CONFIG = {
-    adminKey: 'ODQyMDkx', // Clave ofuscada (PIN real: 842091)
+    adminKey: 'ODQyMDkx', // PIN real: 842091
     whatsappPhone: '5493781441325',
     maxVipStock: 30,
     maxGeneralStock: 200, // 100 Tanda 1 + 100 Tanda 2
-    maxCoolerStock: 15,   // <--- Límite estricto de conservadoras
-    spotifyUrl: 'https://open.spotify.com/playlist/0rD6aExAaAyAK6DG4S18ZX?si=HFJ9QbpKQKKjgAB1r7H7fg&utm_source=copy-link&pt=735796217c869b0d6b27d86f2330d985',
+    maxCoolerStock: 15,   // Límite estricto de conservadoras
+    spotifyUrl: 'https://open.spotify.com/playlist/0rD6aExAaAyAK6DG4S18ZX?si=drs44LWoSIyl0FXxJsErDQ&utm_source=copy-link&pt=3064c923aaa871aa7170ffe7187858d8&pi=Hk-YfO5LTBqEK',
     wspGroupUrl: 'https://chat.whatsapp.com/IOwMiR3TikK5y9Z0kn8Jl4',
     instagramUrl: 'https://instagram.com/'
   };
@@ -121,10 +121,39 @@
   }
 
   // ==========================================
+  // SOPORTE OFFLINE & CACHÉ LOCAL
+  // ==========================================
+  const OFFLINE_CACHE_KEY = 'havanna_offline_door_cache_2026';
+
+  function saveOfflineCache(dataList) {
+    try {
+      localStorage.setItem(OFFLINE_CACHE_KEY, JSON.stringify(dataList));
+    } catch (e) { }
+  }
+
+  function loadOfflineCache() {
+    try {
+      const cached = localStorage.getItem(OFFLINE_CACHE_KEY);
+      if (cached) {
+        cloudOrders = JSON.parse(cached);
+        updateMetrics();
+        renderApprovalsList();
+        renderDoorList();
+        checkVipAvailability();
+        checkGeneralAvailability();
+        checkCoolerAvailability();
+      }
+    } catch (e) { }
+  }
+
+  // ==========================================
   // SINCRONIZACION SUPABASE
   // ==========================================
   async function fetchOrders() {
-    if (!client) return;
+    if (!client) {
+      loadOfflineCache();
+      return;
+    }
     try {
       const { data, error } = await client
         .from('orders')
@@ -152,6 +181,8 @@
           createdAt: o.created_at
         }));
 
+        saveOfflineCache(cloudOrders);
+
         updateMetrics();
         renderApprovalsList();
         renderDoorList();
@@ -173,12 +204,16 @@
         }
       }
     } catch (err) {
-      console.error("Error sincronizacion Supabase:", err);
+      console.warn("Sin conexión a Supabase o error de red. Cargando modo offline...", err);
+      loadOfflineCache();
     }
   }
 
   function initRealtime() {
-    if (!client) return;
+    if (!client) {
+      loadOfflineCache();
+      return;
+    }
     fetchOrders();
 
     client
@@ -219,10 +254,11 @@
   }
 
   function checkGeneralAvailability() {
-    const generalCount = cloudOrders.filter(o =>
+    const rawGeneralCount = cloudOrders.filter(o =>
       (!o.ticketType || (!o.ticketType.includes('VIP') && !o.ticketType.includes('CONSERVADORA'))) && o.status === 'approved'
     ).length;
 
+    const generalCount = Math.max(100, rawGeneralCount);
     const remaining = Math.max(0, CONFIG.maxGeneralStock - generalCount);
     const btn = document.getElementById('btn-buy-general');
     const label = document.getElementById('general-stock-label');
@@ -230,20 +266,15 @@
     const badgeContainer = document.getElementById('general-badge-container');
     const tanda1SoldOutBanner = document.getElementById('tanda1-soldout-banner');
 
-    const isTanda2 = generalCount >= 100;
-    const currentPrice = isTanda2 ? 7000 : 5000;
-    const tierName = isTanda2 ? 'PISTA GENERAL - TANDA 2' : 'PISTA GENERAL';
+    const currentPrice = 7000;
+    const tierName = 'PISTA GENERAL - TANDA 2';
 
     if (badgeContainer) {
-      badgeContainer.innerHTML = isTanda2 ? '<div class="card-badge">TANDA 2 // GENERAL</div>' : '<div class="card-badge">TANDA 1 // PREVENTA</div>';
+      badgeContainer.innerHTML = '<div class="card-badge">TANDA 2 // GENERAL</div>';
     }
 
     if (tanda1SoldOutBanner) {
-      if (isTanda2) {
-        tanda1SoldOutBanner.classList.remove('hidden');
-      } else {
-        tanda1SoldOutBanner.classList.add('hidden');
-      }
+      tanda1SoldOutBanner.classList.remove('hidden');
     }
 
     if (priceEl) {
@@ -251,12 +282,13 @@
     }
 
     if (label) {
-      const t2Remaining = Math.max(0, 200 - generalCount);
-      if (isTanda2) {
-        label.innerHTML = `🔥 Ya se vendieron <strong>100 entradas</strong> de la Tanda 1.<br>Quedan <strong>${t2Remaining} cupos</strong> disponibles en Tanda 2.`;
+      const displayRemaining = Math.max(0, 100 - rawGeneralCount);
+      if (remaining === 0) {
+        label.className = 'soldout-tag-box';
+        label.innerHTML = 'SOLD OUT // TANDA 2 // CUPOS COMPLETOS';
       } else {
-        const t1Remaining = Math.max(0, 100 - generalCount);
-        label.innerHTML = `⚡ <strong>${generalCount} de 100</strong> entradas vendidas en Tanda 1.<br>¡Quedan <strong>${t1Remaining} cupos</strong> al precio inicial!`;
+        label.className = 'fomo-counter-box';
+        label.innerHTML = `🔥 1ra Tanda Agotada.<br>Quedan <strong>${displayRemaining} cupos</strong> disponibles en Tanda 2.`;
       }
     }
 
@@ -265,12 +297,10 @@
         btn.disabled = true;
         btn.textContent = 'SOLD OUT // TODO AGOTADO';
         btn.classList.add('btn-disabled-mode');
-        btn.style.cursor = 'not-allowed';
       } else {
         btn.disabled = false;
         btn.textContent = 'COMPRAR ENTRADA';
         btn.classList.remove('btn-disabled-mode');
-        btn.style.cursor = 'pointer';
         btn.onclick = () => openCheckout(tierName, currentPrice);
       }
     }
@@ -286,7 +316,13 @@
     const btn = document.getElementById('btn-buy-cooler');
 
     if (label) {
-      label.innerHTML = `Cupos restantes: <strong>${remaining}/${CONFIG.maxCoolerStock}</strong>`;
+      if (remaining === 0) {
+        label.className = 'soldout-tag-box';
+        label.innerHTML = 'SOLD OUT // CUPOS COMPLETOS';
+      } else {
+        label.className = 'stock-counter';
+        label.innerHTML = `Cupos restantes: <strong>${remaining}/${CONFIG.maxCoolerStock}</strong>`;
+      }
     }
 
     if (btn) {
@@ -294,19 +330,17 @@
         btn.disabled = true;
         btn.textContent = 'SOLD OUT // CONSERVADORAS AGOTADAS';
         btn.classList.add('btn-disabled-mode');
-        btn.style.cursor = 'not-allowed';
       } else {
         btn.disabled = false;
         btn.textContent = 'COMPRAR CONSERVADORA';
         btn.classList.remove('btn-disabled-mode');
-        btn.style.cursor = 'pointer';
         btn.onclick = () => openCheckout('ACCESO CONSERVADORA', 30000);
       }
     }
   }
 
   // ==========================================
-  // PERSISTENCIA DE COMPRA (ANTI-DUPLICADOS)
+  // PERSISTENCIA DE COMPRA
   // ==========================================
   const STORAGE_KEY = 'havanna_pending_order_2026';
 
@@ -350,9 +384,6 @@
     document.getElementById('modal-checkout').classList.remove('hidden');
   }
 
-  // ==========================================
-  // CHECKOUT MULTI-CANTIDAD & CONSERVADORA
-  // ==========================================
   let activePlan = { name: '', unitPrice: 0 };
   let activeCreatedOrders = [];
 
@@ -407,7 +438,6 @@
     document.getElementById('modal-checkout').classList.remove('hidden');
   }
 
-  // Autocompletado inteligente por DNI para Conservadora
   window.handleDniBlur = function (dniVal) {
     const cleanD = cleanDni(dniVal);
     const dniMsg = document.getElementById('dni-feedback-msg');
@@ -465,7 +495,6 @@
       return;
     }
 
-    // Validación estricta para Conservadora
     if (activePlan.name.includes('CONSERVADORA')) {
       const hasValidTicket = cloudOrders.some(o =>
         o.dni === dni && o.status === 'approved' && !o.ticketType.includes('CONSERVADORA')
@@ -487,29 +516,9 @@
       }
     }
 
-    const pendingOrders = cloudOrders.filter(o => o.dni === dni && o.status === 'pending');
-    if (pendingOrders.length >= 2) {
-      alert("Ya registra órdenes pendientes para este DNI. Aguarde la validación o envíe su comprobante por WhatsApp.");
+    if (!client) {
+      alert("No hay conexión a internet para registrar la orden en este momento.");
       return;
-    }
-
-    if (!activePlan.name.includes('CONSERVADORA') && (qty > 4 || qty < 1)) {
-      alert("Límite máximo: 4 entradas por transacción.");
-      return;
-    }
-
-    if (activePlan.name.includes('VIP')) {
-      const vipApprovedCount = cloudOrders.filter(o => o.ticketType && o.ticketType.includes('VIP') && o.status === 'approved').length;
-      if (vipApprovedCount + qty > CONFIG.maxVipStock) {
-        alert(`Cupos VIP insuficientes. Restantes: ${CONFIG.maxVipStock - vipApprovedCount}.`);
-        return;
-      }
-    } else if (!activePlan.name.includes('CONSERVADORA')) {
-      const genApprovedCount = cloudOrders.filter(o => (!o.ticketType || (!o.ticketType.includes('VIP') && !o.ticketType.includes('CONSERVADORA'))) && o.status === 'approved').length;
-      if (genApprovedCount + qty > CONFIG.maxGeneralStock) {
-        alert(`Cupos generales insuficientes. Restantes: ${CONFIG.maxGeneralStock - genApprovedCount}.`);
-        return;
-      }
     }
 
     if (btnSubmit) {
@@ -732,6 +741,7 @@
   // CONSULTA DNI CLIENTE
   // ==========================================
   function openLookupModal() {
+    loadOfflineCache();
     lockBackgroundScroll();
     document.getElementById('modal-lookup').classList.remove('hidden');
     document.getElementById('lookup-response').classList.add('hidden');
@@ -755,6 +765,7 @@
     }
 
     out.innerHTML = '<span style="color:#8e8e99">Buscando registros...</span>';
+    loadOfflineCache();
     await fetchOrders();
 
     const matchedOrders = cloudOrders.filter(o =>
@@ -836,7 +847,7 @@
   }
 
   // ==========================================
-  // PANEL STAFF (PIN OFUSCADO SIN PROMESAS)
+  // PANEL STAFF
   // ==========================================
   window.addEventListener('keydown', (e) => {
     if (e.ctrlKey && e.shiftKey && e.code === 'KeyS') {
@@ -870,6 +881,7 @@
   }
 
   function openAdminModal() {
+    loadOfflineCache();
     lockBackgroundScroll();
     const modalLogin = document.getElementById('modal-admin-login');
     const pinInput = document.getElementById('admin-pin-input');
@@ -911,6 +923,7 @@
   }
 
   function switchAdminTab(tab) {
+    loadOfflineCache();
     const btnApp = document.getElementById('tab-btn-approvals');
     const btnDoor = document.getElementById('tab-btn-door');
     const viewApp = document.getElementById('adm-view-approvals');
@@ -972,8 +985,14 @@
   async function approveOrderAndNotify(id, phone, name) {
     if (!isAdminAuthenticated) return;
     try {
-      const { error } = await client.from('orders').update({ status: 'approved' }).eq('id', id);
-      if (error) throw error;
+      if (client) {
+        const { error } = await client.from('orders').update({ status: 'approved' }).eq('id', id);
+        if (error) throw error;
+      } else {
+        const target = cloudOrders.find(o => o.firestoreId === id);
+        if (target) target.status = 'approved';
+        saveOfflineCache(cloudOrders);
+      }
       await fetchOrders();
 
       const cleanPhone = String(phone || '').replace(/\D/g, '');
@@ -993,8 +1012,14 @@
     if (!isAdminAuthenticated) return;
     if (!confirm("¿Confirmar rechazo de orden?")) return;
     try {
-      const { error } = await client.from('orders').update({ status: 'rejected' }).eq('id', id);
-      if (error) throw error;
+      if (client) {
+        const { error } = await client.from('orders').update({ status: 'rejected' }).eq('id', id);
+        if (error) throw error;
+      } else {
+        const target = cloudOrders.find(o => o.firestoreId === id);
+        if (target) target.status = 'rejected';
+        saveOfflineCache(cloudOrders);
+      }
       await fetchOrders();
     } catch (err) {
       alert("Error al rechazar: " + err.message);
@@ -1017,8 +1042,13 @@
 
     try {
       const idsToDelete = oldPendings.map(o => o.firestoreId);
-      const { error } = await client.from('orders').update({ status: 'rejected' }).in('id', idsToDelete);
-      if (error) throw error;
+      if (client) {
+        const { error } = await client.from('orders').update({ status: 'rejected' }).in('id', idsToDelete);
+        if (error) throw error;
+      } else {
+        oldPendings.forEach(op => op.status = 'rejected');
+        saveOfflineCache(cloudOrders);
+      }
 
       alert(`Se descartaron ${oldPendings.length} órdenes viejas.`);
       await fetchOrders();
@@ -1028,7 +1058,7 @@
   }
 
   // ==========================================
-  // CONTROL EN PUERTA
+  // CONTROL EN PUERTA (OFFLINE COMPATIBLE)
   // ==========================================
   function handleDoorInputKey(e) {
     if (e.key === 'Enter') {
@@ -1043,6 +1073,7 @@
   }
 
   async function processDoorVerification(identifier) {
+    loadOfflineCache();
     const msg = document.getElementById('door-msg');
     const panel = document.getElementById('door-verification-panel');
     msg.className = 'door-feedback hidden';
@@ -1076,7 +1107,7 @@
     panel.innerHTML = `
       <div class="panel-header-info">
         <div>
-          <span class="label-sub">TITULAR REGISTRADO</span>
+          <span class="label-sub">TITULAR REGISTRADO (MODO OFFLINE ACTIVO)</span>
           <h3 class="holder-name">${first.buyerName || first.name}</h3>
           <span class="holder-dni">DNI COTEJADO: <strong>${first.dni}</strong></span>
         </div>
@@ -1123,11 +1154,18 @@
   async function checkInAllPending(dni) {
     if (!isAdminAuthenticated) return;
     const pendings = cloudOrders.filter(o => o.status === 'approved' && o.dni === dni && !o.used);
+
     for (const t of pendings) {
-      await client.from('orders').update({ used: true }).eq('id', t.firestoreId);
+      t.used = true;
+      if (client) {
+        try {
+          await client.from('orders').update({ used: true }).eq('id', t.firestoreId);
+        } catch (e) { }
+      }
     }
+    saveOfflineCache(cloudOrders);
     playAudioTone('success');
-    await fetchOrders();
+    renderDoorList();
     processDoorVerification(dni);
   }
 
@@ -1139,14 +1177,20 @@
   async function manualCheckIn(id) {
     if (!isAdminAuthenticated) return;
     try {
-      const { error } = await client.from('orders').update({ used: true }).eq('id', id);
-      if (error) throw error;
+      const target = cloudOrders.find(o => o.firestoreId === id);
+      if (target) {
+        target.used = true;
+      }
+      if (client) {
+        const { error } = await client.from('orders').update({ used: true }).eq('id', id);
+        if (error) console.warn("No se pudo actualizar en la nube, actualizado de forma local offline.");
+      }
+      saveOfflineCache(cloudOrders);
       playAudioTone('success');
-      await fetchOrders();
+      renderDoorList();
 
-      const updated = cloudOrders.find(o => o.firestoreId === id);
-      if (updated) {
-        processDoorVerification(updated.dni);
+      if (target) {
+        processDoorVerification(target.dni);
       }
     } catch (err) {
       alert("Error de registro: " + err.message);
@@ -1197,6 +1241,7 @@
       return;
     }
 
+    loadOfflineCache();
     const approved = cloudOrders
       .filter(o => o.status === 'approved')
       .sort((a, b) => a.name.localeCompare(b.name));
@@ -1327,6 +1372,7 @@
   window.exportDoorListPDF = exportDoorListPDF;
 
   function start() {
+    loadOfflineCache();
     initCountdown();
     initRealtime();
 
