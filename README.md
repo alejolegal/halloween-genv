@@ -17,8 +17,9 @@ Web estática (HTML + CSS + JS) con base de datos y pagos en **Supabase** y **Me
   2 se cobran a ese precio y 2 al de la siguiente (nunca se sobrevende una tanda).
 - **FOMO real**: la web muestra entradas vendidas, cuántas quedan, la tanda actual, los SOLD OUT y avisa
   en vivo cuando alguien compra o cuando cambia de tanda. Todos los números salen de la base de datos.
-- **Reservas**: al iniciar una compra el cupo queda reservado (30 min con Mercado Pago, 24 hs con transferencia).
-  Si no se paga, el cupo se libera solo.
+- **Solo descuentan las aprobadas**: una compra pendiente no ocupa cupo. La entrada se cuenta cuando la aprobás
+  vos (transferencia) o cuando Mercado Pago acredita el pago. Si al aprobar la tanda ya está llena, el panel te avisa.
+- **Recargo Mercado Pago**: en el panel → Resumen ponés la comisión (%) y la web la suma solo a quien paga con MP.
 - **Mercado Pago**: se habilita automáticamente al acreditarse el pago (webhook + verificación al volver a la web).
 - **Transferencia**: el comprador envía el comprobante por WhatsApp y vos aprobás en `staff.html` → *Transferencias*.
 - **Entradas nominales**: cada entrada tiene nombre, DNI y su propio QR. Un DNI no puede tener dos entradas.
@@ -30,6 +31,8 @@ Web estática (HTML + CSS + JS) con base de datos y pagos en **Supabase** y **Me
 ### 1. Base de datos
 1. Entrá a Supabase → tu proyecto → **SQL Editor** → *New query*.
 2. Pegá todo `supabase/migrations/001_navidad_schema.sql` y tocá **Run**.
+   Después, en otra *New query*, pegá `supabase/migrations/002_solo_aprobadas_y_recargo_mp.sql` y tocá **Run**
+   (las reservas no descuentan entradas y se agrega el recargo configurable de Mercado Pago).
 3. Revisá cupos/precios en **Table Editor → `xmas_tiers`** (por defecto Tandas 1, 2 y 3 tienen **100 cupos** cada una — ajustalo).
 
 ### 2. Usuarios del staff

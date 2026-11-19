@@ -169,7 +169,7 @@ function announceChanges(prev, next) {
   const delta = next.total_sold - prev.total_sold;
   const cur = currentTier();
   if (delta > 0 && cur) {
-    toast(`🎟️ Se acaban de reservar ${delta} entrada${delta > 1 ? 's' : ''}. Quedan ${cur.remaining} en ${cur.name}`, 'hot');
+    toast(`🎟️ Se acaban de vender ${delta} entrada${delta > 1 ? 's' : ''}. Quedan ${cur.remaining} en ${cur.name}`, 'hot');
   }
 }
 
@@ -390,9 +390,20 @@ function updatePayOptions() {
   const blocked = state.qty > 1;
   mp.disabled = blocked;
   mp.classList.toggle('is-blocked', blocked);
+  const sub = allocate(state.qty).total;
+  const mpTotal = mpTotalFor(sub);
+  const fee = mpTotal > sub ? ` · <b class="mp-warn">${money(mpTotal)}</b> (incluye recargo de ${money(mpTotal - sub)})` : '';
   $('#mp-note').innerHTML = blocked
     ? `<b class="mp-warn">Con Mercado Pago se compra de a 1 entrada.</b> Para ${state.qty} entradas elegí transferencia, o volvé y comprá de a una.`
-    : 'Tarjeta, débito o dinero en cuenta · <em>entrada al instante</em> · de a 1 entrada por compra';
+    : `Tarjeta, débito o dinero en cuenta · <em>entrada al instante</em>${fee}`;
+  $('#tr-note').innerHTML = `CVU / alias · <b class="mp-warn">${money(sub)}</b> · se habilita al validar el comprobante`;
+}
+
+/** Mismo cálculo que la base: recargo para recibir el precio completo tras la comisión de MP. */
+function mpTotalFor(subtotal) {
+  const pct = Number(state.status?.mp_fee_percent || 0);
+  if (pct <= 0) return subtotal;
+  return Math.ceil(subtotal / (1 - pct / 100) / 10) * 10;
 }
 
 async function onChooseMethod(method, btn) {
@@ -409,7 +420,15 @@ async function onChooseMethod(method, btn) {
 
     if (method === 'mercadopago') {
       btn.querySelector('small').textContent = 'Abriendo Mercado Pago…';
-      const url = await api.mpCreate(res.code, pendingPurchase.buyer.dni);
+      let url;
+      try {
+        url = await api.mpCreate(res.code, pendingPurchase.buyer.dni);
+      } catch (mpErr) {
+        // Si Mercado Pago falla, la orden se cancela para no dejarla colgada
+        api.cancelOrder(res.code, pendingPurchase.buyer.dni).catch(() => {});
+        clearSavedOrder();
+        throw new Error('MP_NO_DISPONIBLE ' + (mpErr?.message || ''));
+      }
       window.location.href = url;
       return;
     }

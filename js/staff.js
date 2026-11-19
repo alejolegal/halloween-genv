@@ -450,9 +450,18 @@ async function onPendingAction(e) {
   (ap || rj).disabled = true;
   try {
     if (ap) {
-      const r = await api.approveOrder(id);
+      try {
+        await api.approveOrder(id);
+      } catch (err) {
+        if (!/CUPO_EXCEDIDO|DNI_YA_APROBADO/.test(err?.message || '')) throw err;
+        if (!confirm(`${humanError(err)}\n\n¿Aprobar igual? (por ejemplo, si ya cobraste esta orden)`)) {
+          (ap || rj).disabled = false;
+          return;
+        }
+        await api.approveOrder(id, true);
+      }
       state.justApproved.set(id, true);
-      toast(r?.was_expired ? 'Aprobada (la reserva estaba vencida: revisá el cupo)' : 'Orden aprobada ✓', 'success');
+      toast('Orden aprobada ✓', 'success');
     } else {
       await api.rejectOrder(id);
       toast('Orden rechazada', 'info');
@@ -495,6 +504,7 @@ function renderOrders() {
           <div class="order-side"><span class="pill pill-${st}">${STATUS_LABEL[st]}</span><small>${money(o.total)} · ${o.payment_method === 'mercadopago' ? 'MP' : 'Transf.'}</small></div>
         </summary>
         <p class="muted">📱 <a href="${esc(whatsappLink(o.phone, ''))}" target="_blank" rel="noopener">${esc(o.phone)}</a> · ✉️ ${esc(o.email)} · ${formatDateTime(o.created_at)}</p>
+        ${o.surcharge ? `<p class="muted">Incluye recargo Mercado Pago: ${money(o.surcharge)}</p>` : ''}
         ${o.admin_note ? `<p class="note">${esc(o.admin_note)}</p>` : ''}
         <ul class="order-tickets">${(o.tickets || []).map((t) => `<li>${esc(t.holder_name)} · DNI ${esc(t.holder_dni)} · ${esc(tierName(t.tier_id))} · <code>${esc(t.code)}</code> ${t.used_at ? `· ✅ ingresó ${formatDateTime(t.used_at)} <button class="btn btn-link btn-sm" data-undo="${esc(t.id)}">deshacer</button>` : ''}</li>`).join('')}</ul>
         <div class="order-actions">
@@ -544,7 +554,7 @@ async function renderSummary() {
 
   $('#kpis').innerHTML = [
     ['Vendidas', `${tickets.length}<small>/${capacity}</small>`],
-    ['Reservadas', pending.reduce((a, o) => a + o.quantity, 0)],
+    ['Pendientes de pago', pending.reduce((a, o) => a + o.quantity, 0)],
     ['Recaudado', money(rev())],
     ['Mercado Pago', money(rev('mercadopago'))],
     ['Transferencias', money(rev('transfer'))],
@@ -553,7 +563,7 @@ async function renderSummary() {
   ].map(([k, v]) => `<div class="kpi"><small>${k}</small><b>${v}</b></div>`).join('');
 
   $('#tier-table').innerHTML = `
-    <div class="tt-row tt-head"><span>Tanda</span><span>Precio</span><span>Vend.</span><span>Res.</span><span>Cupo</span></div>
+    <div class="tt-row tt-head"><span>Tanda</span><span>Precio</span><span>Vend.</span><span>Pend.</span><span>Cupo</span></div>
     ${state.tiers.map((t) => {
       const sold = tickets.filter((x) => x.tier_id === t.id).length;
       const res = pending.flatMap((o) => o.tickets || []).filter((x) => x.tier_id === t.id).length;
@@ -565,7 +575,19 @@ async function renderSummary() {
   try {
     const s = await api.getSettings();
     $('#sales-open').checked = !!s?.sales_open;
+    if (document.activeElement !== $('#mp-fee')) $('#mp-fee').value = Number(s?.mp_fee_percent || 0);
+    renderFeePreview();
   } catch { /* noop */ }
+}
+
+function renderFeePreview() {
+  const pct = Number(String($('#mp-fee').value).replace(',', '.')) || 0;
+  const sold = (id) => state.orders.filter((o) => o.status === 'approved').flatMap((o) => o.tickets || []).filter((t) => t.tier_id === id).length;
+  const base = state.tiers.find((t) => sold(t.id) < t.capacity)?.price || state.tiers[0]?.price || 10000;
+  const total = pct > 0 ? Math.ceil(base / (1 - pct / 100) / 10) * 10 : base;
+  $('#mp-fee-preview').textContent = pct > 0
+    ? `Ej.: entrada de ${money(base)} → el cliente paga ${money(total)} con Mercado Pago. Después de la comisión de ${pct}% te quedan ≈ ${money(Math.round(total * (1 - pct / 100)))}.`
+    : 'Sin recargo: el cliente paga el mismo precio y la comisión de Mercado Pago la absorbés vos.';
 }
 
 // ---------------------------------------------------------------------
@@ -599,6 +621,18 @@ function bindEvents() {
   $('#orders-list').addEventListener('click', onOrdersAction);
   ['#orders-q', '#orders-status', '#orders-method'].forEach((s) => $(s).addEventListener('input', debounce(renderOrders, 200)));
   $('#btn-csv').addEventListener('click', exportCSV);
+
+  $('#mp-fee').addEventListener('input', renderFeePreview);
+  $('#mp-fee-save').addEventListener('click', async () => {
+    const v = Number(String($('#mp-fee').value).replace(',', '.'));
+    if (!(v >= 0 && v < 30)) return toast('Ingresá un porcentaje entre 0 y 29,99', 'error');
+    try {
+      await api.updateSettings({ mp_fee_percent: v });
+      toast(v ? `Recargo de Mercado Pago: ${v}%` : 'Mercado Pago sin recargo', 'success');
+    } catch (err) {
+      toast(humanError(err), 'error');
+    }
+  });
 
   $('#sales-open').addEventListener('change', async (e) => {
     try {

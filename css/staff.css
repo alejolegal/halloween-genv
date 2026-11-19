@@ -100,3 +100,7 @@ details.order summary small { display: block; color: var(--muted); font-size: 0.
 .scan-tier { display: inline-block; justify-self: center; padding: 4px 12px; border-radius: 999px; background: rgba(0, 0, 0, 0.25); font-weight: 700; }
 .scan-detail { opacity: 0.9; }
 .scan-card .btn { margin-top: 18px; background: rgba(0, 0, 0, 0.25); border-color: rgba(255, 255, 255, 0.4); color: #fff; }
+
+.fee-box { display: grid; gap: 8px; padding: 16px; border-radius: var(--radius-sm); background: var(--surface); border: 1px solid var(--border-strong); }
+.fee-row { display: flex; align-items: center; gap: 8px; }
+.fee-row .field { max-width: 120px; }
