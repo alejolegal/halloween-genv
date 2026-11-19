@@ -508,3 +508,11 @@ main, .topbar, .footer { position: relative; z-index: 1; }
   color: var(--text); background: rgba(0, 158, 227, 0.1); border: 1px solid rgba(0, 158, 227, 0.4);
 }
 .mp-fee-info b:first-child { display: block; margin-bottom: 4px; color: #5fc8f5; }
+
+/* Reglas de pago antes de pagar */
+.pay-rules {
+  display: grid; gap: 6px; padding: 12px 14px; margin-bottom: 12px; border-radius: var(--radius-sm);
+  font-size: 0.82rem; line-height: 1.45; background: rgba(245, 196, 81, 0.07); border: 1px solid rgba(245, 196, 81, 0.35);
+}
+.pay-rules > b { color: var(--gold); font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.1em; }
+.price-note { font-size: 0.82rem; color: var(--gold) !important; margin-top: 4px; }

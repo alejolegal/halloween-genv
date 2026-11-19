@@ -342,6 +342,19 @@ function renderSummary() {
     ${a.lines.map((l) => `<div><span>${l.qty} × ${esc(l.name)}</span><span>${money(l.qty * l.price)}</span></div>`).join('')}
     <div class="summary-total"><span>Total</span><b>${money(a.total)}</b></div>
     ${a.lines.length > 1 ? '<small>Tu compra combina dos tandas porque la actual está por agotarse.</small>' : ''}`;
+  $('#pay-rules').innerHTML = payRulesHTML(a.total);
+}
+
+/** Reglas de pago visibles ANTES de pagar: transferencia sin recargo, MP con comisión de la app. */
+function payRulesHTML(subtotal) {
+  const pct = Number(state.status?.mp_fee_percent || 0);
+  const mp = pct > 0
+    ? `se suma la <b>comisión que cobra Mercado Pago (${pct.toLocaleString('es-AR')}%)</b>: no es un cargo nuestro${state.qty === 1 ? ` (en esta compra: ${money(mpTotalFor(subtotal) - subtotal)})` : ''}.`
+    : 'sin recargo.';
+  return `
+    <b>Antes de pagar</b>
+    <p>🏦 <b>Transferencia: sin recargo.</b> Tu entrada se habilita cuando validamos el comprobante; si lo mandás por WhatsApp apenas transferís, suele ser en minutos.</p>
+    <p>📱 <b>Mercado Pago:</b> entrada al instante y de a <b>1 entrada por compra</b>; ${mp}</p>`;
 }
 
 function collectForm() {

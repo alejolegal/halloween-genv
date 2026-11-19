@@ -632,7 +632,7 @@ async function renderSummary() {
     ${state.tiers.map((t) => {
       const sold = tickets.filter((x) => x.tier_id === t.id).length;
       const res = pending.flatMap((o) => o.tickets || []).filter((x) => x.tier_id === t.id).length;
-      const pct = Math.min(100, Math.round(((sold + res) / Math.max(t.capacity, 1)) * 100));
+      const pct = Math.min(100, Math.round((sold / Math.max(t.capacity, 1)) * 100)); // solo aprobadas
       if (t.id === DOOR_TIER) {
         return `<div class="tt-row"><span>${esc(t.name)}</span><span>—</span><span>${sold}</span><span>—</span><span>—</span></div>`;
       }
