@@ -1,0 +1,95 @@
+# 🎄 NAVIDAD · Gen V Christmas Edition — venta de anticipadas
+
+Web estática (HTML + CSS + JS) con base de datos y pagos en **Supabase** y **Mercado Pago**.
+
+| Archivo | Para qué sirve |
+|---|---|
+| `index.html` | Web pública: tandas en vivo, compra, "Mis entradas" |
+| `staff.html` | Panel del equipo: aprobar transferencias, clientes, escáner QR en puerta |
+| `js/config.js` | **Único archivo a editar**: fecha, lugar, datos bancarios, WhatsApp |
+| `supabase/migrations/001_navidad_schema.sql` | Base de datos completa (tablas, seguridad, lógica de tandas) |
+| `supabase/functions/` | Integración con Mercado Pago (checkout + webhook) |
+
+## Cómo funciona
+
+- **Tandas**: Navideña de Regalo (25 × $6.000) → Tanda 1 ($10.000) → Tanda 2 ($12.000) → Tanda 3 ($15.000).
+  Cuando una se agota, la siguiente se habilita sola. Si alguien compra 4 y quedan 2 en la tanda actual,
+  2 se cobran a ese precio y 2 al de la siguiente (nunca se sobrevende una tanda).
+- **FOMO real**: la web muestra entradas vendidas, cuántas quedan, la tanda actual, los SOLD OUT y avisa
+  en vivo cuando alguien compra o cuando cambia de tanda. Todos los números salen de la base de datos.
+- **Reservas**: al iniciar una compra el cupo queda reservado (30 min con Mercado Pago, 24 hs con transferencia).
+  Si no se paga, el cupo se libera solo.
+- **Mercado Pago**: se habilita automáticamente al acreditarse el pago (webhook + verificación al volver a la web).
+- **Transferencia**: el comprador envía el comprobante por WhatsApp y vos aprobás en `staff.html` → *Transferencias*.
+- **Entradas nominales**: cada entrada tiene nombre, DNI y su propio QR. Un DNI no puede tener dos entradas.
+- **Puerta**: el staff escanea el QR con el celular o busca por DNI. Cada entrada se usa una sola vez aunque
+  haya varios celulares escaneando. Si se cae internet, sigue validando con la copia local y sincroniza después.
+
+## Puesta en marcha (una sola vez)
+
+### 1. Base de datos
+1. Entrá a Supabase → tu proyecto → **SQL Editor** → *New query*.
+2. Pegá todo `supabase/migrations/001_navidad_schema.sql` y tocá **Run**.
+3. Revisá cupos/precios en **Table Editor → `xmas_tiers`** (por defecto Tandas 1, 2 y 3 tienen **100 cupos** cada una — ajustalo).
+
+### 2. Usuarios del staff
+1. **Authentication → Users → Add user** (email + contraseña) para vos y para cada persona de puerta.
+2. En el SQL Editor:
+   ```sql
+   insert into public.xmas_staff (user_id, role, name)
+   select id, 'admin', 'Alejo' from auth.users where email = 'TU_EMAIL';
+
+   insert into public.xmas_staff (user_id, role, name)
+   select id, 'door', 'Puerta 1' from auth.users where email = 'EMAIL_PUERTA';
+   ```
+   `admin` ve todo. `door` solo ve la pestaña Puerta (escanear y dar ingreso).
+3. En **Authentication → Providers → Email** desactivá "Allow new users to sign up" para que nadie más pueda crearse un usuario.
+
+### 3. Mercado Pago
+1. En [Mercado Pago Developers](https://www.mercadopago.com.ar/developers/panel/app) creá una aplicación
+   (Checkout Pro) y copiá el **Access Token de producción**.
+2. Instalá la [CLI de Supabase](https://supabase.com/docs/guides/cli) y ejecutá:
+   ```bash
+   supabase login
+   ```
+   ```bash
+   supabase link --project-ref anubyojemmaybrcmzqdo
+   ```
+   ```bash
+   supabase secrets set MP_ACCESS_TOKEN="APP_USR-..." SITE_URL="https://alejolegal.com" EVENT_NAME="Navidad Gen V"
+   ```
+   ```bash
+   supabase functions deploy mp-checkout
+   ```
+   ```bash
+   supabase functions deploy mp-webhook --no-verify-jwt
+   ```
+3. En tu aplicación de Mercado Pago → **Webhooks** → URL de producción:
+   `https://anubyojemmaybrcmzqdo.supabase.co/functions/v1/mp-webhook`, evento **Pagos**.
+   Copiá la **clave secreta** que te muestra y guardala:
+   ```bash
+   supabase secrets set MP_WEBHOOK_SECRET="..."
+   ```
+
+### 4. Datos del evento
+Editá `js/config.js`: **fecha y hora, lugar**, datos de transferencia, WhatsApp que recibe comprobantes,
+y links opcionales (grupo de WhatsApp, playlist, Instagram — si quedan vacíos no se muestran).
+
+### 5. Probar sin tocar datos reales
+Abrí `index.html?demo=1` y `staff.html?demo=1`: funciona todo con datos de prueba guardados en tu navegador
+(en el panel demo cualquier email entra; si contiene "puerta" entra con rol de puerta). `?demo=0` vuelve al modo real.
+
+### 6. Publicar
+Subí los archivos a GitHub Pages / tu hosting como siempre. El panel está en `/staff.html`.
+
+## Seguridad
+- El navegador del público **no puede** leer ni modificar órdenes: solo usa funciones controladas
+  (crear orden, ver disponibilidad, ver sus entradas por DNI). Teléfonos y emails nunca se exponen.
+- Precios, cupos y aprobaciones se calculan en la base de datos, no en el navegador.
+- Mercado Pago se verifica consultando el pago real a su API (y la firma del webhook).
+- ⚠️ **Proyecto de Halloween**: la tabla vieja `orders` permitía que cualquiera con la clave pública
+  aprobara órdenes desde la consola del navegador. Si ya no la usás, desactivá su acceso:
+  ```sql
+  alter table public.orders enable row level security;
+  revoke all on public.orders from anon, authenticated;
+  ```
