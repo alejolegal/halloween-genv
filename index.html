@@ -14,7 +14,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,500;0,9..144,800;1,9..144,400;1,9..144,600&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="css/styles.css?v=1">
+  <link rel="stylesheet" href="css/styles.css?v=2">
 </head>
 
 <body>
@@ -67,6 +67,7 @@
       <header class="section-head reveal">
         <h2>Anticipadas</h2>
         <p>Cuando se agota una tanda, el precio sube. No hay vuelta atrás.</p>
+        <p class="price-note">Precios por transferencia. Con Mercado Pago se suma la comisión que cobra la app.</p>
       </header>
       <div class="tiers" id="tiers">
         <div class="tier skeleton"></div><div class="tier skeleton"></div>
@@ -91,6 +92,10 @@
       <details class="faq reveal">
         <summary>¿Cómo recibo mi entrada?</summary>
         <p>Pagando con Mercado Pago tu entrada se habilita al instante. Por transferencia, se habilita cuando validamos el comprobante. En ambos casos la ves en <b>Mis entradas</b> ingresando tu DNI.</p>
+      </details>
+      <details class="faq reveal">
+        <summary>¿Por qué con Mercado Pago sale más?</summary>
+        <p>Porque Mercado Pago le cobra una comisión a cada venta que se hace por su botón de pago. Ese costo se suma solo si elegís pagar así; <b>no es un cargo del organizador</b>. Pagando por transferencia (desde cualquier banco o billetera, incluso desde tu cuenta de Mercado Pago al alias) no hay recargo. Con el botón de Mercado Pago se compra de a 1 entrada por vez.</p>
       </details>
       <details class="faq reveal">
         <summary>¿Puedo comprar para mis amigos?</summary>
@@ -146,6 +151,7 @@
         <div id="attendees"></div>
 
         <div class="summary" id="buy-summary"></div>
+        <div class="pay-rules" id="pay-rules"></div>
 
         <p class="form-error" id="form-error" role="alert"></p>
         <button type="submit" class="btn btn-primary btn-block btn-lg">Elegir forma de pago</button>
@@ -223,6 +229,6 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js" defer></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js" defer></script>
   <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.3/dist/confetti.browser.js" defer></script>
-  <script type="module" src="js/app.js?v=1"></script>
+  <script type="module" src="js/app.js?v=2"></script>
 </body>
 </html>
