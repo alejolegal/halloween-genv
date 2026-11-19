@@ -392,11 +392,22 @@ function updatePayOptions() {
   mp.classList.toggle('is-blocked', blocked);
   const sub = allocate(state.qty).total;
   const mpTotal = mpTotalFor(sub);
-  const fee = mpTotal > sub ? ` · <b class="mp-warn">${money(mpTotal)}</b> (incluye recargo de ${money(mpTotal - sub)})` : '';
+  const fee = mpTotal > sub ? ` · <b class="mp-warn">${money(mpTotal)}</b> (incluye comisión MP de ${money(mpTotal - sub)})` : '';
   $('#mp-note').innerHTML = blocked
     ? `<b class="mp-warn">Con Mercado Pago se compra de a 1 entrada.</b> Para ${state.qty} entradas elegí transferencia, o volvé y comprá de a una.`
     : `Tarjeta, débito o dinero en cuenta · <em>entrada al instante</em>${fee}`;
-  $('#tr-note').innerHTML = `CVU / alias · <b class="mp-warn">${money(sub)}</b> · se habilita al validar el comprobante`;
+  $('#tr-note').innerHTML = `CVU / alias · <b class="mp-warn">${money(sub)}</b> · sin recargo · se habilita al validar el comprobante`;
+
+  // Cartel: el recargo es la comisión de Mercado Pago, no un cargo del organizador
+  const info = $('#mp-fee-info');
+  const pct = Number(state.status?.mp_fee_percent || 0);
+  info.hidden = blocked || pct <= 0;
+  if (!info.hidden) {
+    info.innerHTML = `<b>ℹ️ ¿Por qué cuesta más con Mercado Pago?</b>
+      Mercado Pago cobra una comisión del <b>${pct.toLocaleString('es-AR')}%</b> (incluye IVA) por cada pago.
+      Ese costo se suma solo al pagar con Mercado Pago (${money(mpTotal - sub)} en tu compra): <b>no es un cargo del organizador</b>.
+      Pagando por transferencia abonás ${money(sub)}, sin recargo.`;
+  }
 }
 
 /** Mismo cálculo que la base: recargo para recibir el precio completo tras la comisión de MP. */
