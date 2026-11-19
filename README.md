@@ -48,28 +48,23 @@ Web estática (HTML + CSS + JS) con base de datos y pagos en **Supabase** y **Me
 ### 3. Mercado Pago
 1. En [Mercado Pago Developers](https://www.mercadopago.com.ar/developers/panel/app) creá una aplicación
    (Checkout Pro) y copiá el **Access Token de producción**.
-2. Instalá la [CLI de Supabase](https://supabase.com/docs/guides/cli) y ejecutá:
-   ```bash
-   supabase login
-   ```
-   ```bash
-   supabase link --project-ref anubyojemmaybrcmzqdo
-   ```
-   ```bash
-   supabase secrets set MP_ACCESS_TOKEN="APP_USR-..." SITE_URL="https://alejolegal.com" EVENT_NAME="Navidad Gen V"
-   ```
-   ```bash
-   supabase functions deploy mp-checkout
-   ```
-   ```bash
-   supabase functions deploy mp-webhook --no-verify-jwt
-   ```
-3. En tu aplicación de Mercado Pago → **Webhooks** → URL de producción:
+2. Supabase → **Edge Functions → Secrets** → agregá:
+   - `MP_ACCESS_TOKEN` = el Access Token de producción (empieza con `APP_USR-`)
+   - `SITE_URL` = la dirección pública de la web (ej. `https://alejolegal.com`)
+   - `EVENT_NAME` = `Navidad Gen V`
+3. Supabase → **Edge Functions → Deploy a new function → Via Editor**:
+   - Nombre `mp-checkout`: pegá todo `supabase/functions/mp-checkout/index.ts` y tocá **Deploy**.
+   - Nombre `mp-webhook`: pegá todo `supabase/functions/mp-webhook/index.ts` y tocá **Deploy**.
+     Después, en los **Details/Settings** de `mp-webhook`, **desactivá "Enforce JWT Verification"** y guardá.
+4. En tu aplicación de Mercado Pago → **Webhooks** → URL de producción:
    `https://anubyojemmaybrcmzqdo.supabase.co/functions/v1/mp-webhook`, evento **Pagos**.
-   Copiá la **clave secreta** que te muestra y guardala:
-   ```bash
-   supabase secrets set MP_WEBHOOK_SECRET="..."
-   ```
+   Copiá la **clave secreta** que te muestra y agregala en Supabase → Edge Functions → Secrets como `MP_WEBHOOK_SECRET`.
+
+> Con Mercado Pago se compra **de a 1 entrada** por operación (lo valida la web y la base de datos).
+> Para 2 a 4 entradas, el comprador usa transferencia.
+
+(Alternativa para quien use la terminal: `supabase functions deploy mp-checkout` y
+`supabase functions deploy mp-webhook --no-verify-jwt`.)
 
 ### 4. Datos del evento
 Editá `js/config.js`: **fecha y hora, lugar**, datos de transferencia, WhatsApp que recibe comprobantes,

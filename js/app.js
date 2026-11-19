@@ -380,11 +380,24 @@ function onSubmitForm(e) {
   const a = allocate(state.qty);
   $('#pay-total').innerHTML = `${state.qty} entrada${state.qty > 1 ? 's' : ''} · Total <b>${money(a.total)}</b>`;
   $('#pay-error').textContent = '';
+  updatePayOptions();
   showStep('step-pay');
+}
+
+/** Mercado Pago solo permite 1 entrada por compra. */
+function updatePayOptions() {
+  const mp = $('[data-method="mercadopago"]');
+  const blocked = state.qty > 1;
+  mp.disabled = blocked;
+  mp.classList.toggle('is-blocked', blocked);
+  $('#mp-note').innerHTML = blocked
+    ? `<b class="mp-warn">Con Mercado Pago se compra de a 1 entrada.</b> Para ${state.qty} entradas elegí transferencia, o volvé y comprá de a una.`
+    : 'Tarjeta, débito o dinero en cuenta · <em>entrada al instante</em> · de a 1 entrada por compra';
 }
 
 async function onChooseMethod(method, btn) {
   if (!pendingPurchase) return showStep('step-form');
+  if (method === 'mercadopago' && pendingPurchase.attendees.length > 1) return updatePayOptions();
   $$('.pay-option').forEach((b) => { b.disabled = true; });
   btn.classList.add('loading');
   $('#pay-error').textContent = '';
@@ -407,6 +420,7 @@ async function onChooseMethod(method, btn) {
     if (/DNI|NOMBRE|CANTIDAD|SIN_CUPO/.test(err?.message || '')) loadStatus();
   } finally {
     $$('.pay-option').forEach((b) => { b.disabled = false; b.classList.remove('loading'); });
+    updatePayOptions();
   }
 }
 

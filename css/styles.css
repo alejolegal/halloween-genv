@@ -494,3 +494,8 @@ main, .topbar, .footer { position: relative; z-index: 1; }
   .tier.is-sold .tier-name, .tier.is-next .tier-name { font-size: 1.2rem; }
   .stamp { font-size: 1.5rem; }
 }
+
+/* Mercado Pago bloqueado para compras de más de 1 entrada */
+.pay-option.is-blocked { opacity: 0.55; cursor: not-allowed; }
+.pay-option.is-blocked:hover { border-color: var(--border); background: var(--surface); }
+.mp-warn { display: inline; font-size: inherit; color: var(--gold); }

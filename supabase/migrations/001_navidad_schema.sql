@@ -291,6 +291,10 @@ begin
   if v_qty < 1 or v_qty > s.max_per_order then
     raise exception 'CANTIDAD_INVALIDA' using errcode = 'P0001';
   end if;
+  -- Mercado Pago: de a 1 entrada por compra
+  if p_method = 'mercadopago' and v_qty > 1 then
+    raise exception 'MP_UNA_ENTRADA' using errcode = 'P0001';
+  end if;
 
   -- Validar asistentes (cada entrada es nominal: nombre + DNI propio)
   for v_att in select value from jsonb_array_elements(p_attendees) loop

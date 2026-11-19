@@ -17,6 +17,7 @@ const ERRORS = {
   DNI_REPETIDO: 'Hay un DNI repetido entre los asistentes ({x}). Cada entrada es personal.',
   DNI_YA_REGISTRADO: 'El DNI {x} ya tiene una entrada (o una reserva activa). Buscala en "Mis entradas".',
   DEMASIADAS_PENDIENTES: 'Ya tenés reservas pendientes con este WhatsApp. Pagalas o esperá que venzan.',
+  MP_UNA_ENTRADA: 'Con Mercado Pago se compra de a 1 entrada. Para varias, elegí transferencia.',
   SIN_CUPO: 'No quedan cupos suficientes para esa cantidad. Probá con menos entradas.',
   NO_AUTORIZADO: 'No tenés permisos para esta acción.',
   ORDEN_NO_ENCONTRADA: 'No encontramos esa orden.',
@@ -205,6 +206,7 @@ function demoApi() {
     async createOrder(buyer, attendees, method) {
       const db = load();
       if (!db.settings.sales_open) fail('VENTAS_CERRADAS');
+      if (method === 'mercadopago' && attendees.length > 1) fail('MP_UNA_ENTRADA');
       const dni = String(buyer.dni).replace(/\D/g, '');
       if (!/^\d{7,9}$/.test(dni)) fail('DNI_INVALIDO');
       const dnis = attendees.map((a) => String(a.dni).replace(/\D/g, ''));
