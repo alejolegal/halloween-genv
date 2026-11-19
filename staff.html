@@ -56,7 +56,30 @@
         <div><b id="door-queue">0</b><small>sin sincronizar</small></div>
       </div>
 
-      <button class="btn btn-primary btn-block btn-lg" id="btn-scan" type="button">📷 Escanear QR</button>
+      <div class="door-main-actions">
+        <button class="btn btn-primary btn-lg" id="btn-scan" type="button">📷 Escanear QR</button>
+        <button class="btn btn-ghost btn-lg" id="btn-door-sale" type="button">➕ Venta en puerta</button>
+      </div>
+
+      <form id="door-sale-form" class="door-sale" hidden>
+        <h3>Venta en puerta</h3>
+        <p class="muted">Cargá a cada persona que paga en la entrada, así queda registrada.</p>
+        <label>Nombre y apellido<input class="field" name="name" required minlength="3" maxlength="80" autocomplete="off"></label>
+        <label>DNI<input class="field" name="dni" inputmode="numeric" required maxlength="10" autocomplete="off" placeholder="Sin puntos"></label>
+        <div class="pay-chips" role="radiogroup" aria-label="Medio de pago">
+          <label><input type="radio" name="payment" value="efectivo" checked><span>💵 Efectivo</span></label>
+          <label><input type="radio" name="payment" value="mercadopago"><span>📱 Mercado Pago</span></label>
+          <label><input type="radio" name="payment" value="transferencia"><span>🏦 Transferencia</span></label>
+          <label><input type="radio" name="payment" value="cortesia"><span>🎁 Invitado</span></label>
+        </div>
+        <label>Monto cobrado ($)<input class="field" name="amount" type="number" inputmode="numeric" min="0" step="100" required></label>
+        <label class="check"><input type="checkbox" name="checkin" checked> Marcar que ya ingresó</label>
+        <p class="form-error" id="door-sale-error" role="alert"></p>
+        <div class="door-sale-actions">
+          <button class="btn btn-primary" type="submit">Registrar entrada</button>
+          <button class="btn btn-ghost" type="button" id="btn-door-sale-cancel">Cancelar</button>
+        </div>
+      </form>
       <div id="scanner-wrap" class="scanner-wrap" hidden>
         <div id="qr-reader"></div>
         <button class="btn btn-ghost btn-block" id="btn-scan-stop" type="button">Cerrar cámara</button>
@@ -122,6 +145,16 @@
           <button class="btn btn-primary" id="mp-fee-save" type="button">Guardar</button>
         </div>
         <small class="muted" id="mp-fee-preview"></small>
+      </div>
+
+      <div class="fee-box">
+        <b>Precio de la entrada en puerta</b>
+        <p class="muted">Es el monto que aparece cargado por defecto en "Venta en puerta" (se puede cambiar en cada venta).</p>
+        <div class="fee-row">
+          <span>$</span>
+          <input class="field" id="door-price" type="number" min="0" step="100" inputmode="numeric">
+          <button class="btn btn-primary" id="door-price-save" type="button">Guardar</button>
+        </div>
       </div>
     </div>
   </section>

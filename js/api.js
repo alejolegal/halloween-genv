@@ -18,6 +18,7 @@ const ERRORS = {
   DNI_YA_REGISTRADO: 'El DNI {x} ya tiene una entrada confirmada. Buscala en "Mis entradas".',
   DEMASIADAS_PENDIENTES: 'Ya tenés compras pendientes con este WhatsApp. Pagalas o esperá que venzan.',
   MP_NO_DISPONIBLE: 'No pudimos abrir Mercado Pago en este momento. Probá pagar por transferencia o intentá en unos minutos.',
+  MONTO_INVALIDO: 'Ingresá un monto válido.',
   CUPO_EXCEDIDO: 'La {x} ya está completa con las entradas aprobadas.',
   DNI_YA_APROBADO: 'El DNI {x} ya tiene una entrada aprobada en otra orden.',
   MP_UNA_ENTRADA: 'Con Mercado Pago se compra de a 1 entrada. Para varias, elegí transferencia.',
@@ -121,6 +122,8 @@ function supabaseApi() {
       return data;
     },
     approveOrder: (id, force = false) => rpc('xmas_approve_order', { p_order_id: id, p_force: force }),
+    doorSale: ({ name, dni, payment, amount, checkIn }) =>
+      rpc('xmas_door_sale', { p_name: name, p_dni: dni, p_payment: payment, p_amount: amount, p_check_in: checkIn }),
     rejectOrder: (id) => rpc('xmas_reject_order', { p_order_id: id }),
     checkIn: ({ code, ticketId }) => rpc('xmas_check_in', { p_code: code || null, p_ticket_id: ticketId || null }),
     undoCheckIn: (ticketId) => rpc('xmas_undo_check_in', { p_ticket_id: ticketId }),
@@ -159,7 +162,7 @@ function demoApi() {
       if (db) return db;
     } catch { /* noop */ }
     return {
-      settings: { sales_open: true, max_per_order: 4, transfer_hold_hours: 24, mp_hold_minutes: 30, mp_fee_percent: 0 },
+      settings: { sales_open: true, max_per_order: 4, transfer_hold_hours: 24, mp_hold_minutes: 30, mp_fee_percent: 0, door_price: 15000 },
       tiers: [
         { id: 0, name: 'Tanda Navideña de Regalo', subtitle: 'Solo 25 cupos · precio especial', price: 6000, capacity: 25, sort: 0, base: 25 },
         { id: 1, name: 'Tanda 1', subtitle: 'Preventa', price: 10000, capacity: 100, sort: 1, base: 78 },
@@ -195,7 +198,7 @@ function demoApi() {
     mode: 'demo',
     async salesStatus() {
       const db = load();
-      const tiers = db.tiers.map((t) => {
+      const tiers = db.tiers.filter((t) => t.is_active !== false).map((t) => {
         const sold = t.base + db.orders.filter((o) => o.status === 'approved').flatMap((o) => o.tickets).filter((x) => x.tier_id === t.id).length;
         return { ...t, sold, reserved: 0, remaining: Math.max(t.capacity - sold, 0) };
       });
@@ -319,6 +322,19 @@ function demoApi() {
         return { result: 'ok', ticket_id: t.id, code: t.code, holder_name: t.holder_name, holder_dni: t.holder_dni, tier, order_code: o.code, seq: t.seq, quantity: o.quantity };
       }
       return { result: 'not_found' };
+    },
+    async doorSale({ name, dni, payment, amount, checkIn }) {
+      const db = load();
+      if (!db.tiers.some((t) => t.id === 99)) db.tiers.push({ id: 99, name: 'Venta en puerta', price: 1, capacity: 0, sort: 99, base: 0, is_active: false });
+      const prev = db.orders.filter((o) => o.status === 'approved').flatMap((o) => o.tickets).find((t) => t.holder_dni === dni);
+      if (prev) return { result: 'exists', ticket_id: prev.id, code: prev.code, holder_name: prev.holder_name, holder_dni: dni, tier: db.tiers.find((t) => t.id === prev.tier_id).name, used_at: prev.used_at };
+      const total = payment === 'cortesia' ? 0 : amount;
+      const now = new Date().toISOString();
+      const t = { id: crypto.randomUUID(), code: 'XM' + rand(10), tier_id: 99, price: total, seq: 1, holder_name: name, holder_dni: dni, used_at: checkIn ? now : null };
+      db.orders.unshift({ id: crypto.randomUUID(), code: 'NAV-' + rand(6), buyer_name: name, dni, phone: '', email: '', quantity: 1, subtotal: total, total,
+        payment_method: 'door', door_payment: payment, status: 'approved', approved_via: 'staff', approved_at: now, expires_at: now, created_at: now, tickets: [t] });
+      save(db); emit();
+      return { result: 'ok', ticket_id: t.id, code: t.code, holder_name: name, holder_dni: dni, tier: 'Venta en puerta' };
     },
     async undoCheckIn(ticketId) {
       const db = load();

@@ -20,8 +20,12 @@ const state = {
 };
 
 const isAdmin = () => state.session?.role === 'admin';
-const tierName = (id) => state.tiers.find((t) => t.id === id)?.name || `Tanda ${id}`;
+const tierName = (id) => state.tiers.find((t) => t.id === id)?.name || (id === 99 ? 'Venta en puerta' : `Tanda ${id}`);
 const effStatus = (o) => (o.status === 'pending' && new Date(o.expires_at) <= new Date() ? 'expired' : o.status);
+const DOOR_TIER = 99;
+const DOOR_PAY = { efectivo: 'Efectivo', mercadopago: 'Mercado Pago', transferencia: 'Transferencia', cortesia: 'Invitado' };
+const payLabel = (o) => (o.payment_method === 'door' ? `Puerta · ${DOOR_PAY[o.door_payment] || ''}`
+  : o.payment_method === 'mercadopago' ? 'MP' : 'Transf.');
 const STATUS_LABEL = { approved: 'Aprobada', pending: 'Pendiente', expired: 'Vencida', rejected: 'Rechazada', cancelled: 'Cancelada' };
 
 // ---------------------------------------------------------------------
@@ -116,7 +120,7 @@ async function logout() {
 // ---------------------------------------------------------------------
 async function refresh() {
   try {
-    const [orders, tiers] = await Promise.all([api.listOrders(), state.tiers.length ? state.tiers : api.listTiers()]);
+    const [orders, tiers] = await Promise.all([api.listOrders(), api.listTiers()]);
     state.orders = orders;
     state.tiers = tiers;
     saveCache();
@@ -230,12 +234,13 @@ async function syncQueue() {
 
 function showScanResult(res) {
   const el = $('#scan-result');
-  const kind = res.result === 'ok' ? 'ok' : res.result === 'used' ? 'warn' : 'error';
+  const kind = res.result === 'ok' ? 'ok' : ['used', 'exists'].includes(res.result) ? 'warn' : 'error';
   const title = {
     ok: '✅ ADELANTE',
     used: '⚠️ YA INGRESÓ',
     not_found: '❌ QR NO VÁLIDO',
     not_approved: '⛔ NO HABILITADA',
+    exists: 'ℹ️ YA TIENE ENTRADA',
   }[res.result] || '❌ ERROR';
   const detail = res.result === 'used'
     ? `Ingresó ${formatDateTime(res.used_at)}`
@@ -362,6 +367,58 @@ async function onDoorAction(e) {
   onDoorSearch();
   renderDoorStats();
   renderRecent();
+}
+
+// ---------------------------------------------------------------------
+//  VENTA EN PUERTA
+// ---------------------------------------------------------------------
+async function openDoorSale() {
+  stopScanner();
+  const f = $('#door-sale-form');
+  f.reset();
+  $('#door-sale-error').textContent = '';
+  f.hidden = false;
+  try {
+    const s = await api.getSettings();
+    f.amount.value = Number(s?.door_price || 0) || '';
+  } catch { /* noop */ }
+  f.name.focus();
+}
+
+function closeDoorSale() {
+  $('#door-sale-form').hidden = true;
+}
+
+async function onDoorSale(e) {
+  e.preventDefault();
+  const f = e.target;
+  const name = f.name.value.trim();
+  const dni = onlyDigits(f.dni.value);
+  const payment = f.payment.value;
+  const amount = payment === 'cortesia' ? 0 : Math.round(Number(f.amount.value));
+  const err = $('#door-sale-error');
+  if (name.length < 3) return (err.textContent = 'Ingresá nombre y apellido.');
+  if (!/^\d{7,9}$/.test(dni)) return (err.textContent = 'El DNI debe tener entre 7 y 9 números.');
+  if (payment !== 'cortesia' && !(amount > 0)) return (err.textContent = 'Ingresá el monto cobrado.');
+  const btn = f.querySelector('button[type=submit]');
+  btn.disabled = true;
+  err.textContent = '';
+  try {
+    const res = await api.doorSale({ name, dni, payment, amount, checkIn: f.checkin.checked });
+    if (res.result === 'exists') {
+      showScanResult({ ...res, result: res.used_at ? 'used' : 'exists' });
+      err.textContent = `Este DNI ya tenía entrada (${res.tier}). No se cargó otra.`;
+      return;
+    }
+    beep('ok');
+    toast(`✅ ${name} registrado · ${DOOR_PAY[payment]}${amount ? ' ' + money(amount) : ''}`, 'success');
+    closeDoorSale();
+    await refresh();
+  } catch (e2) {
+    err.textContent = humanError(e2);
+  } finally {
+    btn.disabled = false;
+  }
 }
 
 function exportPDF() {
@@ -501,7 +558,7 @@ function renderOrders() {
       <details class="order" data-id="${esc(o.id)}" ${open.has(o.id) ? 'open' : ''}>
         <summary>
           <div><b>${esc(o.buyer_name)}</b><small>${esc(o.code)} · DNI ${esc(o.dni)} · ${o.quantity} entr.</small></div>
-          <div class="order-side"><span class="pill pill-${st}">${STATUS_LABEL[st]}</span><small>${money(o.total)} · ${o.payment_method === 'mercadopago' ? 'MP' : 'Transf.'}</small></div>
+          <div class="order-side"><span class="pill pill-${st}">${STATUS_LABEL[st]}</span><small>${money(o.total)} · ${esc(payLabel(o))}</small></div>
         </summary>
         <p class="muted">📱 <a href="${esc(whatsappLink(o.phone, ''))}" target="_blank" rel="noopener">${esc(o.phone)}</a> · ✉️ ${esc(o.email)} · ${formatDateTime(o.created_at)}</p>
         ${o.surcharge ? `<p class="muted">Incluye recargo Mercado Pago: ${money(o.surcharge)}</p>` : ''}
@@ -530,7 +587,7 @@ function exportCSV() {
   const head = ['orden', 'estado', 'pago', 'fecha', 'comprador', 'dni_comprador', 'whatsapp', 'email', 'total_orden',
     'codigo_entrada', 'tanda', 'precio', 'titular', 'dni_titular', 'ingreso'];
   const rows = filteredOrders().flatMap((o) => (o.tickets || []).map((t) => [
-    o.code, STATUS_LABEL[effStatus(o)], o.payment_method, formatDateTime(o.created_at), o.buyer_name, o.dni, o.phone, o.email, o.total,
+    o.code, STATUS_LABEL[effStatus(o)], payLabel(o), formatDateTime(o.created_at), o.buyer_name, o.dni, o.phone, o.email, o.total,
     t.code, tierName(t.tier_id), t.price, t.holder_name, t.holder_dni, t.used_at ? formatDateTime(t.used_at) : '',
   ]));
   const csv = [head, ...rows].map((r) => r.map((v) => `"${String(v ?? '').replace(/"/g, '""')}"`).join(';')).join('\r\n');
@@ -550,15 +607,23 @@ async function renderSummary() {
   const pending = state.orders.filter((o) => effStatus(o) === 'pending');
   const tickets = approved.flatMap((o) => o.tickets || []);
   const rev = (m) => approved.filter((o) => !m || o.payment_method === m).reduce((a, o) => a + o.total, 0);
-  const capacity = state.tiers.reduce((a, t) => a + t.capacity, 0);
+  const door = approved.filter((o) => o.payment_method === 'door');
+  const doorRev = (p) => door.filter((o) => o.door_payment === p).reduce((a, o) => a + o.total, 0);
+  const presale = tickets.filter((t) => t.tier_id !== DOOR_TIER);
+  const capacity = state.tiers.filter((t) => t.id !== DOOR_TIER).reduce((a, t) => a + t.capacity, 0);
 
   $('#kpis').innerHTML = [
-    ['Vendidas', `${tickets.length}<small>/${capacity}</small>`],
-    ['Pendientes de pago', pending.reduce((a, o) => a + o.quantity, 0)],
-    ['Recaudado', money(rev())],
-    ['Mercado Pago', money(rev('mercadopago'))],
-    ['Transferencias', money(rev('transfer'))],
+    ['Anticipadas vendidas', `${presale.length}<small>/${capacity}</small>`],
+    ['Vendidas en puerta', door.length],
+    ['Total personas', tickets.length],
     ['Ingresaron', tickets.filter((t) => t.used_at).length],
+    ['Pendientes de pago', pending.reduce((a, o) => a + o.quantity, 0)],
+    ['Recaudado total', money(rev())],
+    ['Online · Mercado Pago', money(rev('mercadopago'))],
+    ['Online · Transferencias', money(rev('transfer'))],
+    ['Puerta · Efectivo', money(doorRev('efectivo'))],
+    ['Puerta · MP / Transf.', money(doorRev('mercadopago') + doorRev('transferencia'))],
+    ['Invitados', door.filter((o) => o.door_payment === 'cortesia').length],
     ['Clientes', new Set(approved.map((o) => o.dni)).size],
   ].map(([k, v]) => `<div class="kpi"><small>${k}</small><b>${v}</b></div>`).join('');
 
@@ -568,6 +633,9 @@ async function renderSummary() {
       const sold = tickets.filter((x) => x.tier_id === t.id).length;
       const res = pending.flatMap((o) => o.tickets || []).filter((x) => x.tier_id === t.id).length;
       const pct = Math.min(100, Math.round(((sold + res) / Math.max(t.capacity, 1)) * 100));
+      if (t.id === DOOR_TIER) {
+        return `<div class="tt-row"><span>${esc(t.name)}</span><span>—</span><span>${sold}</span><span>—</span><span>—</span></div>`;
+      }
       return `<div class="tt-row"><span>${esc(t.name)}</span><span>${money(t.price)}</span><span>${sold}</span><span>${res}</span><span>${t.capacity}</span>
         <div class="progress tt-bar"><span style="width:${pct}%"></span></div></div>`;
     }).join('')}`;
@@ -576,6 +644,7 @@ async function renderSummary() {
     const s = await api.getSettings();
     $('#sales-open').checked = !!s?.sales_open;
     if (document.activeElement !== $('#mp-fee')) $('#mp-fee').value = Number(s?.mp_fee_percent || 0);
+    if (document.activeElement !== $('#door-price')) $('#door-price').value = Number(s?.door_price || 0);
     renderFeePreview();
   } catch { /* noop */ }
 }
@@ -614,6 +683,25 @@ function bindEvents() {
   $('#btn-scan-stop').addEventListener('click', stopScanner);
   $('#scan-result').addEventListener('click', hideScanResult);
   $('#door-form').addEventListener('submit', onDoorSearch);
+  $('#btn-door-sale').addEventListener('click', openDoorSale);
+  $('#btn-door-sale-cancel').addEventListener('click', closeDoorSale);
+  $('#door-sale-form').addEventListener('submit', onDoorSale);
+  $('#door-sale-form').addEventListener('change', (e) => {
+    if (e.target.name === 'payment') {
+      const f = $('#door-sale-form');
+      f.amount.disabled = f.payment.value === 'cortesia';
+    }
+  });
+  $('#door-price-save').addEventListener('click', async () => {
+    const v = Math.round(Number($('#door-price').value));
+    if (!(v >= 0)) return toast('Ingresá un monto válido', 'error');
+    try {
+      await api.updateSettings({ door_price: v });
+      toast(`Precio en puerta: ${money(v)}`, 'success');
+    } catch (err) {
+      toast(humanError(err), 'error');
+    }
+  });
   $('#door-results').addEventListener('click', onDoorAction);
   $('#btn-pdf').addEventListener('click', exportPDF);
 

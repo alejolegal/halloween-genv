@@ -23,6 +23,7 @@ Web estática (HTML + CSS + JS) con base de datos y pagos en **Supabase** y **Me
 - **Mercado Pago**: se habilita automáticamente al acreditarse el pago (webhook + verificación al volver a la web).
 - **Transferencia**: el comprador envía el comprobante por WhatsApp y vos aprobás en `staff.html` → *Transferencias*.
 - **Entradas nominales**: cada entrada tiene nombre, DNI y su propio QR. Un DNI no puede tener dos entradas.
+- **Venta en puerta**: el staff carga nombre, DNI, medio de pago y monto de quien compra en la entrada; queda registrado y con ingreso marcado.
 - **Puerta**: el staff escanea el QR con el celular o busca por DNI. Cada entrada se usa una sola vez aunque
   haya varios celulares escaneando. Si se cae internet, sigue validando con la copia local y sincroniza después.
 
@@ -33,6 +34,7 @@ Web estática (HTML + CSS + JS) con base de datos y pagos en **Supabase** y **Me
 2. Pegá todo `supabase/migrations/001_navidad_schema.sql` y tocá **Run**.
    Después, en otra *New query*, pegá `supabase/migrations/002_solo_aprobadas_y_recargo_mp.sql` y tocá **Run**
    (las reservas no descuentan entradas y se agrega el recargo configurable de Mercado Pago).
+   Por último corré `supabase/migrations/003_venta_en_puerta.sql` (venta en puerta desde el panel).
 3. Revisá cupos/precios en **Table Editor → `xmas_tiers`** (por defecto Tandas 1, 2 y 3 tienen **100 cupos** cada una — ajustalo).
 
 ### 2. Usuarios del staff
