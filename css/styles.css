@@ -499,3 +499,5 @@ main, .topbar, .footer { position: relative; z-index: 1; }
 .pay-option.is-blocked { opacity: 0.55; cursor: not-allowed; }
 .pay-option.is-blocked:hover { border-color: var(--border); background: var(--surface); }
 .mp-warn { display: inline; font-size: inherit; color: var(--gold); }
+
+.pay-option .mp-warn { display: inline; }

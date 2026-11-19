@@ -163,7 +163,7 @@
         </button>
         <button type="button" class="pay-option" data-method="transfer">
           <span class="pay-ico pay-tr">$</span>
-          <span><b>Transferencia</b><small>CVU / alias · se habilita al validar el comprobante</small></span>
+          <span><b>Transferencia</b><small id="tr-note">CVU / alias · se habilita al validar el comprobante</small></span>
         </button>
         <p class="form-error" id="pay-error" role="alert"></p>
       </div>
@@ -171,7 +171,7 @@
       <!-- Paso 3a: transferencia -->
       <div id="step-transfer" class="step" hidden>
         <h3 class="modal-title">Transferí para confirmar</h3>
-        <p class="modal-sub">Reservamos tus lugares por <b id="tr-hold">24 hs</b>. Orden <b id="tr-code"></b></p>
+        <p class="modal-sub">Tenés <b id="tr-hold">24 hs</b> para transferir y mandar el comprobante. Tu entrada se confirma cuando validamos el pago. Orden <b id="tr-code"></b></p>
         <div class="bank">
           <div class="bank-total"><small>Total a transferir</small><b id="tr-total"></b></div>
           <div class="bank-row"><small>Alias</small><b id="tr-alias"></b><button type="button" class="btn btn-ghost btn-sm" data-copy="alias">Copiar</button></div>

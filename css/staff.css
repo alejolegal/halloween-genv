@@ -100,3 +100,21 @@ details.order summary small { display: block; color: var(--muted); font-size: 0.
 .scan-tier { display: inline-block; justify-self: center; padding: 4px 12px; border-radius: 999px; background: rgba(0, 0, 0, 0.25); font-weight: 700; }
 .scan-detail { opacity: 0.9; }
 .scan-card .btn { margin-top: 18px; background: rgba(0, 0, 0, 0.25); border-color: rgba(255, 255, 255, 0.4); color: #fff; }
+
+.fee-box { display: grid; gap: 8px; padding: 16px; border-radius: var(--radius-sm); background: var(--surface); border: 1px solid var(--border-strong); }
+.fee-row { display: flex; align-items: center; gap: 8px; }
+.fee-row .field { max-width: 120px; }
+
+.door-main-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.door-main-actions .btn { padding: 0 12px; }
+.door-sale { display: grid; gap: 10px; padding: 16px; border-radius: var(--radius); background: var(--surface); border: 1px solid var(--border-strong); }
+.door-sale h3 { font-family: var(--font-display); font-size: 1.4rem; }
+.door-sale label { display: grid; gap: 4px; font-size: 0.8rem; color: var(--muted); font-weight: 600; }
+.door-sale .check { display: flex; color: var(--text); font-size: 0.9rem; }
+.pay-chips { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
+.pay-chips label { display: block; }
+.pay-chips input { position: absolute; opacity: 0; pointer-events: none; }
+.pay-chips span { display: block; text-align: center; padding: 10px 6px; border-radius: var(--radius-sm); border: 1px solid var(--border); font-size: 0.85rem; color: var(--text); cursor: pointer; }
+.pay-chips input:checked + span { background: var(--gold); color: #1b1405; border-color: var(--gold); }
+.pay-chips input:focus-visible + span { outline: 2px solid var(--gold); outline-offset: 2px; }
+.door-sale-actions { display: flex; gap: 8px; }

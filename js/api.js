@@ -15,8 +15,12 @@ const ERRORS = {
   CANTIDAD_INVALIDA: 'Cantidad de entradas inválida.',
   ASISTENTES_INVALIDOS: 'Completá los datos de cada asistente.',
   DNI_REPETIDO: 'Hay un DNI repetido entre los asistentes ({x}). Cada entrada es personal.',
-  DNI_YA_REGISTRADO: 'El DNI {x} ya tiene una entrada (o una reserva activa). Buscala en "Mis entradas".',
-  DEMASIADAS_PENDIENTES: 'Ya tenés reservas pendientes con este WhatsApp. Pagalas o esperá que venzan.',
+  DNI_YA_REGISTRADO: 'El DNI {x} ya tiene una entrada confirmada. Buscala en "Mis entradas".',
+  DEMASIADAS_PENDIENTES: 'Ya tenés compras pendientes con este WhatsApp. Pagalas o esperá que venzan.',
+  MP_NO_DISPONIBLE: 'No pudimos abrir Mercado Pago en este momento. Probá pagar por transferencia o intentá en unos minutos.',
+  MONTO_INVALIDO: 'Ingresá un monto válido.',
+  CUPO_EXCEDIDO: 'La {x} ya está completa con las entradas aprobadas.',
+  DNI_YA_APROBADO: 'El DNI {x} ya tiene una entrada aprobada en otra orden.',
   MP_UNA_ENTRADA: 'Con Mercado Pago se compra de a 1 entrada. Para varias, elegí transferencia.',
   SIN_CUPO: 'No quedan cupos suficientes para esa cantidad. Probá con menos entradas.',
   NO_AUTORIZADO: 'No tenés permisos para esta acción.',
@@ -25,13 +29,15 @@ const ERRORS = {
 
 export function humanError(err) {
   const raw = String(err?.message || err || '');
-  const match = raw.match(/([A-Z_]{5,})(?::(\S+))?/);
-  if (match && ERRORS[match[1]]) return ERRORS[match[1]].replace('{x}', match[2] || '');
+  const known = [...raw.matchAll(/([A-Z][A-Z_]{4,})(?::([^\s,]+))?/g)].find((m) => ERRORS[m[1]]);
+  if (known) return ERRORS[known[1]].replace('{x}', known[2] || '');
   if (/Failed to fetch|NetworkError|network/i.test(raw)) return 'Sin conexión. Revisá tu internet e intentá de nuevo.';
   if (/function .* does not exist|Could not find the function/i.test(raw)) {
     return 'La venta todavía no está habilitada. Volvé a intentar en unos minutos.';
   }
-  return 'Ocurrió un error inesperado. Intentá de nuevo.';
+  console.error('Error no reconocido:', err);
+  const detail = [err?.code, raw].filter(Boolean).join(' · ').slice(0, 120);
+  return `Ocurrió un error inesperado. Intentá de nuevo.${detail ? ` (detalle: ${detail})` : ''}`;
 }
 
 function isDemo() {
@@ -115,7 +121,9 @@ function supabaseApi() {
       if (error) throw error;
       return data;
     },
-    approveOrder: (id) => rpc('xmas_approve_order', { p_order_id: id }),
+    approveOrder: (id, force = false) => rpc('xmas_approve_order', { p_order_id: id, p_force: force }),
+    doorSale: ({ name, dni, payment, amount, checkIn }) =>
+      rpc('xmas_door_sale', { p_name: name, p_dni: dni, p_payment: payment, p_amount: amount, p_check_in: checkIn }),
     rejectOrder: (id) => rpc('xmas_reject_order', { p_order_id: id }),
     checkIn: ({ code, ticketId }) => rpc('xmas_check_in', { p_code: code || null, p_ticket_id: ticketId || null }),
     undoCheckIn: (ticketId) => rpc('xmas_undo_check_in', { p_ticket_id: ticketId }),
@@ -154,7 +162,7 @@ function demoApi() {
       if (db) return db;
     } catch { /* noop */ }
     return {
-      settings: { sales_open: true, max_per_order: 4, transfer_hold_hours: 24, mp_hold_minutes: 30 },
+      settings: { sales_open: true, max_per_order: 4, transfer_hold_hours: 24, mp_hold_minutes: 30, mp_fee_percent: 0, door_price: 15000 },
       tiers: [
         { id: 0, name: 'Tanda Navideña de Regalo', subtitle: 'Solo 25 cupos · precio especial', price: 6000, capacity: 25, sort: 0, base: 25 },
         { id: 1, name: 'Tanda 1', subtitle: 'Preventa', price: 10000, capacity: 100, sort: 1, base: 78 },
@@ -168,7 +176,7 @@ function demoApi() {
   const holds = (o) => o.status === 'approved' || (o.status === 'pending' && new Date(o.expires_at).getTime() > now());
   const eff = (o) => (o.status === 'pending' && new Date(o.expires_at).getTime() <= now() ? 'expired' : o.status);
   const used = (db, tierId) =>
-    db.orders.filter(holds).flatMap((o) => o.tickets).filter((t) => t.tier_id === tierId).length;
+    db.orders.filter((o) => o.status === 'approved').flatMap((o) => o.tickets).filter((t) => t.tier_id === tierId).length;
   const fail = (code) => { throw new Error(code); };
   const delay = (v) => new Promise((r) => setTimeout(() => r(v), 250));
   const publicOrder = (db, o, dni) => ({
@@ -190,16 +198,15 @@ function demoApi() {
     mode: 'demo',
     async salesStatus() {
       const db = load();
-      const tiers = db.tiers.map((t) => {
+      const tiers = db.tiers.filter((t) => t.is_active !== false).map((t) => {
         const sold = t.base + db.orders.filter((o) => o.status === 'approved').flatMap((o) => o.tickets).filter((x) => x.tier_id === t.id).length;
-        const reserved = db.orders.filter((o) => o.status === 'pending' && holds(o)).flatMap((o) => o.tickets).filter((x) => x.tier_id === t.id).length;
-        return { ...t, sold, reserved, remaining: Math.max(t.capacity - sold - reserved, 0) };
+        return { ...t, sold, reserved: 0, remaining: Math.max(t.capacity - sold, 0) };
       });
       return delay({
-        sales_open: db.settings.sales_open, max_per_order: db.settings.max_per_order, tiers,
+        sales_open: db.settings.sales_open, max_per_order: db.settings.max_per_order, mp_fee_percent: db.settings.mp_fee_percent || 0, tiers,
         current_tier_id: tiers.find((t) => t.remaining > 0)?.id ?? null,
         total_capacity: tiers.reduce((a, t) => a + t.capacity, 0),
-        total_sold: tiers.reduce((a, t) => a + t.sold + t.reserved, 0),
+        total_sold: tiers.reduce((a, t) => a + t.sold, 0),
         sold_last_24h: 37, last_sale_at: new Date(now() - 4 * 60000).toISOString(),
       });
     },
@@ -211,8 +218,9 @@ function demoApi() {
       if (!/^\d{7,9}$/.test(dni)) fail('DNI_INVALIDO');
       const dnis = attendees.map((a) => String(a.dni).replace(/\D/g, ''));
       dnis.forEach((d, i) => { if (dnis.indexOf(d) !== i) fail('DNI_REPETIDO:' + d); });
-      const taken = db.orders.filter(holds).flatMap((o) => o.tickets).find((t) => dnis.includes(t.holder_dni));
+      const taken = db.orders.filter((o) => o.status === 'approved').flatMap((o) => o.tickets).find((t) => dnis.includes(t.holder_dni));
       if (taken) fail('DNI_YA_REGISTRADO:' + taken.holder_dni);
+      db.orders.filter((o) => o.dni === dni && o.status === 'pending').forEach((o) => { o.status = 'cancelled'; });
       const tickets = [];
       for (const tier of db.tiers) {
         let left = tier.capacity - tier.base - used(db, tier.id);
@@ -227,9 +235,12 @@ function demoApi() {
       const order = {
         id: crypto.randomUUID(), code: 'NAV-' + rand(6), buyer_name: buyer.name.trim(), dni,
         phone: String(buyer.phone).replace(/\D/g, ''), email: buyer.email.trim().toLowerCase(),
-        quantity: tickets.length, total: tickets.reduce((a, t) => a + t.price, 0), payment_method: method,
+        quantity: tickets.length, subtotal: tickets.reduce((a, t) => a + t.price, 0), payment_method: method,
         status: 'pending', expires_at: new Date(now() + hold).toISOString(), created_at: new Date().toISOString(), tickets,
       };
+      const pct = method === 'mercadopago' ? Number(db.settings.mp_fee_percent || 0) : 0;
+      order.total = pct > 0 ? Math.ceil(order.subtotal / (1 - pct / 100) / 10) * 10 : order.subtotal;
+      order.surcharge = order.total - order.subtotal;
       db.orders.unshift(order);
       save(db); emit();
       return delay({ code: order.code, total: order.total, quantity: order.quantity, payment_method: method, expires_at: order.expires_at });
@@ -277,9 +288,15 @@ function demoApi() {
     async signOut() { sessionStorage.removeItem('xmas_demo_staff'); },
     async listOrders() { return delay(load().orders.map((o) => ({ ...o }))); },
     async listTiers() { return load().tiers; },
-    async approveOrder(id) {
+    async approveOrder(id, force = false) {
       const db = load();
       const o = db.orders.find((x) => x.id === id);
+      if (!force) {
+        for (const tier of db.tiers) {
+          const mine = o.tickets.filter((t) => t.tier_id === tier.id).length;
+          if (mine && tier.base + used(db, tier.id) + mine > tier.capacity) fail('CUPO_EXCEDIDO:' + tier.name);
+        }
+      }
       Object.assign(o, { status: 'approved', approved_via: 'staff', approved_at: new Date().toISOString() });
       save(db); emit();
       return { ok: true };
@@ -305,6 +322,19 @@ function demoApi() {
         return { result: 'ok', ticket_id: t.id, code: t.code, holder_name: t.holder_name, holder_dni: t.holder_dni, tier, order_code: o.code, seq: t.seq, quantity: o.quantity };
       }
       return { result: 'not_found' };
+    },
+    async doorSale({ name, dni, payment, amount, checkIn }) {
+      const db = load();
+      if (!db.tiers.some((t) => t.id === 99)) db.tiers.push({ id: 99, name: 'Venta en puerta', price: 1, capacity: 0, sort: 99, base: 0, is_active: false });
+      const prev = db.orders.filter((o) => o.status === 'approved').flatMap((o) => o.tickets).find((t) => t.holder_dni === dni);
+      if (prev) return { result: 'exists', ticket_id: prev.id, code: prev.code, holder_name: prev.holder_name, holder_dni: dni, tier: db.tiers.find((t) => t.id === prev.tier_id).name, used_at: prev.used_at };
+      const total = payment === 'cortesia' ? 0 : amount;
+      const now = new Date().toISOString();
+      const t = { id: crypto.randomUUID(), code: 'XM' + rand(10), tier_id: 99, price: total, seq: 1, holder_name: name, holder_dni: dni, used_at: checkIn ? now : null };
+      db.orders.unshift({ id: crypto.randomUUID(), code: 'NAV-' + rand(6), buyer_name: name, dni, phone: '', email: '', quantity: 1, subtotal: total, total,
+        payment_method: 'door', door_payment: payment, status: 'approved', approved_via: 'staff', approved_at: now, expires_at: now, created_at: now, tickets: [t] });
+      save(db); emit();
+      return { result: 'ok', ticket_id: t.id, code: t.code, holder_name: name, holder_dni: dni, tier: 'Venta en puerta' };
     },
     async undoCheckIn(ticketId) {
       const db = load();
