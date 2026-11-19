@@ -501,3 +501,10 @@ main, .topbar, .footer { position: relative; z-index: 1; }
 .mp-warn { display: inline; font-size: inherit; color: var(--gold); }
 
 .pay-option .mp-warn { display: inline; }
+
+/* Cartel de comisión de Mercado Pago */
+.mp-fee-info {
+  margin: -2px 0 12px; padding: 12px 14px; border-radius: var(--radius-sm); font-size: 0.82rem; line-height: 1.45;
+  color: var(--text); background: rgba(0, 158, 227, 0.1); border: 1px solid rgba(0, 158, 227, 0.4);
+}
+.mp-fee-info b:first-child { display: block; margin-bottom: 4px; color: #5fc8f5; }

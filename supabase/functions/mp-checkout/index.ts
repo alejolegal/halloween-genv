@@ -115,7 +115,7 @@ Deno.serve(async (req) => {
     }));
 
     if (order.surcharge > 0) {
-      items.push({ id: `${order.code}-recargo`, title: 'Recargo por pago con Mercado Pago', quantity: 1, unit_price: order.surcharge, currency_id: 'ARS' });
+      items.push({ id: `${order.code}-recargo`, title: 'Comisión de Mercado Pago (incluye IVA)', quantity: 1, unit_price: order.surcharge, currency_id: 'ARS' });
     }
 
     const [firstName, ...rest] = String(order.buyer_name).split(' ');
