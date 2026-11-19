@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Staff · Navidad Gen V</title>
+  <meta name="robots" content="noindex, nofollow">
+  <meta name="theme-color" content="#06130e">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🎟️</text></svg>">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,800&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/styles.css?v=1">
+  <link rel="stylesheet" href="css/staff.css?v=1">
+</head>
+<body class="staff">
+
+  <!-- LOGIN -->
+  <section id="view-login" class="login" hidden>
+    <form id="login-form" class="login-card">
+      <h1>Staff 🎄</h1>
+      <p class="muted">Ingresá con tu usuario del equipo.</p>
+      <label>Email<input class="field" name="email" type="email" autocomplete="username" required></label>
+      <label>Contraseña<input class="field" name="password" type="password" autocomplete="current-password" required></label>
+      <p class="form-error" id="login-error" role="alert"></p>
+      <button class="btn btn-primary btn-block" type="submit">Ingresar</button>
+      <a href="index.html" class="btn btn-link btn-block">Volver a la web</a>
+    </form>
+  </section>
+
+  <!-- APP -->
+  <section id="view-app" hidden>
+    <header class="st-top">
+      <div>
+        <b>Panel Navidad</b>
+        <small id="st-user"></small>
+      </div>
+      <div class="st-top-actions">
+        <span class="net" id="net-status" title="Estado de conexión"></span>
+        <button class="btn btn-ghost btn-sm" id="btn-logout" type="button">Salir</button>
+      </div>
+    </header>
+
+    <nav class="st-tabs" role="tablist">
+      <button role="tab" data-tab="door" class="active">Puerta</button>
+      <button role="tab" data-tab="pending" data-admin>Transferencias <span class="count" id="count-pending">0</span></button>
+      <button role="tab" data-tab="orders" data-admin>Clientes</button>
+      <button role="tab" data-tab="summary" data-admin>Resumen</button>
+    </nav>
+
+    <!-- PUERTA -->
+    <div class="st-view" id="tab-door">
+      <div class="door-stats">
+        <div><b id="door-in">0</b><small>ingresaron</small></div>
+        <div><b id="door-total">0</b><small>habilitadas</small></div>
+        <div><b id="door-queue">0</b><small>sin sincronizar</small></div>
+      </div>
+
+      <button class="btn btn-primary btn-block btn-lg" id="btn-scan" type="button">📷 Escanear QR</button>
+      <div id="scanner-wrap" class="scanner-wrap" hidden>
+        <div id="qr-reader"></div>
+        <button class="btn btn-ghost btn-block" id="btn-scan-stop" type="button">Cerrar cámara</button>
+      </div>
+
+      <form id="door-form" class="door-form">
+        <input class="field" name="q" inputmode="numeric" placeholder="DNI o código de entrada" autocomplete="off">
+        <button class="btn btn-primary" type="submit">Buscar</button>
+      </form>
+      <div id="door-results"></div>
+
+      <div class="door-tools" data-admin>
+        <button class="btn btn-ghost btn-sm" id="btn-pdf" type="button">Planilla PDF</button>
+      </div>
+      <h3 class="st-h3">Últimos ingresos</h3>
+      <div id="door-recent" class="list"></div>
+    </div>
+
+    <!-- TRANSFERENCIAS PENDIENTES -->
+    <div class="st-view" id="tab-pending" hidden>
+      <p class="muted st-help">Revisá el comprobante en WhatsApp y aprobá la orden. Las entradas se habilitan al instante.</p>
+      <div id="pending-list" class="list"></div>
+    </div>
+
+    <!-- CLIENTES / ÓRDENES -->
+    <div class="st-view" id="tab-orders" hidden>
+      <div class="filters">
+        <input class="field" id="orders-q" placeholder="Buscar nombre, DNI, orden, email…">
+        <select class="field" id="orders-status">
+          <option value="">Todos los estados</option>
+          <option value="approved">Aprobadas</option>
+          <option value="pending">Pendientes</option>
+          <option value="expired">Vencidas</option>
+          <option value="rejected">Rechazadas</option>
+          <option value="cancelled">Canceladas</option>
+        </select>
+        <select class="field" id="orders-method">
+          <option value="">Todos los pagos</option>
+          <option value="mercadopago">Mercado Pago</option>
+          <option value="transfer">Transferencia</option>
+        </select>
+        <button class="btn btn-ghost" id="btn-csv" type="button">Exportar CSV</button>
+      </div>
+      <p class="muted" id="orders-count"></p>
+      <div id="orders-list" class="list"></div>
+    </div>
+
+    <!-- RESUMEN -->
+    <div class="st-view" id="tab-summary" hidden>
+      <div class="kpis" id="kpis"></div>
+      <div class="tier-table" id="tier-table"></div>
+      <label class="switch">
+        <input type="checkbox" id="sales-open">
+        <span>Venta online abierta</span>
+      </label>
+    </div>
+  </section>
+
+  <!-- Resultado de escaneo (pantalla completa) -->
+  <div id="scan-result" class="scan-result" hidden role="alert"></div>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html5-qrcode/2.3.8/html5-qrcode.min.js" defer></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js" defer></script>
+  <script type="module" src="js/staff.js?v=1"></script>
+</body>
+</html>

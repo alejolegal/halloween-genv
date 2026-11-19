@@ -1,0 +1,7 @@
+# Configuración mínima para Supabase CLI (solo funciones).
+# El webhook de Mercado Pago no envía JWT de Supabase.
+[functions.mp-webhook]
+verify_jwt = false
+
+[functions.mp-checkout]
+verify_jwt = true

@@ -1,521 +1,227 @@
 <!DOCTYPE html>
 <html lang="es">
-
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>HAVANNA CLUB // HALLOWEEN OBSESSION 2026</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>NAVIDAD · Gen V Christmas Edition 2026 · Itá Ibaté</title>
+  <meta name="description" content="Anticipadas para la fiesta de Navidad Gen V en Itá Ibaté. Entradas nominales con QR, pago con Mercado Pago o transferencia. Cupos limitados por tanda.">
+  <meta name="theme-color" content="#06130e">
+  <meta property="og:type" content="website">
+  <meta property="og:title" content="NAVIDAD · Gen V Christmas Edition">
+  <meta property="og:description" content="Anticipadas con cupos limitados. La Tanda Navideña de Regalo vuela.">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🎄</text></svg>">
 
-  <!-- Favicon Calabaza Brillante -->
-  <link rel="icon"
-    href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><filter id=%22glow%22><feGaussianBlur stdDeviation=%224%22 result=%22coloredBlur%22/><feMerge><feMergeNode in=%22coloredBlur%22/><feMergeNode in=%22SourceGraphic%22/></feMerge></filter><text y=%22.88em%22 font-size=%2286%22 filter=%22url(%23glow)%22>🎃</text></svg>">
-
-  <!-- Tipografías Oficiales: Anton + Inter + Permanent Marker -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link
-    href="https://fonts.googleapis.com/css2?family=Anton&family=Inter:wght@400;500;600;700;800&family=Permanent+Marker&display=swap"
-    rel="stylesheet">
-
-  <link rel="stylesheet" href="style.css?v=6">
-
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,500;0,9..144,800;1,9..144,400;1,9..144,600&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/styles.css?v=1">
 </head>
 
 <body>
+  <canvas id="snow" aria-hidden="true"></canvas>
+  <div class="lights" aria-hidden="true"></div>
+
   <!-- BARRA SUPERIOR -->
-  <header class="navbar-centered">
-    <button onclick="openLookupModal()" class="btn-clean-pill">
-      Consultar mi entrada
-    </button>
+  <header class="topbar">
+    <a href="#" class="brand" aria-label="Inicio"><span class="brand-star">✦</span> <span data-ev="brand">GEN V</span></a>
+    <button class="btn btn-ghost btn-sm" id="btn-my-tickets" type="button">Mis entradas</button>
   </header>
 
-  <!-- HERO PRINCIPAL -->
-  <main class="hero-section">
-    <div class="container hero-content">
-      <div class="hero-title-group">
-        <div class="logo-poster-wrapper">
-          <span class="banner-sub-halloween"><span class="drip-letter">H</span>ALLOWEEN</span>
-          <h1 class="banner-main-obsession">OBSESSION</h1>
-          <span class="banner-brush-edition">edition</span>
+  <main>
+    <!-- HERO -->
+    <section class="hero">
+      <p class="hero-kicker reveal"><span class="live-dot"></span> <span data-ev="city">Itá Ibaté</span> · <span data-ev="dateLabel"></span></p>
+      <h1 class="hero-title reveal">
+        <span class="hero-title-main" data-ev="name">NAVIDAD</span>
+        <span class="hero-title-sub"><span data-ev="edition">Christmas Edition</span> <span data-ev="year">2026</span></span>
+      </h1>
+
+      <div class="countdown reveal" role="timer" aria-label="Cuenta regresiva">
+        <div><b id="cd-d">00</b><small>días</small></div>
+        <div><b id="cd-h">00</b><small>horas</small></div>
+        <div><b id="cd-m">00</b><small>min</small></div>
+        <div><b id="cd-s">00</b><small>seg</small></div>
+      </div>
+
+      <!-- Estado de venta en vivo -->
+      <div class="live-card reveal" id="live-card" aria-live="polite">
+        <div class="live-row">
+          <span class="live-badge" id="live-tier">Cargando…</span>
+          <span class="live-sold"><b id="live-sold">—</b> entradas vendidas</span>
         </div>
+        <div class="progress" aria-hidden="true"><span id="live-progress"></span></div>
+        <p class="live-msg" id="live-msg">Consultando disponibilidad…</p>
       </div>
 
-      <div class="countdown-bar liquid-glass">
-        <div class="cd-box"><span id="cd-days">00</span><small>DÍAS</small></div>
-        <div class="cd-sep">:</div>
-        <div class="cd-box"><span id="cd-hours">00</span><small>HS</small></div>
-        <div class="cd-sep">:</div>
-        <div class="cd-box"><span id="cd-mins">00</span><small>MIN</small></div>
-        <div class="cd-sep">:</div>
-        <div class="cd-box"><span id="cd-secs">00</span><small>SEG</small></div>
+      <a href="#tandas" class="btn btn-primary btn-lg hero-cta reveal" id="hero-cta">
+        Comprar anticipada <span id="hero-cta-price"></span>
+      </a>
+      <p class="hero-trust reveal">🔒 Mercado Pago o transferencia · Entrada nominal con QR</p>
+    </section>
+
+    <!-- MARQUESINA FOMO -->
+    <div class="marquee" aria-hidden="true"><div class="marquee-track" id="marquee-track"></div></div>
+
+    <!-- TANDAS -->
+    <section class="section" id="tandas">
+      <header class="section-head reveal">
+        <h2>Anticipadas</h2>
+        <p>Cuando se agota una tanda, el precio sube. No hay vuelta atrás.</p>
+      </header>
+      <div class="tiers" id="tiers">
+        <div class="tier skeleton"></div><div class="tier skeleton"></div>
+        <div class="tier skeleton"></div><div class="tier skeleton"></div>
+      </div>
+    </section>
+
+    <!-- INFO -->
+    <section class="section section-info">
+      <div class="info-grid">
+        <div class="info reveal"><span class="info-ico">📅</span><b data-ev="dateLabel"></b><small data-ev="timeLabel"></small></div>
+        <div class="info reveal"><span class="info-ico">📍</span><b data-ev="venue"></b><small data-ev="city"></small></div>
+        <div class="info reveal"><span class="info-ico">🎁</span><b>Dress code</b><small data-ev="dressCode"></small></div>
+        <div class="info reveal"><span class="info-ico">🪪</span><b>Ingreso ágil</b><small>QR o DNI en puerta</small></div>
       </div>
 
-      <div class="event-meta-info">
-        31 DE OCTUBRE // HAVANNA CLUB • ITÁ IBATÉ
+      <div class="venue-soon reveal">
+        <span>✨ Muy pronto</span>
+        <p>Vamos a publicar acá la distribución de espacios del lugar.</p>
       </div>
-    </div>
+
+      <details class="faq reveal">
+        <summary>¿Cómo recibo mi entrada?</summary>
+        <p>Pagando con Mercado Pago tu entrada se habilita al instante. Por transferencia, se habilita cuando validamos el comprobante. En ambos casos la ves en <b>Mis entradas</b> ingresando tu DNI.</p>
+      </details>
+      <details class="faq reveal">
+        <summary>¿Puedo comprar para mis amigos?</summary>
+        <p>Sí, hasta 4 entradas por compra pagando por transferencia (con Mercado Pago es de a 1 entrada por compra). Cada entrada es nominal: cargás nombre y DNI de cada persona y cada una tiene su propio QR.</p>
+      </details>
+      <details class="faq reveal">
+        <summary>¿Qué necesito para entrar?</summary>
+        <p>Tu QR (en el celular o impreso) y tu DNI físico. El staff también puede validarte solo con el DNI.</p>
+      </details>
+
+      <div class="community" id="community" hidden></div>
+    </section>
   </main>
 
-  <!-- SECCIÓN TICKETS -->
-  <section class="section-tickets" id="tickets">
-    <div class="container">
-      <div class="section-header">
-        <h2 class="section-title">VENTA DE TICKETS OFICIALES</h2>
-        <p class="section-subtitle">Acceso digital nominal con código QR intransferible. Ingreso con DNI físico en mano.
-        </p>
-      </div>
-
-      <div class="tickets-grid">
-        <!-- GENERAL -->
-        <div class="ticket-card card-general liquid-glass">
-          <div id="general-badge-container">
-            <div class="card-badge">TANDA 2 // GENERAL</div>
-          </div>
-
-          <h3 class="tier-title">PISTA GENERAL</h3>
-
-          <!-- Aviso Tanda 1 Sold Out -->
-          <div id="tanda1-soldout-banner" class="soldout-tag-box hidden">
-            🔥 1RA TANDA SOLD OUT (100/100)
-          </div>
-
-          <div class="tier-price">$7.000 <span class="currency">ARS</span></div>
-
-          <ul class="tier-features">
-            <li>Acceso a pista principal</li>
-            <li>Barra general de bebidas</li>
-          </ul>
-
-          <!-- CONTADOR FOMO Y STOCK -->
-          <div id="general-stock-label" class="fomo-counter-box" style="font-size: 0.85rem; margin-bottom: 12px;">
-            Cargando disponibilidad...
-          </div>
-
-          <button id="btn-buy-general" onclick="openCheckout('PISTA GENERAL - TANDA 2', 7000)"
-            class="btn-ticket btn-general">COMPRAR ENTRADA</button>
-          <small class="tier-next">Disponibilidad inmediata por transferencia</small>
-        </div>
-
-        <!-- VIP -->
-        <div class="ticket-card card-vip liquid-glass">
-          <div class="card-badge badge-gold">CUPO LIMITADO: 30 PLAZAS</div>
-          <h3 class="tier-title title-vip">ZONA VIP EXCLUSIVA</h3>
-          <div class="tier-price price-gold">$15.000 <span class="currency">ARS</span></div>
-          <ul class="tier-features">
-            <li>1 consumición de regalo incluida</li>
-            <li>Barra de tragos exclusivos de Aloha</li>
-            <li>Barra de bebidas preferencial sin filas</li>
-            <li>Sector con asientos y salida al balcon</li>
-            <li>Acceso libre a pista general</li>
-            <li>Porrones de cervezas de marcas seleccionadas</li>
-          </ul>
-          <button id="btn-buy-vip" onclick="openCheckout('ZONA VIP EXCLUSIVA', 15000)"
-            class="btn-ticket btn-vip">COMPRAR VIP</button>
-          <div class="stock-counter">
-            <span id="vip-stock-label">Cupos restantes: <strong>30/30</strong></span>
-          </div>
-        </div>
-
-        <!-- CONSERVADORA (ACTUALIZADO) -->
-        <div class="ticket-card card-cooler liquid-glass" style="border-color: rgba(56, 189, 248, 0.3);">
-          <div class="card-badge"
-            style="background: rgba(56, 189, 248, 0.15); color: #38bdf8; border-color: rgba(56, 189, 248, 0.3);">CUPO
-            EXCLUSIVO: 15 PLAZAS</div>
-          <h3 class="tier-title" style="color: #38bdf8;">ACCESO CONSERVADORA</h3>
-          <div class="tier-price" style="color: #38bdf8;">$30.000 <span class="currency">ARS</span></div>
-
-          <ul class="tier-features">
-            <li>Exclusivo para asistentes con entrada previa</li>
-            <li><strong>No se vende en puerta</strong></li>
-          </ul>
-
-          <!-- BOTÓN REGLAMENTO -->
-          <button onclick="toggleCoolerRulesModal()" class="btn-clean-secondary"
-            style="width: 100%; margin-bottom: 12px; border-color: rgba(56, 189, 248, 0.4); color: #38bdf8;">
-            Ver reglamento de conservadoras
-          </button>
-
-          <div id="cooler-stock-label" class="stock-counter" style="margin-bottom: 12px; color: #38bdf8;">
-            Cupos restantes: <strong>15/15</strong>
-          </div>
-          <button id="btn-buy-cooler" onclick="openCheckout('ACCESO CONSERVADORA', 30000)" class="btn-ticket"
-            style="background: #38bdf8; color: #090a0f; font-weight: 800;">COMPRAR CONSERVADORA</button>
-          <small class="tier-next">Requisito: Poseer entrada general o VIP previa</small>
-        </div>
-      </div>
-    </div>
-
-    <!-- BOTONES MODALES -->
-    <div class="club-map-wrapper" style="display: flex; gap: 12px; justify-content: center; flex-wrap: wrap;">
-      <button class="btn-map-toggle" onclick="toggleMapModal()">Ver plano de distribución del club</button>
-      <button class="btn-map-toggle" onclick="toggleVipDrinksModal()">Ver carta de tragos VIP</button>
-    </div>
-  </section>
-
-  <!-- CRONOGRAMA & ATRACCIONES OFICIALES -->
-  <section class="section-community">
-    <div class="container">
-      <div class="section-header" style="margin-bottom: 2rem;">
-        <h2 class="section-title">LINE UP & EXPERIENCIAS OFICIALES</h2>
-        <p class="section-subtitle">Todo lo confirmado para romper la noche de Halloween.</p>
-      </div>
-
-      <div class="community-grid">
-        <!-- DJ & MUSICA -->
-        <div class="comm-card liquid-glass">
-          <div class="comm-status-badge badge-green">PRINCIPAL</div>
-          <h3 class="comm-title">DJ Juanse</h3>
-          <p class="comm-desc">Llegando directamente desde <strong>Corrientes Capital y Resistencia (Chaco)</strong> a
-            Itá Ibaté.</p>
-        </div>
-
-        <!-- EXPERIENCIAS -->
-        <div class="comm-card liquid-glass">
-          <div class="comm-status-badge badge-red">HIGHLIGHTS</div>
-          <h3 class="comm-title">SHOWS</h3>
-          <p class="comm-desc" style="font-size: 0.85rem; line-height: 1.6;">
-            • <strong>Neon Party</strong>Toda la noche<br>
-            • <strong>Maquilladora Gratuita</strong>Maquillajes simples<br>
-            • <strong>Fotógrafa en la noche</strong>cubriendo todo<br>
-            • <strong>Tequila Gratis</strong> en el ingreso
-          </p>
-        </div>
-
-        <!-- PREMIOS Y CONCURSOS -->
-        <div class="comm-card liquid-glass">
-          <div class="comm-status-badge"
-            style="background: rgba(234, 179, 8, 0.15); color: #eab308; border-color: rgba(234, 179, 8, 0.3);">PREMIOS
-          </div>
-          <h3 class="comm-title">Premios & Sponsors</h3>
-          <p class="comm-desc" style="font-size: 0.85rem; line-height: 1.6;">
-            • <strong>Mejor Disfraz:</strong> 3 Packs de cerveza (Auspicia <em>Maxikiosco 24 al paso</em>)<br>
-            • <strong>Mejor Disfraz en Dúo:</strong> 1 cena para 2 todo pago (Auspicia <em>Aloha</em>)<br>
-            • <strong>Grupo más fiestero:</strong> ¡Premio sorpresa!
-          </p>
-        </div>
-      </div>
-
-      <!-- SHOW DE LUCES DESTACADO -->
-      <div class="liquid-glass"
-        style="margin-top: 1.5rem; padding: 1.5rem; text-align: center; border: 1px solid rgba(239, 68, 68, 0.3); background: rgba(239, 68, 68, 0.04);">
-        <span
-          style="color: #ef4444; font-weight: 800; font-size: 0.85rem; letter-spacing: 1px; display:block; margin-bottom:4px;">ACA
-          SE PUDRE TODO</span>
-        <h3
-          style="font-family: 'Anton', sans-serif; font-size: 1.8rem; letter-spacing: 1px; margin-bottom: 4px; color: #fff;">
-          SHOW DE LUCES // 03:00 A.M.</h3>
-        <p style="color: #9ca3af; font-size: 0.9rem; margin: 0;">inauguracion de Halloween Obsession Edition</p>
-      </div>
-    </div>
-  </section>
-
-  <!-- COMUNIDAD (WHATSAPP & SPOTIFY) -->
-  <section class="section-community" style="padding-top: 0;">
-    <div class="container">
-      <div class="community-grid">
-        <div class="comm-card comm-spotify liquid-glass">
-          <div class="comm-status-badge badge-green">PLAYLIST</div>
-          <h3 class="comm-title">Playlist Colaborativa</h3>
-          <p class="comm-desc">Sumá tus temas recomendados para la previa y pista principal en Spotify.</p>
-          <a href="https://open.spotify.com/playlist/0rD6aExAaAyAK6DG4S18ZX?si=drs44LWoSIyl0FXxJsErDQ&utm_source=copy-link&pt=3064c923aaa871aa7170ffe7187858d8&pi=Hk-YfO5LTBqEK"
-            target="_blank" id="btn-spotify-link" class="btn-comm btn-spotify">Abrir en Spotify →</a>
-        </div>
-
-        <div class="comm-card comm-wsp liquid-glass">
-          <div class="comm-status-badge badge-red">OFICIAL</div>
-          <h3 class="comm-title">Comunidad Exclusiva</h3>
-          <p class="comm-desc">Enterate antes que nadie de las novedades, sorteos y anuncios oficiales.</p>
-          <a href="https://chat.whatsapp.com/IOwMiR3TikK5y9Z0kn8Jl4" target="_blank" id="btn-wsp-group-link"
-            class="btn-comm btn-wsp">Unirse al canal →</a>
-        </div>
-      </div>
-    </div>
-  </section>
-
-  <!-- FOOTER -->
   <footer class="footer">
-    <div class="container footer-content">
-      <p class="footer-collab">
-        ALEJO LEGAL × HAVANNA CLUB × <span id="secret-admin-trigger">GEN V</span>
-      </p>
-      <small style="color: #6b7280; font-size: 0.8rem;">Itá Ibaté, Corrientes</small>
-    </div>
+    <p class="footer-collab" id="footer-collab"></p>
+    <small><span data-ev="city"></span> · <a href="staff.html" class="footer-staff">Staff</a></small>
   </footer>
 
-  <!-- ==========================================
-       MODALES
-       ========================================== -->
+  <!-- BARRA FIJA MOBILE -->
+  <div class="sticky-buy" id="sticky-buy" hidden>
+    <div><small id="sticky-tier">Tanda</small><b id="sticky-price">$0</b></div>
+    <button class="btn btn-primary" type="button" id="sticky-btn">Comprar</button>
+  </div>
 
-  <!-- MODAL CHECKOUT COMPRA -->
-  <div id="modal-checkout" class="modal-overlay hidden">
-    <div class="modal-window liquid-glass">
-      <button class="modal-close" onclick="closeCheckout()">✕</button>
+  <!-- ================= MODAL COMPRA ================= -->
+  <div class="modal" id="modal-buy" role="dialog" aria-modal="true" aria-labelledby="buy-title" hidden>
+    <div class="modal-box">
+      <button class="modal-x" data-close aria-label="Cerrar">✕</button>
 
-      <!-- PASO 1: FORMULARIO -->
-      <div id="co-step-form">
-        <h3 class="modal-heading">Reserva de Entrada</h3>
-        <p class="modal-sub"><span id="co-ticket-name"></span> — <strong id="co-unit-price" style="color:#fff"></strong>
-        </p>
+      <!-- Paso 1: datos -->
+      <form id="step-form" class="step" novalidate>
+        <h3 id="buy-title" class="modal-title">Tus entradas</h3>
+        <p class="modal-sub" id="buy-tier-label"></p>
 
-        <form id="orderForm" onsubmit="handleOrderSubmit(event)">
-          <div class="form-group" id="qty-container-group">
-            <label>CANTIDAD (MÁX 4)</label>
-            <select id="cust-qty" class="qty-select" onchange="updateCheckoutTotal()">
-              <option value="1">1 Unidad</option>
-              <option value="2">2 Unidades</option>
-              <option value="3">3 Unidades</option>
-              <option value="4">4 Unidades</option>
-            </select>
+        <div class="qty">
+          <span>Cantidad</span>
+          <div class="qty-ctrl">
+            <button type="button" class="qty-btn" id="qty-minus" aria-label="Restar">−</button>
+            <output id="qty-val">1</output>
+            <button type="button" class="qty-btn" id="qty-plus" aria-label="Sumar">+</button>
           </div>
-
-          <div class="form-group">
-            <label>DNI (PARA INGRESO / VALIDACIÓN)</label>
-            <input type="number" id="cust-dni" required placeholder="Sin puntos ni espacios"
-              onblur="handleDniBlur(this.value)">
-            <small id="dni-feedback-msg"
-              style="font-size: 0.7rem; color: #38bdf8; display: block; margin-top: 4px;"></small>
-          </div>
-
-          <div class="form-group">
-            <label>NOMBRE COMPLETO DEL TITULAR</label>
-            <input type="text" id="cust-name" required placeholder="Ej: Juan Pérez">
-          </div>
-
-          <div class="form-group">
-            <label>NÚMERO DE WHATSAPP</label>
-            <input type="tel" id="cust-phone" required placeholder="Ej: 3794123456">
-          </div>
-
-          <div class="form-group">
-            <label>CORREO ELECTRÓNICO</label>
-            <input type="email" id="cust-email" required placeholder="ejemplo@email.com">
-          </div>
-
-          <div style="display:flex; justify-content:space-between; align-items:center; margin: 1.5rem 0;">
-            <span style="font-size:0.85rem; color:#9ca3af">Total a transferir:</span>
-            <strong id="co-ticket-price" style="font-size:1.4rem; color:#fff"></strong>
-          </div>
-
-          <button type="submit" class="btn-primary full-width">CONTINUAR A TRANSFERENCIA //➔</button>
-        </form>
-      </div>
-
-      <!-- PASO 2: DATOS DE TRANSFERENCIA (PREX) -->
-      <div id="co-step-transfer" class="hidden">
-        <h3 class="modal-heading">Datos de Transferencia</h3>
-        <p class="modal-sub">Transferí el monto total para poder <strong>OBTENER TU TICKET</strong>:</p>
-
-        <div class="transfer-box liquid-glass"
-          style="padding: 1.25rem; margin-bottom: 1.25rem; font-size: 0.88rem; background: rgba(255,255,255,0.03);">
-          <p style="margin-bottom: 4px;"><strong>Titular:</strong> Alejo Legal</p>
-          <p style="margin-bottom: 4px;"><strong>Entidad:</strong> Prex</p>
-          <p style="margin-bottom: 4px;"><strong>Cuenta:</strong> 13263579</p>
-          <p style="margin-bottom: 4px;"><strong>CVU:</strong> <span
-              style="font-family: monospace; letter-spacing: 0.5px;">0000013000032132635795</span></p>
-          <p style="margin-bottom: 8px;"><strong>Alias:</strong> <strong id="transfer-alias"
-              style="color: #38bdf8;">alejolegal.prex</strong></p>
-          <button onclick="copyAlias()" class="btn-clean-secondary"
-            style="width: 100%; border-color: rgba(56, 189, 248, 0.4); color: #38bdf8;">Copiar Alias</button>
         </div>
 
-        <div style="margin-bottom: 1.25rem;">
-          <small style="color: #9ca3af; display:block;">Referencia de Orden: <strong id="transfer-order-code"
-              style="color:#fff;"></strong></small>
-          <small style="color: #9ca3af; display:block; margin-top:3px;">Monto total: <strong id="transfer-amount"
-              style="color: #fff; font-size:1.1rem;"></strong></small>
-        </div>
+        <fieldset class="fields">
+          <legend>Tus datos (titular de la compra)</legend>
+          <label>Nombre y apellido<input name="name" autocomplete="name" required minlength="3" maxlength="80" placeholder="Ej: Sofía Romero"></label>
+          <label>DNI<input name="dni" inputmode="numeric" autocomplete="off" required pattern="\d{7,9}" maxlength="10" placeholder="Sin puntos"></label>
+          <label>WhatsApp<input name="phone" type="tel" inputmode="tel" autocomplete="tel" required placeholder="Ej: 3794123456"></label>
+          <label>Email<input name="email" type="email" autocomplete="email" required placeholder="tu@email.com"></label>
+        </fieldset>
 
-        <button onclick="sendWhatsAppProof()" class="btn-primary full-width" style="background: #25d366;">
-          Enviar Comprobante por WhatsApp ➔
+        <div id="attendees"></div>
+
+        <div class="summary" id="buy-summary"></div>
+
+        <p class="form-error" id="form-error" role="alert"></p>
+        <button type="submit" class="btn btn-primary btn-block btn-lg">Elegir forma de pago</button>
+      </form>
+
+      <!-- Paso 2: método de pago -->
+      <div id="step-pay" class="step" hidden>
+        <button type="button" class="link-back" data-back="step-form">← Volver</button>
+        <h3 class="modal-title">¿Cómo querés pagar?</h3>
+        <p class="modal-sub" id="pay-total"></p>
+
+        <button type="button" class="pay-option" data-method="mercadopago">
+          <span class="pay-ico pay-mp">MP</span>
+          <span><b>Mercado Pago</b><small id="mp-note">Tarjeta, débito o dinero en cuenta · <em>entrada al instante</em> · de a 1 entrada por compra</small></span>
         </button>
-      </div>
-
-      <!-- PASO 3: PANTALLA EN REVISIÓN -->
-      <div id="co-step-pending" class="hidden" style="text-align:center; padding:1rem 0;">
-        <div style="font-size:2.5rem; margin-bottom:1rem">⏳</div>
-        <h3 class="modal-heading">Orden en Proceso</h3>
-        <p class="modal-sub">Tu comprobante fue registrado bajo la orden <strong id="pend-code"
-            style="color:#fff"></strong>.</p>
-        <p style="font-size:0.85rem; color:#9ca3af; margin-bottom:1.5rem">
-          Titular: <span id="pend-name"></span> (DNI: <span id="pend-dni"></span>)<br>
-          En cuanto validemos tu pago, tus accesos quedarán habilitados.
-        </p>
-        <button onclick="checkStatusFromCurrent()" class="btn-secondary full-width" style="margin-bottom:8px">Comprobar
-          Estado Ahora</button>
-        <button onclick="closeCheckout()" class="btn-clean-secondary full-width">Cerrar Ventana</button>
-      </div>
-
-      <!-- PASO 4: TICKETS RENDERIZADOS -->
-      <div id="co-step-ticket" class="hidden">
-        <h3 class="modal-heading" style="text-align:center; color:#34d399">¡Acceso Aprobado!</h3>
-        <p class="modal-sub" style="text-align:center">Presentá este ticket digital o tu DNI físico en puerta.</p>
-        <div id="ticket-render-box"></div>
-        <button onclick="closeCheckout()" class="btn-clean-secondary full-width"
-          style="margin-top:1rem">Finalizar</button>
-      </div>
-    </div>
-  </div>
-
-  <!-- MODAL CONSULTA DNI -->
-  <div id="modal-lookup" class="modal-overlay hidden">
-    <div class="modal-window liquid-glass">
-      <button class="modal-close" onclick="closeLookupModal()">✕</button>
-      <h3 class="modal-heading">Consultar mis entradas</h3>
-      <p class="modal-sub">Ingresá tu DNI o código de ticket registrado.</p>
-      <div class="form-group">
-        <input type="number" id="lookup-dni-input" placeholder="Número de DNI sin puntos">
-      </div>
-      <button onclick="executeLookup()" class="btn-primary full-width">Buscar entradas</button>
-      <div id="lookup-response" class="lookup-result hidden"></div>
-    </div>
-  </div>
-
-  <!-- MODAL PLANO DEL CLUB -->
-  <div id="modal-map" class="modal-overlay hidden">
-    <div class="modal-window modal-wide liquid-glass">
-      <button class="modal-close" onclick="toggleMapModal()">✕</button>
-      <h3 class="modal-heading">Distribución Havanna Club</h3>
-      <p class="modal-sub">Sector General, Balcón VIP y barras.</p>
-      <div class="map-image-box">
-        <img src="mapa-havanna.png" alt="Plano Havanna Club" class="club-map-img">
-      </div>
-    </div>
-  </div>
-
-  <!-- MODAL CARTA DE TRAGOS VIP -->
-  <div id="modal-vip-drinks" class="modal-overlay hidden">
-    <div class="modal-window modal-wide liquid-glass">
-      <button class="modal-close" onclick="toggleVipDrinksModal()">✕</button>
-      <h3 class="modal-heading">Tragos oficiales de Aloha exclusivos para la noche de halloween</h3>
-      <p class="modal-sub">(La carta contendrá 10 tragos a elección aproximadamente)</p>
-      <div class="map-image-box">
-        <img src="tragos-vip.png" alt="Carta de Tragos VIP" class="club-map-img">
-      </div>
-    </div>
-  </div>
-
-  <!-- MODAL REGLAS DE CONSERVADORA (SIN EMOJIS) -->
-  <div id="modal-cooler-rules" class="modal-overlay hidden">
-    <div class="modal-window liquid-glass" style="max-width: 550px;">
-      <button class="modal-close" onclick="toggleCoolerRulesModal()">✕</button>
-      <h3 class="modal-heading" style="color: #38bdf8; margin-bottom: 0.5rem;">Reglamento Oficial // Conservadoras</h3>
-      <p class="modal-sub">Normas obligatorias para el ingreso y permanencia con conservadoras dentro del predio.</p>
-
-      <div
-        style="text-align: left; font-size: 0.85rem; color: #d1d5db; display: flex; flex-direction: column; gap: 12px; max-height: 60vh; overflow-y: auto; padding-right: 4px;">
-        <div
-          style="background: rgba(255,255,255,0.03); padding: 10px; border-radius: 8px; border-left: 3px solid #ef4444;">
-          <strong style="color: #fff; display: block; margin-bottom: 2px;">Prohibido el vidrio</strong>
-          Queda terminantemente prohibido el ingreso de envases, botellas o cualquier elemento de vidrio dentro de la
-          conservadora. Ante cualquier rotura, se pone en riesgo la integridad física de los presentes.
-        </div>
-
-        <div
-          style="background: rgba(255,255,255,0.03); padding: 10px; border-radius: 8px; border-left: 3px solid #38bdf8;">
-          <strong style="color: #fff; display: block; margin-bottom: 2px;">Manos libres</strong>
-          No se permite ingresar al lugar portando elementos en las manos al mismo tiempo que se transporta la
-          conservadora.
-        </div>
-
-        <div
-          style="background: rgba(255,255,255,0.03); padding: 10px; border-radius: 8px; border-left: 3px solid #38bdf8;">
-          <strong style="color: #fff; display: block; margin-bottom: 2px;">Ubicación obligatoria de las bebidas</strong>
-          Todo tipo de bebida que ingrese debe estar guardada estrictamente en el interior de la conservadora. No se
-          permite llevar bebidas sueltas o fuera de ella.
-        </div>
-
-        <div
-          style="background: rgba(255,255,255,0.03); padding: 10px; border-radius: 8px; border-left: 3px solid #ef4444;">
-          <strong style="color: #fff; display: block; margin-bottom: 2px;">Cero elementos cortopunzantes</strong>
-          Está totalmente prohibido el ingreso de cuchillos, navajas, abrelatas filosos o cualquier objeto punzocortante
-          que pueda representar un peligro en aglomeraciones.
-        </div>
-
-        <div
-          style="background: rgba(255,255,255,0.03); padding: 10px; border-radius: 8px; border-left: 3px solid #eab308;">
-          <strong style="color: #fff; display: block; margin-bottom: 2px;">Control de capacidad y contenido</strong>
-          La organización se reserva el derecho de inspeccionar el interior de la conservadora en el acceso para
-          verificar el cumplimiento de estas normas.
-        </div>
-      </div>
-
-      <button onclick="toggleCoolerRulesModal()" class="btn-primary full-width"
-        style="margin-top: 1.5rem;">Entendido</button>
-    </div>
-  </div>
-
-  <!-- MODAL LOGIN ADMIN -->
-  <div id="modal-admin-login" class="modal-overlay hidden">
-    <div class="modal-window liquid-glass">
-      <button class="modal-close" onclick="closeAdminLoginModal()">✕</button>
-      <h3 class="modal-heading">Acceso Staff</h3>
-      <div class="form-group">
-        <input type="password" id="admin-pin-input" placeholder="PIN de autorización" maxlength="6">
-      </div>
-      <button onclick="authenticateAdmin()" class="btn-primary full-width">Ingresar al panel</button>
-    </div>
-  </div>
-
-  <!-- MODAL DASHBOARD STAFF -->
-  <div id="modal-admin-dashboard" class="modal-overlay hidden">
-    <div class="modal-window modal-admin liquid-glass">
-      <button class="modal-close" onclick="closeAdminDashboard()">✕</button>
-      <div class="admin-header">
-        <h2>Panel de Control // Havanna 2026</h2>
-        <div class="admin-metrics">
-          <div>Pendientes: <strong id="adm-metric-pending">0</strong></div>
-          <div>Aprobadas: <strong id="adm-metric-approved">0</strong></div>
-          <div>VIPs: <strong id="adm-metric-vip">0/30</strong></div>
-          <div>Recaudación: <strong id="adm-metric-revenue">$0</strong></div>
-        </div>
-      </div>
-
-      <div class="admin-tabs">
-        <button id="tab-btn-approvals" class="admin-tab active"
-          onclick="switchAdminTab('approvals')">Aprobaciones</button>
-        <button id="tab-btn-door" class="admin-tab" onclick="switchAdminTab('door')">Control en Puerta (DNI)</button>
-      </div>
-
-      <!-- PESTAÑA APROBACIONES -->
-      <div id="adm-view-approvals" class="admin-body">
-        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
-          <span style="font-size:0.8rem; color:#9ca3af;">Órdenes pendientes de revisión</span>
-          <button onclick="window.cleanOldPendingOrders()" class="btn-clean-secondary">
-            Limpiar pendientes (>24h)
-          </button>
-        </div>
-        <div id="adm-pending-list"></div>
-      </div>
-
-      <!-- PESTAÑA PUERTA -->
-      <div id="adm-view-door" class="admin-body hidden">
-        <button onclick="window.exportDoorListPDF()" class="btn-clean-secondary"
-          style="width:100%; margin-bottom:14px; border-color:#38bdf8; color:#38bdf8;">
-          Descargar planilla de control (PDF)
+        <button type="button" class="pay-option" data-method="transfer">
+          <span class="pay-ico pay-tr">$</span>
+          <span><b>Transferencia</b><small>CVU / alias · se habilita al validar el comprobante</small></span>
         </button>
+        <p class="form-error" id="pay-error" role="alert"></p>
+      </div>
 
-        <div class="door-scan-bar">
-          <input type="number" id="door-input" placeholder="Ingresar DNI del asistente..."
-            oninput="handleDoorSearchInput(this.value)" onkeyup="handleDoorInputKey(event)">
-          <button onclick="validateDoorCheckIn()" class="btn-primary">Buscar DNI</button>
+      <!-- Paso 3a: transferencia -->
+      <div id="step-transfer" class="step" hidden>
+        <h3 class="modal-title">Transferí para confirmar</h3>
+        <p class="modal-sub">Reservamos tus lugares por <b id="tr-hold">24 hs</b>. Orden <b id="tr-code"></b></p>
+        <div class="bank">
+          <div class="bank-total"><small>Total a transferir</small><b id="tr-total"></b></div>
+          <div class="bank-row"><small>Alias</small><b id="tr-alias"></b><button type="button" class="btn btn-ghost btn-sm" data-copy="alias">Copiar</button></div>
+          <div class="bank-row"><small>CVU</small><b id="tr-cvu" class="mono"></b><button type="button" class="btn btn-ghost btn-sm" data-copy="cvu">Copiar</button></div>
+          <div class="bank-row"><small>Titular</small><b id="tr-holder"></b></div>
+          <div class="bank-row"><small>Entidad</small><b id="tr-bank"></b></div>
         </div>
+        <a class="btn btn-wsp btn-block btn-lg" id="tr-wsp" target="_blank" rel="noopener">Enviar comprobante por WhatsApp</a>
+        <button type="button" class="btn btn-ghost btn-block" id="tr-done">Ya lo envié</button>
+      </div>
 
-        <div id="door-verification-panel" class="hidden"></div>
-        <div id="door-msg" class="door-feedback hidden"></div>
+      <!-- Paso 3b: esperando aprobación / pago -->
+      <div id="step-wait" class="step step-center" hidden>
+        <div class="spinner-tree" aria-hidden="true">🎄</div>
+        <h3 class="modal-title" id="wait-title">Estamos validando tu pago</h3>
+        <p class="modal-sub" id="wait-text"></p>
+        <p class="wait-code">Orden <b id="wait-code"></b></p>
+        <button type="button" class="btn btn-primary btn-block" id="wait-check">Actualizar estado</button>
+        <a class="btn btn-ghost btn-block" id="wait-pay" hidden>Pagar con Mercado Pago</a>
+        <button type="button" class="btn btn-link btn-block" id="wait-cancel">Cancelar reserva</button>
+      </div>
 
-        <div class="door-table-wrapper">
-          <div id="adm-door-list" class="door-list"></div>
-        </div>
+      <!-- Paso 4: tickets -->
+      <div id="step-tickets" class="step" hidden>
+        <h3 class="modal-title center">¡Ya estás adentro! 🎉</h3>
+        <p class="modal-sub center">Guardá tus entradas. Cada QR es personal.</p>
+        <div id="tickets-box" class="tickets-box"></div>
       </div>
     </div>
   </div>
 
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="app.js?v=17"></script>
+  <!-- ================= MODAL MIS ENTRADAS ================= -->
+  <div class="modal" id="modal-lookup" role="dialog" aria-modal="true" aria-labelledby="lookup-title" hidden>
+    <div class="modal-box">
+      <button class="modal-x" data-close aria-label="Cerrar">✕</button>
+      <h3 id="lookup-title" class="modal-title">Mis entradas</h3>
+      <p class="modal-sub">Ingresá tu DNI para ver tus entradas y QR.</p>
+      <form id="lookup-form" class="lookup-form">
+        <input name="dni" inputmode="numeric" placeholder="DNI sin puntos" required maxlength="10" autofocus>
+        <button class="btn btn-primary" type="submit">Buscar</button>
+      </form>
+      <div id="lookup-out" class="lookup-out"></div>
+    </div>
+  </div>
+
+  <!-- Librerías (versiones fijas) -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js" defer></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js" defer></script>
+  <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.3/dist/confetti.browser.js" defer></script>
+  <script type="module" src="js/app.js?v=1"></script>
 </body>
-
 </html>
