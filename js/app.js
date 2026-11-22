@@ -707,6 +707,67 @@ function bindEvents() {
 }
 
 // ---------------------------------------------------------------------
+//  DJ: tilt 3D + contadores animados
+// ---------------------------------------------------------------------
+function initDj() {
+  const photo = $('#dj-photo');
+  const card = $('#dj-card');
+  if (!photo || !card) return;
+  if (!REDUCED_MOTION && window.matchMedia('(pointer: fine)').matches) {
+    card.addEventListener('pointermove', (e) => {
+      const r = photo.getBoundingClientRect();
+      const x = (e.clientX - r.left) / r.width - 0.5;
+      const y = (e.clientY - r.top) / r.height - 0.5;
+      photo.style.setProperty('--ry', `${x * 10}deg`);
+      photo.style.setProperty('--rx', `${-y * 10}deg`);
+    });
+    card.addEventListener('pointerleave', () => {
+      photo.style.setProperty('--ry', '0deg');
+      photo.style.setProperty('--rx', '0deg');
+    });
+  }
+
+  const nums = $$('[data-count]', card);
+  const run = () => nums.forEach((el) => {
+    const end = Number(el.dataset.count);
+    const dec = Number(el.dataset.decimals || 0);
+    const fmt = (v) => v.toLocaleString('es-AR', { minimumFractionDigits: dec, maximumFractionDigits: dec });
+    if (REDUCED_MOTION) { el.textContent = fmt(end); return; }
+    const t0 = performance.now();
+    const step = (t) => {
+      const p = Math.min(1, (t - t0) / 1600);
+      el.textContent = fmt(end * (1 - Math.pow(1 - p, 3)));
+      if (p < 1) requestAnimationFrame(step);
+    };
+    requestAnimationFrame(step);
+  });
+  if (!('IntersectionObserver' in window)) return run();
+  const io = new IntersectionObserver(([en]) => { if (en.isIntersecting) { run(); io.disconnect(); } }, { threshold: 0.4 });
+  io.observe(card);
+}
+
+// ---------------------------------------------------------------------
+//  Plano del lugar
+// ---------------------------------------------------------------------
+const ZONES = {
+  stage: '<b>Escenario nuevo</b> con cabina del DJ, arco de luces y 2 torres de iluminación.',
+  floor: '<b>Pista general</b> rodeada por 4 torres de iluminación. Acá pasa todo.',
+  wc: '<b>Baños</b> de hombres y mujeres, al costado de la pista.',
+  bar: '<b>Barra</b> junto al ingreso, para que no pierdas tiempo.',
+  entry: '<b>Ingreso</b>: mostrá tu QR o tu DNI y entrás en segundos.',
+};
+function initMap() {
+  const map = $('#venue-map');
+  if (!map) return;
+  map.addEventListener('click', (e) => {
+    const z = e.target.closest('[data-zone]');
+    if (!z) return;
+    $$('.zone', map).forEach((el) => el.classList.toggle('active', el === z));
+    $('#map-info').innerHTML = ZONES[z.dataset.zone] || '';
+  });
+}
+
+// ---------------------------------------------------------------------
 //  Inicio
 // ---------------------------------------------------------------------
 async function start() {
@@ -714,7 +775,10 @@ async function start() {
   initCountdown();
   initSnow();
   initReveal();
+  initDj();
+  initMap();
   bindEvents();
+  $('#wanted-cta')?.addEventListener('click', (e) => { e.preventDefault(); openBuy(); });
   if (api.mode === 'demo') toast('Modo demo: los datos son de prueba', 'info', 5000);
 
   await loadStatus();
