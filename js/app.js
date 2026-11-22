@@ -11,6 +11,13 @@ import {
 const REDUCED_MOTION = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 const ORDER_KEY = 'xmas_last_order';
 
+// Mensajes de bienvenida (se elige uno al azar en cada visita)
+const WELCOME = [
+  '🎄 Bienvenido al mejor cierre del año. Esta Navidad no te la contás: la vivís.',
+  '✨ Después del brindis, la fiesta es acá. Asegurá tu lugar antes de que suba el precio.',
+  '🎁 La Navidad más esperada de Itá Ibaté ya tiene fecha. ¿Vas a quedarte afuera?',
+];
+
 const state = {
   status: null,       // respuesta de xmas_sales_status
   qty: 1,
@@ -187,10 +194,10 @@ function renderStatus() {
   $('#live-progress').style.width = `${Math.max(pct, 4)}%`;
   let msg;
   if (closed) msg = 'La venta online está pausada en este momento.';
-  else if (soldOut) msg = 'Se agotaron todas las anticipadas. ¡Gracias!';
+  else if (soldOut) msg = s.door_price ? `Se agotaron las anticipadas. Quedan entradas en puerta a ${money(s.door_price)}.` : 'Se agotaron todas las anticipadas. ¡Gracias!';
   else if (cur.remaining <= 10) msg = `🚨 Últimas ${cur.remaining} entradas de ${cur.name} a ${money(cur.price)}`;
   else msg = `Quedan ${cur.remaining} de ${cur.capacity} en ${cur.name} · después sube el precio`;
-  if (s.sold_last_24h > 0 && !soldOut) msg += ` · ${s.sold_last_24h} vendidas en las últimas 24 hs`;
+  if (s.sold_last_24h >= 10 && !soldOut) msg += ` · ${s.sold_last_24h} vendidas en las últimas 24 hs`;
   $('#live-msg').textContent = msg;
   $('#live-card').classList.toggle('urgent', !!cur && cur.remaining <= 10);
 
@@ -202,6 +209,13 @@ function renderStatus() {
   $('#sticky-tier').textContent = cur ? `${cur.name} · quedan ${cur.remaining}` : 'Agotado';
   $('#sticky-price').textContent = cur ? money(cur.price) : '—';
   $('#sticky-btn').disabled = soldOut || closed;
+
+  // Aviso de precio en puerta
+  const door = $('#door-note');
+  door.hidden = !s.door_price;
+  if (s.door_price) {
+    door.innerHTML = `Solo hay <b>${s.total_capacity} anticipadas</b>. Después, la entrada se vende únicamente en puerta a <b>${money(s.door_price)}</b>.`;
+  }
 
   // Tarjetas de tandas
   $('#tiers').innerHTML = s.tiers.map((t) => tierHTML(t, cur, closed)).join('');
@@ -717,8 +731,8 @@ async function start() {
     }
   }
 
-  if (state.status?.last_sale_at && currentTier()) {
-    setTimeout(() => toast(`🎄 Última compra ${timeAgo(state.status.last_sale_at)} · quedan ${currentTier().remaining} en ${currentTier().name}`, 'hot', 5500), 3500);
+  if (currentTier() && !new URLSearchParams(location.search).has('orden')) {
+    setTimeout(() => toast(WELCOME[Math.floor(Math.random() * WELCOME.length)], 'hot', 6000), 2500);
   }
 }
 

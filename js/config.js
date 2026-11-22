@@ -9,7 +9,7 @@ export const CONFIG = {
   supabaseAnonKey:
     'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFudWJ5b2plbW1heWJyY216cWRvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTA1OTg3NjUsImV4cCI6MjEwNjE3NDc2NX0.JH3fXRo8esF9s9G7sXNQr2L_5JPg2ppYrbOx26MDS-E',
 
-  // --- Evento  (⚠️ CONFIRMAR fecha, hora y lugar antes de publicar)
+  // --- Evento (fecha, hora y lugar confirmados)
   event: {
     name: 'NAVIDAD',
     edition: 'Christmas Edition',
@@ -18,10 +18,10 @@ export const CONFIG = {
     dateISO: '2026-12-24T23:59:00-03:00',
     dateLabel: '24 de diciembre',
     timeLabel: '23:59 hs',
-    venue: 'Havanna Club',
+    venue: 'Club Rana',
     city: 'Itá Ibaté, Corrientes',
     dressCode: 'Toque navideño: rojo, blanco, verde o dorado',
-    collab: ['ALEJO LEGAL', 'HAVANNA CLUB', 'GEN V'],
+    collab: ['ALEJO LEGAL', 'CLUB RANA', 'GEN V'],
   },
 
   // --- Transferencia bancaria (habilitación manual desde el panel)
