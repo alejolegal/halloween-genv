@@ -516,3 +516,7 @@ main, .topbar, .footer { position: relative; z-index: 1; }
 }
 .pay-rules > b { color: var(--gold); font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.1em; }
 .price-note { font-size: 0.82rem; color: var(--gold) !important; margin-top: 4px; }
+
+.door-note { margin-top: 10px !important; display: inline-block; padding: 8px 14px; border-radius: 999px; font-size: 0.85rem;
+  background: rgba(225, 29, 72, 0.12); border: 1px solid rgba(255, 77, 109, 0.4); color: var(--text) !important; }
+.door-note b { color: var(--red-2); }
