@@ -14,7 +14,7 @@ const ORDER_KEY = 'xmas_last_order';
 // Mensajes de bienvenida (se elige uno al azar en cada visita)
 const WELCOME = [
   '🎄 Bienvenido al mejor cierre del año. Esta Navidad no te la contás: la vivís.',
-  '✨ Después del brindis, la fiesta es acá. Asegurá tu lugar antes de que suba el precio.',
+  '✨ Después del brindis, hagamos historia una vez más. Esta vez vamos por todos los récords.',
   '🎁 La Navidad más esperada de Itá Ibaté ya tiene fecha. ¿Vas a quedarte afuera?',
 ];
 
