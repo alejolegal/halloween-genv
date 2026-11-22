@@ -13,9 +13,7 @@ const ORDER_KEY = 'xmas_last_order';
 
 // Mensajes de bienvenida (se elige uno al azar en cada visita)
 const WELCOME = [
-  '🎄 Bienvenido al mejor cierre del año. Esta Navidad no te la contás: la vivís.',
   '✨ Después del brindis, hagamos historia una vez más. Esta vez vamos por todos los récords.',
-  '🎁 La Navidad más esperada de Itá Ibaté ya tiene fecha. ¿Vas a quedarte afuera?',
 ];
 
 const state = {
@@ -78,15 +76,21 @@ function initSnow() {
   const canvas = $('#snow');
   const ctx = canvas.getContext('2d');
   let w, h, flakes;
-  const count = () => Math.min(140, Math.round(window.innerWidth / (REDUCED_MOTION ? 30 : 9)));
+  const MOBILE = window.matchMedia('(pointer: coarse)').matches || window.innerWidth < 820;
+  const count = () => Math.min(MOBILE ? 45 : 120, Math.round(window.innerWidth / (REDUCED_MOTION ? 30 : 10)));
+  let lastW = 0;
+  let running = false;
   const make = () => ({
     x: Math.random() * w, y: Math.random() * h,
     r: Math.random() * 2.2 + 0.6, s: Math.random() * 0.6 + 0.25,
     d: Math.random() * Math.PI * 2, o: Math.random() * 0.5 + 0.35,
   });
   function resize() {
-    const dpr = Math.min(window.devicePixelRatio || 1, 2);
-    w = window.innerWidth; h = window.innerHeight;
+    if (window.innerWidth === lastW && flakes) return; // ignorar cambios de alto (barra de Safari)
+    lastW = window.innerWidth;
+    const dpr = MOBILE ? 1 : Math.min(window.devicePixelRatio || 1, 1.5);
+    w = window.innerWidth;
+    h = Math.max(window.innerHeight, window.screen?.height || 0);
     canvas.width = w * dpr; canvas.height = h * dpr;
     ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
     flakes = Array.from({ length: count() }, make);
@@ -107,11 +111,13 @@ function initSnow() {
       }
     }
     if (!REDUCED_MOTION && !document.hidden) requestAnimationFrame(draw);
+    else running = false;
   }
+  const start = () => { if (!running && !REDUCED_MOTION) { running = true; requestAnimationFrame(draw); } };
   resize();
-  window.addEventListener('resize', resize);
-  document.addEventListener('visibilitychange', () => !document.hidden && !REDUCED_MOTION && requestAnimationFrame(draw));
-  draw();
+  window.addEventListener('resize', resize, { passive: true });
+  document.addEventListener('visibilitychange', () => !document.hidden && start());
+  if (REDUCED_MOTION) draw(); else start();
 
   const lights = $('.lights');
   const n = Math.min(28, Math.round(window.innerWidth / 42));
@@ -133,6 +139,15 @@ function initReveal() {
     });
   }, { threshold: 0.12 });
   els.forEach((el) => io.observe(el));
+}
+
+/** Pausa las animaciones de las secciones fuera de pantalla (ahorra memoria en celulares). */
+function initOffscreenPause() {
+  if (!('IntersectionObserver' in window)) return;
+  const io = new IntersectionObserver((entries) => {
+    entries.forEach((e) => e.target.classList.toggle('offscreen', !e.isIntersecting));
+  }, { rootMargin: '100px 0px' });
+  $$('main > section, .marquee').forEach((el) => io.observe(el));
 }
 
 function celebrate() {
@@ -777,6 +792,7 @@ async function start() {
   initReveal();
   initDj();
   initMap();
+  initOffscreenPause();
   bindEvents();
   $('#wanted-cta')?.addEventListener('click', (e) => { e.preventDefault(); openBuy(); });
   if (api.mode === 'demo') toast('Modo demo: los datos son de prueba', 'info', 5000);
