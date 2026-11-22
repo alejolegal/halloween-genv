@@ -33,6 +33,16 @@ function fillEventTexts() {
   });
   $('#footer-collab').textContent = CONFIG.event.collab.join(' × ');
 
+  // Acceso oculto al panel: 3 toques seguidos sobre los nombres del pie de página
+  let taps = 0;
+  let tapTimer = null;
+  $('#footer-collab').addEventListener('click', () => {
+    taps += 1;
+    clearTimeout(tapTimer);
+    if (taps >= 3) { taps = 0; location.href = 'staff.html'; return; }
+    tapTimer = setTimeout(() => { taps = 0; }, 1200);
+  });
+
   const links = [
     ['whatsappGroup', 'Comunidad de WhatsApp', 'Novedades y sorteos antes que nadie'],
     ['spotifyPlaylist', 'Playlist colaborativa', 'Sumá tus temas para la noche'],

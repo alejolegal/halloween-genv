@@ -421,6 +421,95 @@ async function onDoorSale(e) {
   }
 }
 
+// ---------------------------------------------------------------------
+//  PDF: lista completa de asistentes (todas las entradas habilitadas)
+// ---------------------------------------------------------------------
+const TYPE_ORDER = ['Regalo', 'Tanda 1', 'Tanda 2', 'Tanda 3', 'Puerta', 'Invitado'];
+
+function ticketType(t, o) {
+  if (t.tier_id === DOOR_TIER) return o.door_payment === 'cortesia' ? 'Invitado' : 'Puerta';
+  return tierName(t.tier_id).replace('Tanda Navideña de Regalo', 'Regalo');
+}
+
+function ticketPayment(o) {
+  if (o.payment_method === 'mercadopago') return 'Mercado Pago';
+  if (o.payment_method === 'transfer') return 'Transferencia';
+  return { efectivo: 'Efectivo (puerta)', mercadopago: 'MP (puerta)', transferencia: 'Transf. (puerta)', cortesia: 'Invitado' }[o.door_payment] || 'Puerta';
+}
+
+function exportFullPDF() {
+  if (!window.jspdf) return toast('Cargando módulo PDF… probá de nuevo', 'info');
+  const rows = state.orders
+    .filter((o) => o.status === 'approved')
+    .flatMap((o) => (o.tickets || []).filter((t) => t.tier_id !== 98).map((t) => ({
+      name: t.holder_name, dni: t.holder_dni, type: ticketType(t, o), pay: ticketPayment(o),
+      amount: t.price + (o.quantity === 1 ? (o.surcharge || 0) : 0),
+      buyer: o.dni !== t.holder_dni ? o.buyer_name : '', phone: o.phone || '', order: o.code,
+      inAt: t.used_at,
+    })))
+    .sort((a, b) => a.name.localeCompare(b.name, 'es', { sensitivity: 'base' }));
+  if (!rows.length) return toast('Todavía no hay entradas habilitadas', 'info');
+
+  const { jsPDF } = window.jspdf;
+  const doc = new jsPDF('l', 'mm', 'a4'); // horizontal
+  const W = 297;
+  const X = { n: 10, name: 20, dni: 82, type: 104, pay: 124, amount: 156, buyer: 178, phone: 222, order: 246, inAt: 268 };
+  const count = (k) => rows.filter((r) => r.type === k).length;
+  const inside = rows.filter((r) => r.inAt).length;
+  const total = rows.reduce((a, r) => a + r.amount, 0);
+  const hhmm = (iso) => new Date(iso).toLocaleTimeString('es-AR', { hour: '2-digit', minute: '2-digit', hour12: false });
+
+  // Encabezado
+  doc.setFillColor(15, 42, 31); doc.rect(0, 0, W, 30, 'F');
+  doc.setTextColor(245, 196, 81); doc.setFont('helvetica', 'bold'); doc.setFontSize(15);
+  doc.text(`${CONFIG.event.name} ${CONFIG.event.edition} ${CONFIG.event.year} · Lista completa de asistentes`, 10, 12);
+  doc.setTextColor(255, 255, 255); doc.setFont('helvetica', 'normal'); doc.setFontSize(9);
+  doc.text(`${CONFIG.event.dateLabel} · ${CONFIG.event.venue} · ${CONFIG.event.city}   |   Emitido: ${new Date().toLocaleString('es-AR')}`, 10, 19);
+  doc.text(`Total personas: ${rows.length}   ·   Ingresaron: ${inside}   ·   ${TYPE_ORDER.map((k) => `${k}: ${count(k)}`).join('   ·   ')}   ·   Recaudado: ${money(total)}`, 10, 25);
+
+  const header = (y) => {
+    doc.setFillColor(232, 236, 233); doc.rect(8, y - 4.5, W - 16, 7, 'F');
+    doc.setTextColor(20, 20, 20); doc.setFont('helvetica', 'bold'); doc.setFontSize(8);
+    [['#', 'n'], ['TITULAR', 'name'], ['DNI', 'dni'], ['TIPO', 'type'], ['PAGO', 'pay'], ['MONTO', 'amount'],
+      ['COMPRADO POR', 'buyer'], ['WHATSAPP', 'phone'], ['ORDEN', 'order'], ['INGRESO', 'inAt']]
+      .forEach(([label, k]) => doc.text(label, X[k], y));
+    doc.setFont('helvetica', 'normal');
+  };
+
+  let y = 38;
+  header(y); y += 7;
+  rows.forEach((r, i) => {
+    if (y > 200) {
+      doc.addPage(); y = 14; header(y); y += 7;
+    }
+    if (i % 2 === 1) { doc.setFillColor(246, 248, 247); doc.rect(8, y - 4, W - 16, 6, 'F'); }
+    doc.setTextColor(20, 20, 20);
+    doc.text(String(i + 1), X.n, y);
+    doc.text(r.name.slice(0, 34), X.name, y);
+    doc.text(r.dni, X.dni, y);
+    if (r.type === 'Invitado') doc.setTextColor(150, 90, 0);
+    else if (r.type === 'Puerta') doc.setTextColor(170, 20, 50);
+    doc.text(r.type, X.type, y);
+    doc.setTextColor(20, 20, 20);
+    doc.text(r.pay, X.pay, y);
+    doc.text(r.amount ? money(r.amount) : '-', X.amount, y);
+    doc.text(r.buyer.slice(0, 24), X.buyer, y);
+    doc.text(r.phone, X.phone, y);
+    doc.text(r.order, X.order, y);
+    if (r.inAt) { doc.setTextColor(21, 128, 61); doc.text(`Sí ${hhmm(r.inAt)}`, X.inAt, y); }
+    else { doc.setTextColor(150, 150, 150); doc.text('No', X.inAt, y); }
+    y += 6;
+  });
+
+  // Números de página
+  const pages = doc.getNumberOfPages();
+  for (let p = 1; p <= pages; p++) {
+    doc.setPage(p); doc.setFontSize(7); doc.setTextColor(140, 140, 140);
+    doc.text(`Página ${p} de ${pages}`, W - 30, 205);
+  }
+  doc.save(`Lista_completa_Navidad_${new Date().toISOString().slice(0, 10)}.pdf`);
+}
+
 function exportPDF() {
   if (!window.jspdf) return toast('Cargando módulo PDF… probá de nuevo', 'info');
   const rows = allTickets().filter((t) => t.order.status === 'approved')
@@ -709,6 +798,7 @@ function bindEvents() {
   $('#orders-list').addEventListener('click', onOrdersAction);
   ['#orders-q', '#orders-status', '#orders-method'].forEach((s) => $(s).addEventListener('input', debounce(renderOrders, 200)));
   $('#btn-csv').addEventListener('click', exportCSV);
+  $('#btn-full-pdf').addEventListener('click', exportFullPDF);
 
   $('#mp-fee').addEventListener('input', renderFeePreview);
   $('#mp-fee-save').addEventListener('click', async () => {
